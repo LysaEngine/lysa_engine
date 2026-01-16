@@ -37,7 +37,7 @@ namespace lysa {
         for (MemoryBlock& bloc : freeBlocs) {
             if (bloc.size >= size) {
                 const MemoryBlock result{
-                    (bloc.offset / instanceSize),
+                    static_cast<uint32>(bloc.offset / instanceSize),
                     bloc.offset,
                     size};
                 if (bloc.size == size) {

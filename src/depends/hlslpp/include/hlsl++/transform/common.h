@@ -1,5 +1,5 @@
 #pragma once
-#include <cmath>
+//#include <cmath>
 
 //------------------------------------------------------------------
 // Common Transformation Macro-Definitions and Types

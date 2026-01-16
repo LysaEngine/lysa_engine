@@ -27,7 +27,7 @@ Lysa Engine is a hobby 3D engine created for learning and experimenting with low
 
 - [Vulkan](https://vulkan.lunarg.com/) SDK
 - [Vireo RHI](https://github.com/HenriMichelon/vireo_rhi)
-- C++23 compatible compiler (MSVC, LLVM, etc.)
+- C++23 compiler with std module support : MSVC 19+, [LLVM+MingW 21+](https://github.com/mstorsjo/llvm-mingw/releases)
 - CMake 3.29+ with a build tool like Ninja
 
 ### Integration

@@ -9,6 +9,7 @@ export module lysa.renderers.deferred_renderer;
 import vireo;
 import lysa.blur_data;
 import lysa.context;
+import lysa.types;
 import lysa.renderers.configuration;
 import lysa.renderers.renderer;
 import lysa.renderers.scene_frame_data;

@@ -21,8 +21,8 @@ namespace lysa {
     }
 
     MeshInstance::MeshInstance(const MeshInstance& mi, const std::string& name) :
-        materialManager(materialManager),
-        meshManager(meshManager),
+        materialManager(mi.materialManager),
+        meshManager(mi.meshManager),
         mesh(mi.mesh),
         name(name),
         visible(mi.visible),

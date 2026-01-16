@@ -74,7 +74,6 @@ export import lysa.lua;
 
 export namespace  lysa {
 
-
     /**
     * Global events fired during the main loop
     */

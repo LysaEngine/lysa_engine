@@ -4,8 +4,9 @@
  * This software is released under the MIT License.
  * https://opensource.org/licenses/MIT
 */
-module lysa.resources.material;
+module;
 #include <xxhash.h>
+module lysa.resources.material;
 
 import lysa.log;
 

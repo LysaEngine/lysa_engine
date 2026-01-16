@@ -9,6 +9,7 @@ export module lysa.renderers.renderpasses.bloom_pass;
 import vireo;
 import lysa.blur_data;
 import lysa.context;
+import lysa.types;
 import lysa.renderers.configuration;
 import lysa.renderers.renderpasses.post_processing;
 

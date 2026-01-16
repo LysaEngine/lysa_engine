@@ -15,13 +15,13 @@ export module lysa.math;
  * quaternion-to-Euler conversion, tolerant comparisons, and simple random
  * number generation utilities.
  */
-
-#include <cstdint>
+#define HLSLPP_MODULE_DECLARATION
+#define HLSLPP_FEATURE_TRANSFORM
+export import std;
+export import lysa.types;
+using namespace std;
 using int32 = int32_t;
 using uint32 = uint32_t;
-
-#define HLSLPP_FEATURE_TRANSFORM
-#define HLSLPP_MODULE_DECLARATION
 
 #include "hlsl++/vector_float.h"
 #include "hlsl++/vector_float8.h"
@@ -37,8 +37,6 @@ using uint32 = uint32_t;
 
 #include "hlsl++/data_packing.h"
 
-export import std;
-export import lysa.types;
 
 export namespace lysa {
 

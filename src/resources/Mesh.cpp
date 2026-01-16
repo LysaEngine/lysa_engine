@@ -12,12 +12,6 @@ import lysa.renderers.graphic_pipeline_data;
 
 namespace lysa {
 
-    const std::vector<vireo::VertexAttributeDesc> VertexData::vertexAttributes {
-        {"POSITION", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, position)},
-        {"NORMAL", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, normal)},
-        {"TANGENT", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, tangent)},
-    };
-
     MeshSurface::MeshSurface(const uint32 firstIndex, const uint32 count):
         firstIndex{firstIndex},
         indexCount{count} {

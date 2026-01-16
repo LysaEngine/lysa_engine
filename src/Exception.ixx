@@ -41,13 +41,13 @@ export namespace lysa {
         explicit Exception(Args&&... args) {
             std::ostringstream oss;
             (oss << ... << std::forward<Args>(args));
-#ifdef _MSC_VER
             message = oss.str();
-#endif
+            std::cerr << message << std::endl;
 #ifdef _DEBUG
 #ifdef _WIN32
             if (IsDebuggerPresent()) {
                 OutputDebugStringA(message.c_str());
+#else
 #endif
 #ifdef __has_builtin
     __builtin_debugtrap();

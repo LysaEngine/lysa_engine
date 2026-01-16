@@ -4,12 +4,21 @@
 * This software is released under the MIT License.
 * https://opensource.org/licenses/MIT
 */
+module;
+#include <cstddef>
 module lysa.renderers.graphic_pipeline_data;
 
+import std;
 import vireo;
 import lysa.log;
 
 namespace lysa {
+
+    const std::vector<vireo::VertexAttributeDesc> VertexData::vertexAttributes {
+        {"POSITION", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, position)},
+        {"NORMAL", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, normal)},
+        {"TANGENT", vireo::AttributeFormat::R32G32B32A32_FLOAT, offsetof(VertexData, tangent)},
+    };
 
     void GraphicPipelineData::createDescriptorLayouts(const std::shared_ptr<vireo::Vireo>& vireo) {
         pipelineDescriptorLayout = vireo->createDescriptorLayout("Pipeline data");

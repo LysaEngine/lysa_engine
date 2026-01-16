@@ -100,7 +100,6 @@ export namespace lysa {
         constexpr CTX& getContext() const { return ctx; }
 
     protected:
-        friend class Lysa;
         // Reference to the owning application context.
         CTX& ctx;
 
