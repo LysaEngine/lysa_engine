@@ -1,0 +1,63 @@
+/*
+* Copyright (c) 2025-present Henri Michelon
+*
+* This software is released under the MIT License.
+* https://opensource.org/licenses/MIT
+*/
+export module lysa.renderers.forward_renderer;
+
+import vireo;
+
+import lysa.context;
+import lysa.types;
+import lysa.renderers.configuration;
+import lysa.renderers.renderer;
+import lysa.renderers.renderpasses.forward_color_pass;
+import lysa.renderers.scene_frame_data;
+
+export namespace lysa {
+
+    /**
+     * Forward rendering path.
+     *
+     * Renders opaque geometry directly to the color/depth attachments using a
+     * single forward pass, then handles transparency and optional bloom.
+     * Suitable for scenes with many materials requiring complex shading (PBR,
+     * alpha test, etc.) without a G-Buffer.
+     */
+    class ForwardRenderer : public Renderer {
+    public:
+        ForwardRenderer(
+            const Context& ctx,
+            const RendererConfiguration& config);
+
+        /** Updates/creates pipelines following the materials mapping. */
+        void updatePipelines(
+            const std::unordered_map<pipeline_id,
+            std::vector<unique_id>>& pipelineIds) override;
+
+        void resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) override;
+
+        /** Returns the brightness buffer used for bloom extraction. */
+        std::shared_ptr<vireo::RenderTarget> getBloomColorAttachment(const uint32 frameIndex) const override {
+            return forwardColorPass.getBrightnessBuffer(frameIndex);
+        }
+
+    protected:
+        /** Per-frame housekeeping (post-process data, etc.). */
+        void update(uint32 frameIndex) override;
+
+        /** Records the forward color pass followed by transparency. */
+        void colorPass(
+            vireo::CommandList& commandList,
+            const SceneFrameData& scene,
+            const vireo::Viewport& viewport,
+            const vireo::Rect& scissors,
+            bool clearAttachment,
+            uint32 frameIndex) override;
+
+    private:
+        /** Opaque/alpha-tested color pass used by forward rendering. */
+        ForwardColorPass forwardColorPass;
+    };
+}

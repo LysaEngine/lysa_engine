@@ -1,0 +1,337 @@
+/*
+* Copyright (c) 2025-present Henri Michelon
+*
+* This software is released under the MIT License.
+* https://opensource.org/licenses/MIT
+*/
+module lysa.renderers.renderer;
+
+import lysa.exception;
+import lysa.renderers.renderpasses.renderpass;
+import lysa.renderers.renderpasses.shadow_map_pass;
+#ifdef FORWARD_RENDERER
+import lysa.renderers.forward_renderer;
+#endif
+#ifdef DEFERRED_RENDERER
+import lysa.renderers.deferred_renderer;
+#endif
+
+namespace lysa {
+
+    std::unique_ptr<Renderer> Renderer::create(
+        Context& ctx,
+        const RendererConfiguration& config) {
+#ifdef FORWARD_RENDERER
+        if (config.rendererType == RendererType::FORWARD) {
+            return std::make_unique<ForwardRenderer>(ctx, config);
+        }
+#endif
+#ifdef DEFERRED_RENDERER
+        if (config.rendererType == RendererType::DEFERRED) {
+            return std::make_unique<DeferredRenderer>(ctx, config);
+        }
+#endif
+        throw Exception("Unknown renderer type");
+    }
+
+    Renderer::Renderer(
+        const Context& ctx,
+        const RendererConfiguration& config) :
+        ctx(ctx),
+        withStencil(
+            config.depthStencilFormat == vireo::ImageFormat::D32_SFLOAT_S8_UINT ||
+            config.depthStencilFormat == vireo::ImageFormat::D24_UNORM_S8_UINT
+        ),
+        config(config),
+        depthPrePass(ctx, config, withStencil),
+        meshManager(ctx.res.get<MeshManager>()),
+        shaderMaterialPass(ctx, config),
+        transparencyPass(ctx, config) {
+        const auto needToneMapping =
+            config.colorRenderingFormat == vireo::ImageFormat::R16G16B16A16_UNORM ||
+            config.colorRenderingFormat == vireo::ImageFormat::R32G32B32A32_SFLOAT ||
+            config.colorRenderingFormat == vireo::ImageFormat::R16G16B16A16_SFLOAT;
+        const auto needGammaCorrection =
+            config.colorRenderingFormat == vireo::ImageFormat::R8G8B8A8_UNORM ||
+            config.colorRenderingFormat == vireo::ImageFormat::R8G8B8A8_SNORM;
+        if (needGammaCorrection || needToneMapping) {
+            gammaCorrectionPass = std::make_unique<GammaCorrectionPass>(
+                ctx,
+                config,
+                needToneMapping ? config.toneMappingType : ToneMappingType::NONE);
+        }
+        switch (config.antiAliasingType) {
+        case AntiAliasingType::FXAA:
+            fxaaPass = std::make_unique<FXAAPass>(ctx, config);
+            break;
+        case AntiAliasingType::SMAA:
+            smaaPass = std::make_unique<SMAAPass>(ctx, config);
+            break;
+        default:
+            break;
+        }
+        if (config.bloomEnabled) {
+            bloomPass = std::make_unique<BloomPass>(ctx, config);
+        }
+        framesData.resize(ctx.config.framesInFlight);
+    }
+
+    void Renderer::update(const uint32 frameIndex) {
+        depthPrePass.update(frameIndex);
+        if (bloomPass) {
+            bloomPass->update(frameIndex);
+        }
+        for (const auto& postProcessingPass : postProcessingPasses) {
+            postProcessingPass->update(frameIndex);
+        }
+        if (fxaaPass) {
+            fxaaPass->update(frameIndex);
+        } else if (smaaPass) {
+            smaaPass->update(frameIndex);
+        }
+        gammaCorrectionPass->update(frameIndex);
+    }
+
+    void Renderer::updatePipelines(const SceneFrameData& scene) {
+        const auto& pipelineIds = scene.getPipelineIds();
+        updatePipelines(pipelineIds);
+    }
+
+    void Renderer::updatePipelines(const std::unordered_map<pipeline_id, std::vector<unique_id>>& pipelineIds) {
+        depthPrePass.updatePipelines(pipelineIds);
+        shaderMaterialPass.updatePipelines(pipelineIds);
+        transparencyPass.updatePipelines(pipelineIds);
+    }
+
+    void Renderer::prepare(
+        vireo::CommandList& commandList,
+        const SceneFrameData& scene,
+        const vireo::Viewport& viewport,
+        const vireo::Rect& scissors,
+        const uint32 frameIndex) {
+        commandList.bindVertexBuffer(meshManager.getVertexBuffer());
+        commandList.bindIndexBuffer(meshManager.getIndexBuffer());
+        for (const auto& shadowMapRenderer : scene.getShadowMapRenderers()) {
+            static_pointer_cast<ShadowMapPass>(shadowMapRenderer)->render(commandList, scene);
+        }
+        commandList.setViewport(viewport);
+        commandList.setScissors(scissors);
+        depthPrePass.render(commandList, scene, framesData[frameIndex].depthAttachment, frameIndex);
+    }
+
+    void Renderer::render(
+        vireo::CommandList& commandList,
+        const SceneFrameData& scene,
+        const vireo::Viewport& viewport,
+        const vireo::Rect& scissors,
+        const bool clearAttachment,
+        const uint32 frameIndex) {
+        commandList.bindVertexBuffer(meshManager.getVertexBuffer());
+        commandList.bindIndexBuffer(meshManager.getIndexBuffer());
+        commandList.setViewport(viewport);
+        commandList.setScissors(scissors);
+        colorPass(
+            commandList,
+            scene,
+            viewport,
+            scissors,
+            clearAttachment,
+            frameIndex);
+        const auto& frame = framesData[frameIndex];
+        shaderMaterialPass.render(
+            commandList,
+            scene,
+            frame.colorAttachment,
+            frame.depthAttachment,
+            false,
+            frameIndex);
+        transparencyPass.render(
+            commandList,
+            scene,
+            frame.colorAttachment,
+            frame.depthAttachment,
+            false,
+            frameIndex);
+    }
+
+    void Renderer::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
+        currentExtent = extent;
+        for (auto& frame : framesData) {
+            frame.colorAttachment = ctx.vireo->createRenderTarget(
+               config.colorRenderingFormat,
+               extent.width, extent.height,
+               vireo::RenderTargetType::COLOR,
+               {config.clearColor.r, config.clearColor.g, config.clearColor.b, 1.0f},
+               1,
+               vireo::MSAA::NONE,
+               "Main color attachment");
+            frame.depthAttachment = ctx.vireo->createRenderTarget(
+                config.depthStencilFormat,
+                extent.width, extent.height,
+                vireo::RenderTargetType::DEPTH,
+                { .depthStencil = { .depth = 1.0f, .stencil = 0 } },
+                1,
+                vireo::MSAA::NONE,
+                "Main depth stencil attachment");
+            const auto depthStage =
+               config.depthStencilFormat == vireo::ImageFormat::D32_SFLOAT_S8_UINT ||
+               config.depthStencilFormat == vireo::ImageFormat::D24_UNORM_S8_UINT   ?
+               vireo::ResourceState::RENDER_TARGET_DEPTH_STENCIL :
+               vireo::ResourceState::RENDER_TARGET_DEPTH;
+            commandList->barrier(
+                frame.depthAttachment,
+                vireo::ResourceState::UNDEFINED,
+                depthStage);
+        }
+        depthPrePass.resize(extent, commandList);
+        shaderMaterialPass.resize(extent, commandList);
+        transparencyPass.resize(extent, commandList);
+        if (bloomPass) {
+            bloomPass->resize(extent);
+        }
+        if (fxaaPass) {
+            fxaaPass->resize(extent);
+        } else if (smaaPass) {
+            smaaPass->resize(extent, commandList);
+        }
+        for (const auto& postProcessingPass : postProcessingPasses) {
+            postProcessingPass->resize(extent);
+        }
+        gammaCorrectionPass->resize(extent);
+    }
+
+     std::shared_ptr<vireo::RenderTarget> Renderer::gammaCorrection(
+        vireo::CommandList& commandList,
+        const vireo::Viewport&viewport,
+        const vireo::Rect&scissor,
+        const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
+        const uint32 frameIndex) const {
+        commandList.barrier(
+           colorAttachment,
+           vireo::ResourceState::UNDEFINED,
+           vireo::ResourceState::SHADER_READ);
+        gammaCorrectionPass->render(
+            commandList,
+            viewport,
+            scissor,
+            colorAttachment,
+            nullptr,
+            frameIndex);
+        commandList.barrier(
+           colorAttachment,
+           vireo::ResourceState::SHADER_READ,
+           vireo::ResourceState::UNDEFINED);
+        commandList.barrier(
+           gammaCorrectionPass->getColorAttachment(frameIndex),
+           vireo::ResourceState::SHADER_READ,
+           vireo::ResourceState::UNDEFINED);
+        return gammaCorrectionPass->getColorAttachment(frameIndex);
+    }
+
+    void Renderer::postprocess(
+        vireo::CommandList& commandList,
+        const vireo::Viewport&viewport,
+        const vireo::Rect&scissor,
+        uint32 frameIndex) {
+        const auto& frame = framesData[frameIndex];
+        commandList.barrier(
+            frame.colorAttachment,
+            vireo::ResourceState::UNDEFINED,
+            vireo::ResourceState::SHADER_READ);
+        auto colorAttachment = frame.colorAttachment;
+        if (bloomPass) {
+            bloomPass->render(
+                commandList,
+                viewport,
+                scissor,
+                colorAttachment,
+                getBloomColorAttachment(frameIndex),
+                frameIndex);
+            colorAttachment = bloomPass->getColorAttachment(frameIndex);
+        }
+        if (!postProcessingPasses.empty()) {
+            const auto depthStage =
+               config.depthStencilFormat == vireo::ImageFormat::D32_SFLOAT_S8_UINT ||
+               config.depthStencilFormat == vireo::ImageFormat::D24_UNORM_S8_UINT   ?
+               vireo::ResourceState::RENDER_TARGET_DEPTH_STENCIL :
+               vireo::ResourceState::RENDER_TARGET_DEPTH;
+            commandList.barrier(
+               frame.depthAttachment,
+               depthStage,
+               vireo::ResourceState::SHADER_READ);
+            std::ranges::for_each(postProcessingPasses, [&](auto* postProcessingPass) {
+                postProcessingPass->render(
+                    commandList,
+                    viewport,
+                    scissor,
+                    colorAttachment,
+                    frame.depthAttachment,
+                    frameIndex);
+                colorAttachment = postProcessingPass->getColorAttachment(frameIndex);
+            });
+            commandList.barrier(
+               frame.depthAttachment,
+               vireo::ResourceState::SHADER_READ,
+               depthStage);
+            std::ranges::for_each(postProcessingPasses, [&](const auto& postProcessingPass) {
+                commandList.barrier(
+                    postProcessingPass->getColorAttachment(frameIndex),
+                    vireo::ResourceState::SHADER_READ,
+                    vireo::ResourceState::UNDEFINED);
+            });
+        }
+        if (fxaaPass) {
+            fxaaPass->render(
+                commandList,
+                viewport,
+                scissor,
+                colorAttachment,
+                frame.depthAttachment,
+                frameIndex);
+            commandList.barrier(
+                fxaaPass->getColorAttachment(frameIndex),
+               vireo::ResourceState::SHADER_READ,
+               vireo::ResourceState::UNDEFINED);
+        } else if (smaaPass) {
+            smaaPass->render(
+                commandList,
+                colorAttachment,
+                frameIndex);
+            commandList.barrier(
+                smaaPass->getColorAttachment(frameIndex),
+               vireo::ResourceState::SHADER_READ,
+               vireo::ResourceState::UNDEFINED);
+        }
+        commandList.barrier(
+            frame.colorAttachment,
+            vireo::ResourceState::SHADER_READ,
+            vireo::ResourceState::UNDEFINED);
+    }
+
+    std::shared_ptr<vireo::RenderTarget> Renderer::getCurrentColorAttachment(const uint32 frameIndex) const {
+        if (fxaaPass) {
+            return fxaaPass->getColorAttachment(frameIndex);
+        }
+        if (smaaPass) {
+            return smaaPass->getColorAttachment(frameIndex);
+        }
+        if (postProcessingPasses.empty()) {
+            if (bloomPass) {
+                return bloomPass->getColorAttachment(frameIndex);
+            }
+            return framesData[frameIndex].colorAttachment;
+        }
+        return postProcessingPasses.back()->getColorAttachment(frameIndex);
+    }
+
+    void Renderer::addPostprocessing(PostProcessing& postProcessingPass) {
+        postProcessingPass.resize(currentExtent);
+        postProcessingPasses.push_back(&postProcessingPass);
+    }
+
+    void Renderer::removePostprocessing(const std::string& fragShaderName) {
+        std::erase_if(postProcessingPasses, [&fragShaderName](const PostProcessing* item) {
+            return item->getFragShaderName() == fragShaderName;
+        });
+    }
+}

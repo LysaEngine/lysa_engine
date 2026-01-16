@@ -1,0 +1,478 @@
+/*
+* Copyright (c) 2025-present Henri Michelon
+*
+* This software is released under the MIT License.
+* https://opensource.org/licenses/MIT
+*/
+module lysa.renderers.scene_frame_data;
+
+import lysa.exception;
+import lysa.log;
+import lysa.math;
+import lysa.resources.image;
+import lysa.renderers.renderpasses.shadow_map_pass;
+
+namespace lysa {
+
+    void SceneFrameData::createDescriptorLayouts(const Context& ctx) {
+        sceneDescriptorLayout = ctx.vireo->createDescriptorLayout("Scene");
+        sceneDescriptorLayout->add(BINDING_SCENE, vireo::DescriptorType::UNIFORM);
+        sceneDescriptorLayout->add(BINDING_MODELS, vireo::DescriptorType::DEVICE_STORAGE);
+        sceneDescriptorLayout->add(BINDING_LIGHTS, vireo::DescriptorType::UNIFORM);
+        sceneDescriptorLayout->add(BINDING_SHADOW_MAPS, vireo::DescriptorType::SAMPLED_IMAGE,
+            ctx.config.maxShadowMapsPerScene * 6);
+        sceneDescriptorLayout->build();
+
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+        sceneDescriptorLayoutOptional1 = ctx.vireo->createDescriptorLayout("Scene opt1");
+        sceneDescriptorLayoutOptional1->add(BINDING_SHADOW_MAP_TRANSPARENCY_COLOR,
+            vireo::DescriptorType::SAMPLED_IMAGE, ctx.config.maxShadowMapsPerScene * 6);
+        sceneDescriptorLayoutOptional1->build();
+#endif
+
+        GraphicPipelineData::createDescriptorLayouts(ctx.vireo);
+    }
+
+    void SceneFrameData::destroyDescriptorLayouts() {
+        sceneDescriptorLayout.reset();
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+        sceneDescriptorLayoutOptional1.reset();
+#endif
+        GraphicPipelineData::destroyDescriptorLayouts();
+    }
+
+    SceneFrameData::SceneFrameData(
+        const Context& ctx,
+        const uint32 maxLights,
+        const uint32 maxMeshInstancesPerScene,
+        const uint32 maxMeshSurfacePerPipeline) :
+        ctx(ctx),
+        lightsBuffer{ctx.vireo->createBuffer(
+            vireo::BufferType::UNIFORM,
+            sizeof(LightData),
+            1,
+            "lights")},
+        meshInstancesDataArray{ctx.vireo,
+            sizeof(MeshInstanceData),
+            maxMeshInstancesPerScene,
+            maxMeshInstancesPerScene,
+            vireo::BufferType::DEVICE_STORAGE,
+            "meshInstancesData"},
+        sceneUniformBuffer{ctx.vireo->createBuffer(
+            vireo::BufferType::UNIFORM,
+            sizeof(SceneData), 1,
+            "sceneUniform")},
+        maxMeshSurfacePerPipeline(maxMeshSurfacePerPipeline),
+        maxLights(maxLights),
+        materialManager(ctx.res.get<MaterialManager>()) {
+        const auto blankImage = ctx.res.get<ImageManager>().getBlankImage();
+
+        shadowMaps.resize(ctx.config.maxShadowMapsPerScene * 6);
+        for (int i = 0; i < shadowMaps.size(); i++) {
+            shadowMaps[i] = blankImage;
+        }
+        descriptorSet = ctx.vireo->createDescriptorSet(sceneDescriptorLayout, "Scene");
+        descriptorSet->update(BINDING_SCENE, sceneUniformBuffer);
+        descriptorSet->update(BINDING_MODELS, meshInstancesDataArray.getBuffer());
+        descriptorSet->update(BINDING_LIGHTS, lightsBuffer);
+        descriptorSet->update(BINDING_SHADOW_MAPS, shadowMaps);
+
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+        shadowTransparencyColorMaps.resize(ctx.config.maxShadowMapsPerScene * 6);
+        for (int i = 0; i < shadowMaps.size(); i++) {
+            shadowMaps[i] = blankImage;
+            shadowTransparencyColorMaps[i] = blankImage;
+        }
+        descriptorSetOpt1 = ctx.vireo->createDescriptorSet(sceneDescriptorLayoutOptional1, "Scene Opt1");
+        descriptorSetOpt1->update(BINDING_SHADOW_MAP_TRANSPARENCY_COLOR, shadowTransparencyColorMaps);
+#endif
+
+        sceneUniformBuffer->map();
+        lightsBuffer->map();
+    }
+
+    void SceneFrameData::compute(vireo::CommandList& commandList, const Camera& camera) const {
+        compute(camera, commandList, opaquePipelinesData);
+        compute(camera, commandList, shaderMaterialPipelinesData);
+        compute(camera, commandList, transparentPipelinesData);
+    }
+
+    void SceneFrameData::compute(
+        const Camera& camera,
+        vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::unique_ptr<GraphicPipelineData>>& pipelinesData) const {
+        for (const auto& [pipelineId, pipelineData] : pipelinesData) {
+            pipelineData->frustumCullingPipeline.dispatch(
+                commandList,
+                pipelineData->drawCommandsCount,
+                camera.transform,
+                camera.projection,
+                *pipelineData->instancesArray.getBuffer(),
+                *pipelineData->drawCommandsBuffer,
+                *pipelineData->culledDrawCommandsBuffer,
+                *pipelineData->culledDrawCommandsCountBuffer);
+        }
+        for (const auto& renderer : std::views::values(shadowMapRenderers)) {
+            const auto& shadowMapRenderer = std::static_pointer_cast<ShadowMapPass>(renderer);
+            shadowMapRenderer->compute(commandList, pipelinesData);
+        }
+    }
+
+    void SceneFrameData::updatePipelinesData(
+        const vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::unique_ptr<GraphicPipelineData>>& pipelinesData) {
+        for (const auto& [pipelineId, pipelineData] : pipelinesData) {
+            pipelineData->updateData(commandList, drawCommandsStagingBufferRecycleBin, meshInstancesDataMemoryBlocks);
+        }
+    }
+
+    void SceneFrameData::update(
+        const vireo::CommandList& commandList,
+        const Camera& camera,
+        const RendererConfiguration& config,
+        const uint32 frameIndex) {
+        if (!removedLights.empty()) {
+            for (const auto& light : removedLights) {
+                disableLightShadowCasting(light);
+                lights.erase(light);
+            }
+            removedLights.clear();
+        }
+        for (const auto* light : lights) {
+            if (light->castShadows) {
+                enableLightShadowCasting(light);
+            } else {
+                disableLightShadowCasting(light);
+            }
+        }
+        if (shadowMapsUpdated) {
+            descriptorSet->update(BINDING_SHADOW_MAPS, shadowMaps);
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+                descriptorSetOpt1->update(BINDING_SHADOW_MAP_TRANSPARENCY_COLOR, shadowTransparencyColorMaps);
+#endif
+            shadowMapsUpdated = false;
+        }
+        for (const auto [light, renderpass] : shadowMapRenderers) {
+            if (light->visible && light->castShadows) {
+                const auto shadowMapRenderer = std::dynamic_pointer_cast<ShadowMapPass>(renderpass);
+                shadowMapRenderer->setCurrentCamera(camera);
+                shadowMapRenderer->updatePipelines(pipelineIds);
+                shadowMapRenderer->update(frameIndex);
+            }
+        }
+
+        if (!drawCommandsStagingBufferRecycleBin.empty()) {
+            drawCommandsStagingBufferRecycleBin.clear();
+        }
+
+        const auto sceneUniform = SceneData {
+            .cameraPosition = camera.transform[3].xyz,
+            .projection = camera.projection,
+            .view = inverse(camera.transform),
+            .viewInverse = camera.transform,
+            .ambientLight = float4(environment.color, environment.intensity),
+            .lightsCount = static_cast<uint32>(lights.size()),
+            .bloomEnabled = config.bloomEnabled ? 1u : 0u,
+            .ssaoEnabled = config.ssaoEnabled ? 1u : 0u,
+        };
+        sceneUniformBuffer->write(&sceneUniform);
+
+        if (meshInstancesDataUpdated) {
+            meshInstancesDataArray.flush(commandList);
+            meshInstancesDataArray.postBarrier(commandList);
+            meshInstancesDataUpdated = false;
+        }
+
+        updatePipelinesData(commandList, opaquePipelinesData);
+        updatePipelinesData(commandList, shaderMaterialPipelinesData);
+        updatePipelinesData(commandList, transparentPipelinesData);
+
+        if (!lights.empty()) {
+            if (lights.size() > lightsBufferCount) {
+                if (lightsBufferCount >= maxLights) {
+                    throw Exception("Too many lights");
+                }
+                lightsBufferCount = lights.size();
+                lightsBuffer = ctx.vireo->createBuffer(
+                    vireo::BufferType::UNIFORM,
+                    sizeof(LightData) * lightsBufferCount, 1,
+                    "Scene Lights");
+                lightsBuffer->map();
+                descriptorSet->update(BINDING_LIGHTS, lightsBuffer);
+            }
+            auto lightIndex = 0;
+            auto lightsArray = std::vector<LightData>(lightsBufferCount);
+            for (const auto& light : lights) {
+                if (light->visible) {
+                    lightsArray[lightIndex] = light->getData();
+                    if (shadowMapRenderers.contains(light)) {
+                        const auto& shadowMapRenderer = std::static_pointer_cast<ShadowMapPass>(shadowMapRenderers[light]);
+                        lightsArray[lightIndex].mapIndex = shadowMapIndex[light];
+                        switch (light->type) {
+                            case LightType::LIGHT_DIRECTIONAL: {
+                                for (int cascadeIndex = 0; cascadeIndex < lightsArray[lightIndex].cascadesCount ; cascadeIndex++) {
+                                    lightsArray[lightIndex].lightSpace[cascadeIndex] =
+                                        shadowMapRenderer->getLightSpace(cascadeIndex);
+                                    lightsArray[lightIndex].cascadeSplitDepth[cascadeIndex] =
+                                        shadowMapRenderer->getCascadeSplitDepth(cascadeIndex);
+                                }
+                                break;
+                            }
+                            case LightType::LIGHT_SPOT: {
+                                lightsArray[lightIndex].lightSpace[0] = shadowMapRenderer->getLightSpace(0);
+                                break;
+                            }
+                            case LightType::LIGHT_OMNI: {
+                                break;
+                            }
+                            default:;
+                        }
+                    }
+                    lightIndex++;
+                }
+            }
+            lightsBuffer->write(lightsArray.data(), lightsArray.size() * sizeof(LightData));
+        }
+    }
+
+    void SceneFrameData::addLight(const Light* light) {
+        lights.insert(light);
+        if (light->castShadows) {
+            enableLightShadowCasting(light);
+        }
+    }
+
+    void SceneFrameData::removeLight(const Light* light) {
+        if (lights.contains(light)) {
+            removedLights.insert(light);
+        }
+    }
+
+    void SceneFrameData::addInstance(const MeshInstance* meshInstance) {
+        const auto& mesh = meshInstance->getMesh();
+        assert([&]{ return !meshInstancesDataMemoryBlocks.contains(meshInstance);}, "Mesh instance already in the scene");
+        assert([&]{return !mesh.getMaterials().empty(); }, "Models without materials are not supported");
+        assert([&]{return mesh.isUploaded(); }, "Mesh instance is not in VRAM");
+
+        const auto meshInstanceData = meshInstance->getData();
+        meshInstancesDataMemoryBlocks[meshInstance] = meshInstancesDataArray.alloc(1);
+        meshInstancesDataArray.write(meshInstancesDataMemoryBlocks[meshInstance], &meshInstanceData);
+        meshInstancesDataUpdated = true;
+
+        auto haveTransparentMaterial{false};
+        auto haveShaderMaterial{false};
+        auto nodePipelineIds = std::set<uint32>{};
+        for (int i = 0; i < mesh.getSurfaces().size(); i++) {
+            const auto& material = materialManager[meshInstance->getSurfaceMaterial(i)];
+            haveTransparentMaterial = material.getTransparency() != Transparency::DISABLED;
+            haveShaderMaterial = material.getType() == Material::SHADER;
+            const auto id = material.getPipelineId();
+            nodePipelineIds.insert(id);
+            if (!pipelineIds.contains(id)) {
+                pipelineIds[id].push_back(material.id);
+                materialsUpdated = true;
+            }
+        }
+
+        for (const auto& pipelineId : nodePipelineIds) {
+            if (haveShaderMaterial) {
+                addInstance(pipelineId, meshInstance, shaderMaterialPipelinesData);
+            } else if (haveTransparentMaterial) {
+                addInstance(pipelineId, meshInstance, transparentPipelinesData);
+            } else {
+                addInstance(pipelineId, meshInstance, opaquePipelinesData);
+            }
+        }
+    }
+
+    void SceneFrameData::updateInstance(const MeshInstance* meshInstance) {
+        assert([&]{ return meshInstancesDataMemoryBlocks.contains(meshInstance); },
+"MeshInstance does not belong to the scene");
+        const auto meshInstanceData = meshInstance->getData();
+        meshInstancesDataArray.write(meshInstancesDataMemoryBlocks[meshInstance], &meshInstanceData);
+        meshInstancesDataUpdated = true;
+    }
+
+    void SceneFrameData::addInstance(
+        pipeline_id pipelineId,
+        const MeshInstance*& meshInstance,
+        std::unordered_map<uint32, std::unique_ptr<GraphicPipelineData>>& pipelinesData) {
+        if (!pipelinesData.contains(pipelineId)) {
+            pipelinesData[pipelineId] = std::make_unique<GraphicPipelineData>(
+                ctx, pipelineId, meshInstancesDataArray, maxMeshSurfacePerPipeline);
+        }
+        pipelinesData[pipelineId]->addInstance(meshInstance, meshInstancesDataMemoryBlocks);
+    }
+
+    void SceneFrameData::removeInstance(const MeshInstance* meshInstance) {
+        assert([&]{ return meshInstancesDataMemoryBlocks.contains(meshInstance); },
+            "MeshInstance does not belong to the scene");
+        for (const auto& pipelineId : std::views::keys(pipelineIds)) {
+            if (shaderMaterialPipelinesData.contains(pipelineId)) {
+                shaderMaterialPipelinesData[pipelineId]->removeInstance(meshInstance);
+            }
+            if (transparentPipelinesData.contains(pipelineId)) {
+                transparentPipelinesData[pipelineId]->removeInstance(meshInstance);
+            }
+            if (opaquePipelinesData.contains(pipelineId)) {
+                opaquePipelinesData[pipelineId]->removeInstance(meshInstance);
+            }
+        }
+        meshInstancesDataArray.free(meshInstancesDataMemoryBlocks.at(meshInstance));
+        meshInstancesDataMemoryBlocks.erase(meshInstance);
+        meshInstancesDataUpdated = true;
+    }
+
+    void SceneFrameData::drawOpaquesModels(
+        vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::shared_ptr<vireo::GraphicPipeline>>& pipelines) const {
+        if (opaquePipelinesData.empty()) { return; }
+        drawModels(commandList, pipelines, opaquePipelinesData);
+    }
+
+    void SceneFrameData::drawTransparentModels(
+        vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::shared_ptr<vireo::GraphicPipeline>>& pipelines) const {
+        if (transparentPipelinesData.empty()) { return; }
+        drawModels(commandList, pipelines, transparentPipelinesData);
+    }
+
+    void SceneFrameData::drawShaderMaterialModels(
+        vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::shared_ptr<vireo::GraphicPipeline>>& pipelines) const {
+        if (shaderMaterialPipelinesData.empty()) { return; }
+        drawModels(commandList, pipelines, shaderMaterialPipelinesData);
+    }
+
+
+    void SceneFrameData::drawModels(
+        vireo::CommandList& commandList,
+        const uint32 set,
+        const std::map<pipeline_id, std::shared_ptr<vireo::Buffer>>& culledDrawCommandsBuffers,
+        const std::map<pipeline_id, std::shared_ptr<vireo::Buffer>>& culledDrawCommandsCountBuffers,
+        const std::map<pipeline_id, std::shared_ptr<FrustumCulling>>& frustumCullingPipelines) const {
+        for (const auto& [pipelineId, pipelineData] : opaquePipelinesData) {
+            if (pipelineData->drawCommandsCount == 0 ||
+                frustumCullingPipelines.at(pipelineId)->getDrawCommandsCount() == 0) { continue; }
+            commandList.bindDescriptor(pipelineData->descriptorSet, set);
+            // commandList.drawIndexedIndirect(
+                // pipelineData->drawCommandsBuffer,
+                // 0,
+                // pipelineData->drawCommandsCount,
+                // sizeof(DrawCommand),
+                // sizeof(uint32));
+            commandList.drawIndexedIndirectCount(
+                culledDrawCommandsBuffers.at(pipelineId),
+                0,
+                culledDrawCommandsCountBuffers.at(pipelineId),
+                0,
+                pipelineData->drawCommandsCount,
+                sizeof(DrawCommand),
+                sizeof(uint32));
+        }
+        for (const auto& [pipelineId, pipelineData] : shaderMaterialPipelinesData) {
+            if (pipelineData->drawCommandsCount == 0 ||
+                frustumCullingPipelines.at(pipelineId)->getDrawCommandsCount() == 0) { continue; }
+            commandList.bindDescriptor(pipelineData->descriptorSet, set);
+            commandList.drawIndexedIndirectCount(
+                culledDrawCommandsBuffers.at(pipelineId),
+                0,
+                culledDrawCommandsCountBuffers.at(pipelineId),
+                0,
+                pipelineData->drawCommandsCount,
+                sizeof(DrawCommand),
+                sizeof(uint32));
+        }
+        for (const auto& [pipelineId, pipelineData] : transparentPipelinesData) {
+            if (pipelineData->drawCommandsCount == 0 ||
+                frustumCullingPipelines.at(pipelineId)->getDrawCommandsCount() == 0) { continue; }
+            commandList.bindDescriptor(pipelineData->descriptorSet, set);
+            commandList.drawIndexedIndirectCount(
+                culledDrawCommandsBuffers.at(pipelineId),
+                0,
+                culledDrawCommandsCountBuffers.at(pipelineId),
+                0,
+                pipelineData->drawCommandsCount,
+                sizeof(DrawCommand),
+                sizeof(uint32));
+        }
+    }
+
+    void SceneFrameData::drawModels(
+        vireo::CommandList& commandList,
+        const std::unordered_map<uint32, std::shared_ptr<vireo::GraphicPipeline>>& pipelines,
+        const std::unordered_map<uint32, std::unique_ptr<GraphicPipelineData>>& pipelinesData) const {
+        for (const auto& [pipelineId, pipelineData] : pipelinesData) {
+            if (pipelineData->drawCommandsCount == 0 ||
+                pipelineData->frustumCullingPipeline.getDrawCommandsCount() == 0) { continue; }
+            const auto& pipeline = pipelines.at(pipelineId);
+            commandList.bindPipeline(pipeline);
+            commandList.bindDescriptors({
+                ctx.globalDescriptorSet,
+                ctx.samplers.getDescriptorSet(),
+                descriptorSet,
+                pipelineData->descriptorSet,
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+                descriptorSetOpt1,
+#endif
+            });
+
+            commandList.drawIndexedIndirectCount(
+                pipelineData->culledDrawCommandsBuffer,
+                0,
+                pipelineData->culledDrawCommandsCountBuffer,
+                0,
+                pipelineData->drawCommandsCount,
+                sizeof(DrawCommand),
+                sizeof(uint32));
+        }
+    }
+
+    void SceneFrameData::enableLightShadowCasting(const Light* light) {
+        if (light->castShadows && !shadowMapRenderers.contains(light) && (shadowMapRenderers.size() < ctx.config.maxShadowMapsPerScene)) {
+            const auto shadowMapRenderer = std::make_shared<ShadowMapPass>(
+                ctx,
+                light,
+                meshInstancesDataArray,
+                maxMeshSurfacePerPipeline);
+            // Log::info("enableLightShadowCasting for #", std::to_string(light->id));
+            materialsUpdated = true; // force update pipelines
+            shadowMapRenderers[light] = shadowMapRenderer;
+            const auto blankImage = ctx.res.get<ImageManager>().getBlankImage();
+            for (uint32 index = 0; index < shadowMaps.size(); index += 6) {
+                if (shadowMaps[index] == blankImage) {
+                    shadowMapIndex[light] = index;
+                    for (int i = 0; i < shadowMapRenderer->getShadowMapCount(); i++) {
+                        shadowMaps[index + i] = shadowMapRenderer->getShadowMap(i)->getImage();
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+                        shadowTransparencyColorMaps[index + i] = shadowMapRenderer->getTransparencyColorMap(i)->getImage();
+#endif
+                    }
+                    shadowMapsUpdated = true;
+                    return;
+                }
+            }
+            throw Exception("Out of memory for shadow map");
+        }
+    }
+
+    void SceneFrameData::disableLightShadowCasting(const Light* light) {
+        if (shadowMapRenderers.contains(light)) {
+            // Log::info("disableLightShadowCasting for #", std::to_string(light->id));
+            const auto& shadowMapRenderer = std::static_pointer_cast<ShadowMapPass>(shadowMapRenderers.at(light));
+            const auto index = shadowMapIndex[light];
+            const auto& blankImage = ctx.res.get<ImageManager>().getBlankImage();
+            for (int i = 0; i < shadowMapRenderer->getShadowMapCount(); i++) {
+                shadowMaps[index + i] = blankImage;
+#ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
+                shadowTransparencyColorMaps[index + i] = blankImage;
+#endif
+            }
+            shadowMapsUpdated = true;
+            shadowMapIndex.erase(light);
+            shadowMapRenderers.erase(light);
+        }
+    }
+
+
+}

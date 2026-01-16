@@ -1,0 +1,68 @@
+/*
+ * Copyright (c) 2025-present Henri Michelon
+ * 
+ * This software is released under the MIT License.
+ * https://opensource.org/licenses/MIT
+*/
+module;
+module lysa.resources.mesh_instance;
+
+namespace lysa {
+
+    MeshInstance::MeshInstance(
+          const Context& ctx,
+          const Mesh& mesh,
+          const std::string& name) :
+          materialManager(ctx.res.get<MaterialManager>()),
+          meshManager(ctx.res.get<MeshManager>()),
+          mesh(mesh),
+          name(name) {
+        meshManager.use(mesh.id);
+    }
+
+    MeshInstance::MeshInstance(const MeshInstance& mi, const std::string& name) :
+        materialManager(materialManager),
+        meshManager(meshManager),
+        mesh(mi.mesh),
+        name(name),
+        visible(mi.visible),
+        castShadows(mi.castShadows),
+        worldAABB(mi.worldAABB),
+        worldTransform(mi.worldTransform) {
+        meshManager.use(mesh.id);
+    }
+
+    MeshInstance::MeshInstance(const MeshInstance& orig) :
+        materialManager(orig.materialManager),
+        meshManager(orig.meshManager),
+        mesh(orig.mesh),
+        name(orig.name),
+        visible(orig.visible),
+        castShadows(orig.castShadows),
+        worldAABB(orig.worldAABB),
+        worldTransform(orig.worldTransform) {
+        meshManager.use(mesh.id);
+    }
+
+    MeshInstance::~MeshInstance() {
+        meshManager.destroy(mesh.id);
+    }
+
+    unique_id MeshInstance::getSurfaceMaterial(const uint32 surfaceIndex) const {
+        if (materialsOverride.contains(surfaceIndex)) {
+            return materialsOverride.at(surfaceIndex);
+        }
+        return mesh.getSurfaces()[surfaceIndex].material;
+    }
+
+    MeshInstanceData MeshInstance::getData() const {
+        return {
+            .transform = worldTransform,
+            .aabbMin = worldAABB.min,
+            .aabbMax = worldAABB.max,
+            .visible = visible ? 1u : 0u,
+            .castShadows = castShadows ? 1u : 0u,
+        };
+    }
+
+}

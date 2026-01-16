@@ -1,0 +1,132 @@
+/*
+* Copyright (c) 2025-present Henri Michelon
+*
+* This software is released under the MIT License.
+* https://opensource.org/licenses/MIT
+*/
+module;
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+}
+export module lysa.lua;
+
+export import lua_bridge; // from Vireo
+
+import lysa.context;
+import lysa.exception;
+import lysa.types;
+
+export namespace lysa {
+
+    /**
+     * Configuration options for Lua integration and tooling.
+     */
+    struct LuaConfiguration {
+        /**
+         * Whether to start the Lua remote debugger on initialization.
+         */
+        bool startRemoteDebug{true};
+
+        /**
+         * Comma-separated list of hostnames/IPs the debugger may connect to.
+         *
+         * Multiple hosts can be provided separated by commas to allow fallback, e.g.
+         * "127.0.0.1,192.168.1.10".
+         */
+        std::string remoteDebugHosts{"127.0.0.1"};
+
+        /**
+         * TCP port used by the remote debugger server.
+         *
+         * Defaults to 8172, which is the standard port used by ZeroBrane Studio
+         */
+        uint32 remoteDebugPort{8172};
+    };
+
+    /**
+     * Wrapper around a %Lua state.
+     *
+     * @note The implementation relies on the [LuaBridge3 library](https://kunitoki.github.io/LuaBridge3/Manual)
+     */
+    class Lua {
+    public:
+        /**
+         * Returns the LuaBridge3 "lysa" namespace
+         */
+        luabridge::Namespace beginNamespace() const;
+
+        /**
+         * Returns a LuaBridge3 namespace
+         */
+        luabridge::Namespace beginNamespace(const std::string& name) const;
+
+        /**
+         * Returns a global Lua object (function, variable, ...)
+         */
+        luabridge::LuaRef getGlobal(const std::string & name) const;
+
+        /**
+         * Execute a Lua script file in the current state.
+         *
+         * @param scriptName name of the script file to execute, relative to the script directory of the VFS
+         * @param args
+         */
+        template <typename... Args>
+        luabridge::LuaRef execute(const std::string& scriptName, Args&&... args) const {
+            std::vector<char> data;
+            ctx.fs.loadScript(scriptName, data);
+            const auto script = std::string(data.begin(), data.end());
+            if (script.empty()) {
+                throw Exception("Lua error: failed to load script");
+            }
+            if (luaL_loadstring(L, script.c_str()) != LUA_OK) {
+                const char* err = lua_tostring(L, -1);
+                std::string msg = err ? err : "(unknown error)";
+                lua_pop(L, 1);
+                throw Exception("Lua error : ", msg);
+            }
+            pushSandboxEnv();
+            const char* upname = lua_setupvalue(L, -2, 1);
+            if (!upname) {
+                lua_pop(L, 1);
+                throw Exception("Lua error : _ENV missing");
+            }
+            if (lua_pcall(L, 0, 1, 0) != LUA_OK) {
+                const char* err = lua_tostring(L, -1);
+                std::string msg = err ? err : "(unknown error)";
+                lua_pop(L, 1);
+                throw Exception("Lua error : ", msg);
+            }
+            const auto factory = luabridge::LuaRef::fromStack(L, -1);
+            const auto result = factory(ctx, std::forward<Args>(args)...);
+            if (result.wasOk()) {
+                if (result[0].isTable()) {
+                    return result[0];
+                }
+                throw Exception("Error executing the Lua script " + scriptName + " : incorrect return type");
+            }
+            throw Exception("Error executing the Lua script " + scriptName + " : " + result.errorMessage());
+        }
+
+        void pushSandboxEnv() const;
+
+        void collectGarbage() const {
+            lua_gc(L, LUA_GCCOLLECT);
+        }
+
+        Lua(Context& ctx, const LuaConfiguration& luaConfiguration);
+
+        ~Lua();
+
+        lua_State* get() const { return L; }
+
+    private:
+        Context& ctx;
+        lua_State* L;
+
+        void bind();
+    };
+
+}
