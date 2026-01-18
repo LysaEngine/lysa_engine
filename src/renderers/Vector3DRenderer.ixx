@@ -5,7 +5,7 @@
 * https://opensource.org/licenses/MIT
 */
 module;
-#include <cstdlib>
+#include <cstddef>
 export module lysa.renderers.vector_3d;
 
 import vireo;

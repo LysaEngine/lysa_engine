@@ -266,15 +266,6 @@ export namespace lysa {
 
         AssetsPack() = default;
 
-        static void print(const Header& header);
-        static void print(const ImageHeader& header);
-        static void print(const MipLevelInfo& header);
-        static void print(const TextureHeader& header);
-        static void print(const MaterialHeader& header);
-        static void print(const MeshHeader& header);
-        static void print(const SurfaceInfo& header);
-        static void print(const DataInfo& header);
-
     private:
         Header header{};;
 

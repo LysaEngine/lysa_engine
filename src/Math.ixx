@@ -4,6 +4,10 @@
  * This software is released under the MIT License.
  * https://opensource.org/licenses/MIT
 */
+module;
+#if defined(__clang__) || defined(__GNUG__)
+#include <x86intrin.h>
+#endif
 export module lysa.math;
 
 

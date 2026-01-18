@@ -20,6 +20,8 @@ export namespace lysa {
     using int32 = std::int32_t;
     using int64 = std::int64_t;
 
+    using size_t = std::size_t;
+
     using unique_id = int64;
     using pipeline_id = uint32;
 

@@ -62,7 +62,11 @@ namespace lysa {
             using namespace std::chrono;
             const auto in_time_t = system_clock::to_time_t(system_clock::now());
             std::tm tm;
+#ifdef _WIN32
             localtime_s(&tm, &in_time_t);
+#else
+            localtime_r(&in_time_t, &tm);
+#endif
             std::string item = std::format("{:02}:{:02}:{:02}", tm.tm_hour, tm.tm_min, tm.tm_sec);
             item.append(" ");
             switch (level) {

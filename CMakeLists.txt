@@ -24,7 +24,7 @@ set(LYSA_ENGINE_TARGET ${PROJECT_NAME})
 if (NOT LYSA_ENGINE_AS_DEPENDENCY)
     message("Building Lysa Engine as standalone project")
     set(DIRECTX_BACKEND ON)
-    set(LUA_BINDING ON)
+    set(LUA_BINDING OFF)
     set(FORWARD_RENDERER ON)
     set(DEFERRED_RENDERER ON)
 endif()
@@ -61,6 +61,9 @@ if(WIN32)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
     endif ()
     add_compile_definitions(UNICODE _UNICODE)
+elseif (LINUX AND NOT APPLE)
+    set(USE_SDL3 ON)
+    add_compile_definitions(USE_SDL3)
 endif ()
 
 #######################################################
@@ -353,9 +356,11 @@ if(LUA_BINDING)
     )
 endif ()
 add_dependencies(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET})
-target_precompile_headers(${LYSA_ENGINE_TARGET} PRIVATE
-    "<intrin.h>"
-)
+if(WIN32)
+    target_precompile_headers(${LYSA_ENGINE_TARGET} PRIVATE
+        "<intrin.h>"
+    )
+endif ()
 set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 #######################################################
@@ -371,6 +376,9 @@ if(WIN32)
     set_target_properties(${LYSA_ENGINE_TARGET} PROPERTIES
             WIN32_EXECUTABLE TRUE)
 endif()
+if (UNIX AND NOT APPLE)
+    target_compile_options(${LYSA_ENGINE_TARGET} PRIVATE -stdlib=libc++)
+endif ()
 
 #######################################################
 find_program(DOXYPRESS_EXECUTABLE doxypress)

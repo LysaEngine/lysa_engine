@@ -114,12 +114,7 @@ namespace lysa {
     }
 
     bool dir_exists(const std::string& dirName) {
-        if constexpr (is_windows()) {
-            const DWORD ftyp = GetFileAttributesA(dirName.c_str());
-            return (ftyp != INVALID_FILE_ATTRIBUTES) && (ftyp & FILE_ATTRIBUTE_DIRECTORY);
-        } else {
-            throw Exception("Not implemented");
-        }
+        return std::filesystem::exists(dirName) && std::filesystem::is_directory(dirName);
     }
 
     std::string to_hexstring(const void* ptr) {
