@@ -16,7 +16,7 @@ namespace lysa {
     RenderTarget::RenderTarget(
         Context& ctx,
         const RenderTargetConfiguration& configuration,
-        const RenderingWindowHandle renderingWindowHandle) :
+        const vireo::PlatformWindowHandle renderingWindowHandle) :
         ctx(ctx),
         rendererConfiguration(configuration.rendererConfiguration) {
         if (renderingWindowHandle == nullptr) {

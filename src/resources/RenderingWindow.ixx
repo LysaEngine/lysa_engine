@@ -120,7 +120,7 @@ export namespace lysa {
 
         void setTitle(const std::string& title) const;
 
-        RenderingWindowHandle getHandle() const { return handle; }
+        vireo::PlatformWindowHandle getHandle() const { return handle; }
 
         /**
           * Sets the mouse visibility and capture mode
@@ -181,14 +181,14 @@ export namespace lysa {
 
     private:
         // Platform specific handle/ID
-        RenderingWindowHandle handle{nullptr};
+        vireo::PlatformWindowHandle handle{nullptr};
         //! Associated render target
         RenderTarget renderTarget;
         //! True once the platform window has been requested to close
         bool closed{false};
         Rect rect;
 
-        RenderingWindowHandle openPlatformWindow(const RenderingWindowConfiguration& config);
+        vireo::PlatformWindowHandle openPlatformWindow(const RenderingWindowConfiguration& config);
     };
 
 

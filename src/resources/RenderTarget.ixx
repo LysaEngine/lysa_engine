@@ -42,15 +42,12 @@ export namespace lysa {
         static constexpr auto RESIZED{"RENDERING_TARGET_RESIZED"};
     };
 
-    //! Platform specific handle/ID
-    using RenderingWindowHandle = void*;
-
     class RenderTarget : public UniqueResource {
     public:
         RenderTarget(
             Context& ctx,
             const RenderTargetConfiguration& configuration,
-            RenderingWindowHandle renderingWindowHandle);
+            vireo::PlatformWindowHandle renderingWindowHandle);
 
         ~RenderTarget() override;
 
