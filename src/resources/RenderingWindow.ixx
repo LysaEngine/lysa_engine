@@ -180,7 +180,7 @@ export namespace lysa {
 #endif
 
     private:
-        // Platform specific handle/ID
+        // Platform-specific handle/ID
         vireo::PlatformWindowHandle handle{nullptr};
         //! Associated render target
         RenderTarget renderTarget;

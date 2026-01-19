@@ -154,6 +154,16 @@ if(WIN32)
     )
     set(WIN32_MODULES ""
     )
+elseif (UNIX AND NOT APPLE)
+    set(POSIX_SRC
+            ${ENGINE_SRC_DIR}/platform/posix/Main.cpp
+#            ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
+    )
+    set(POSIX_MODULES ""
+    )
 endif ()
 
 #######################################################
@@ -252,6 +262,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
 
+        ${POSIX_SRC}
         ${WIN32_SRC}
         ${PHYSICS_SRC}
         ${LUA_BINDINGS_SRC}
@@ -324,6 +335,7 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
 
+        ${POSIX_MODULES}
         ${WIN32_MODULES}
         ${PHYSICS_MODULES}
         ${LUA_BINDINGS_MODULES}

@@ -44,7 +44,16 @@ namespace  lysa {
 #endif
             break;
         case vireo::DebugLevel::ERROR:
+#ifdef _WIN32
+            if (IsDebuggerPresent()) {
+                OutputDebugStringA(message.c_str());
+                OutputDebugStringA("\n");
+            } else {
+                Log::error(message);
+            }
+#else
             Log::error(message);
+#endif
             break;
         }
     }
