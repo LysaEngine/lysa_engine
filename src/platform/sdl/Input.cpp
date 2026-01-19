@@ -40,7 +40,7 @@ namespace lysa {
     }
 
     std::string Input::getJoypadName(const uint32 index) {
-        return "??";
+        return "";
     }
 
     float2 Input::getKeyboardVector(const Key keyNegX, const Key keyPosX, const Key keyNegY, const Key keyPosY) {
