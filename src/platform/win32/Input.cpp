@@ -227,13 +227,10 @@ namespace lysa {
     }
 
     uint32 Input::getConnectedJoypads() {
-        uint32 count = 0;
-        if (useXInput) {
-            count = _xinputStates.size();
-        } else {
-            count = _directInputStates.size();
-        }
-        return count;
+        int count = 0;
+        auto* gamepads = SDL_GetGamepads(&count);
+        SDL_free(gamepads);
+        return static_cast<uint32_t>(count);
     }
 
     bool Input::isGamepad(const uint32 index) {
@@ -251,21 +248,6 @@ namespace lysa {
         }
     }
 
-    void Input::generateGamepadButtonEvent(RenderingWindow& window, const GamepadButton button, const bool pressed) {
-        if (pressed && (!gamepadButtonPressedStates[button])) {
-            gamepadButtonJustPressedStates[button] = true;
-            gamepadButtonJustReleasedStates[button] = false;
-            auto event = InputEventGamepadButton(button, pressed);
-            window._input({InputEventType::GAMEPAD_BUTTON, event});
-        }
-        if ((!pressed) && (gamepadButtonPressedStates[button])) {
-            gamepadButtonJustPressedStates[button] = false;
-            gamepadButtonJustReleasedStates[button] = true;
-            auto event = InputEventGamepadButton(button, pressed);
-            window._input({InputEventType::GAMEPAD_BUTTON, event});
-        }
-        gamepadButtonPressedStates[button] = pressed;
-    }
 
     void Input::_updateInputStates(RenderingWindow& window) {
         if (useXInput) {
@@ -365,14 +347,6 @@ namespace lysa {
             return _directInputStates[index].name;
         }
         return "??";
-    }
-
-    float2 Input::getKeyboardVector(const Key keyNegX, const Key keyPosX, const Key keyNegY, const Key keyPosY) {
-        const auto  x = keyPressedStates[keyNegX] ? -1 : keyPressedStates[keyPosX] ? 1 : 0;
-        const auto  y = keyPressedStates[keyNegY] ? -1 : keyPressedStates[keyPosY] ? 1 : 0;
-        const float2  vector{x, y};
-        const float l = length(vector);
-        return (l > 1.0f) ? vector / l : vector;
     }
 
     std::string Input::keyToChar(const Key key) {

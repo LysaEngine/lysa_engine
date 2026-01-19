@@ -16,6 +16,8 @@ import lysa.utils;
 
 namespace lysa {
 
+    std::map<MouseCursor, SDL_Cursor *> RenderingWindow::_mouseCursors;
+
     void RenderingWindow::show() const {
         if (!SDL_ShowWindow(handle)) {
             throw Exception("Error SDL_ShowWindow : ", SDL_GetError());
@@ -23,12 +25,35 @@ namespace lysa {
     }
 
     void RenderingWindow::close() const {
-        if (SDL_GetWindowFromID(windowId)) {
+        if (SDL_GetWindowFromID(_windowId)) {
             SDL_DestroyWindow(handle);
         }
     }
 
+    bool RenderingWindow::isMinimized() const {
+        const auto flags = SDL_GetWindowFlags(handle);
+        return (flags & SDL_WINDOW_MINIMIZED) != 0;
+    }
+
+    RenderingWindow* RenderingWindow::_getFromId(const SDL_WindowID windowId) {
+        const auto window = SDL_GetWindowFromID(windowId);
+        if (window) {
+            return static_cast<RenderingWindow*>(SDL_GetPointerProperty(
+                SDL_GetWindowProperties(window),
+                _USER_DATA_PROPERTY_NAME,
+                nullptr));
+        }
+        return nullptr;
+    }
+
     vireo::PlatformWindowHandle RenderingWindow::openPlatformWindow(const RenderingWindowConfiguration& config) {
+        if (_mouseCursors.empty()) {
+            _mouseCursors[MouseCursor::ARROW]    = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_DEFAULT);
+            _mouseCursors[MouseCursor::WAIT]     = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_WAIT);
+            _mouseCursors[MouseCursor::RESIZE_H] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_EW_RESIZE);
+            _mouseCursors[MouseCursor::RESIZE_V] = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_NS_RESIZE);
+        }
+
         SDL_WindowFlags flags = SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN;
         int w = config.width;
         int h = config.height;
@@ -72,50 +97,99 @@ namespace lysa {
             static_cast<float>(w),
             static_cast<float>(h)
         };
-        windowId = SDL_GetWindowID(window);
-        SDL_SetPointerProperty(SDL_GetWindowProperties(window), USER_DATA_PROPERTY_NAME, this);
+        SDL_StartTextInput(window);
+        _windowId = SDL_GetWindowID(window);
+        SDL_SetPointerProperty(SDL_GetWindowProperties(window), _USER_DATA_PROPERTY_NAME, this);
         return window;
     }
 
+    void RenderingWindow::_processEvent(const SDL_Event& event) {
+        switch (event.type) {
+            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:{
+                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+                if (renderingWindow) {
+                    renderingWindow->_closing();
+                }
+                break;
+            }
+            case SDL_EVENT_WINDOW_MINIMIZED:{
+                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+                if (renderingWindow) {
+                    renderingWindow->setPause(renderingWindow->isMinimized());
+                }
+            }
+            case SDL_EVENT_WINDOW_RESIZED:
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+                if (renderingWindow) {
+                    if (renderingWindow->isMinimized()) {
+                        renderingWindow->setPause(true);
+                    } else {
+                        renderingWindow->setPause(false);
+                        int x, y, w, h;
+                        SDL_GetWindowPosition(renderingWindow->getHandle(), &x, &y);
+                        SDL_GetWindowSize(renderingWindow->getHandle(), &w, &h);
+                        renderingWindow->_resized({
+                            static_cast<float>(x),
+                            static_cast<float>(y),
+                        static_cast<float>(w),
+                        static_cast<float>(h)});
+                    }
+                }
+                break;
+            }
+        default:
+            break;
+        }
+    }
+
     void RenderingWindow::setTitle(const std::string& title) const {
+        SDL_SetWindowTitle(handle, title.c_str());
     }
 
     float2 RenderingWindow::getMousePosition() const {
-        return { };
+        float x, y;
+        SDL_GetMouseState(&x, &y);
+        return { x, y };
     }
 
     void RenderingWindow::setMousePosition(const float2& position) const {
+        SDL_WarpMouseInWindow(handle, position.x, position.y);
     }
 
     void RenderingWindow::setMouseCursor(const MouseCursor cursor) const {
+        SDL_SetCursor(_mouseCursors[cursor]);
     }
 
     void RenderingWindow::resetMousePosition() const {
+        _resettingMousePosition = true;
+        int w, h;
+        SDL_GetWindowSize(handle, &w, &h);
+        SDL_WarpMouseInWindow(handle, static_cast<float>(w) / 2.0f, static_cast<float>(h) / 2.0f);
     }
 
     bool RenderingWindow::isMouseHidden() const {
-        return false;
+        return !SDL_CursorVisible();;
     }
 
     void RenderingWindow::setMouseMode(const MouseMode mode) const {
-        // while (PeekMessageW(&msg, handle, 0, 0, PM_REMOVE)) {
-            // TranslateMessage(&msg);
-            // DispatchMessageW(&msg);
-        // }
+        SDL_SetWindowRelativeMouseMode(handle, false);
+        SDL_SetWindowMouseGrab(handle, false);
+        SDL_ShowCursor();
         switch (mode) {
         case MouseMode::VISIBLE:
             resetMousePosition();
             break;
         case MouseMode::HIDDEN:
+            SDL_HideCursor();
             break;
-        case MouseMode::VISIBLE_CAPTURED: {
+        case MouseMode::VISIBLE_CAPTURED:
+            SDL_SetWindowMouseGrab(handle, true);
             resetMousePosition();
             break;
-        }
-        case MouseMode::HIDDEN_CAPTURED: {
-            resetMousePosition();
+        case MouseMode::HIDDEN_CAPTURED:
+            SDL_SetWindowRelativeMouseMode(handle, true);
             break;
-        }
         default:
             throw Exception("Unknown mouse mode");
         }

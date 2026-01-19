@@ -27,6 +27,8 @@ export namespace lysa {
         MOUSE_BUTTON = 2,
         //! A gamepad button have been pressed or released
         GAMEPAD_BUTTON = 3,
+        //! User input
+        TEXT_INPUT = 4,
     };
 
 
@@ -40,6 +42,8 @@ export namespace lysa {
         CONTROL = 0x0002,
         //! Left & right alt keys
         ALT = 0x0004,
+        //! Super/Windows key
+        SUPER  = 0x0008,
     };
 
     /**
@@ -585,6 +589,13 @@ export namespace lysa {
     };
 
     /**
+     * User input event
+     */
+    struct InputEventTextInput {
+        std::string text;
+    };
+
+    /**
      * Keyboard input event
      */
     struct InputEventKey {
@@ -680,7 +691,7 @@ export namespace lysa {
         /**
          * The event data
          */
-        std::variant<InputEventKey, InputEventGamepadButton, InputEventMouseButton, InputEventMouseMotion> data;
+        std::variant<InputEventKey, InputEventGamepadButton, InputEventMouseButton, InputEventMouseMotion, InputEventTextInput> data;
     };
 
 

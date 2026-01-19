@@ -19,25 +19,25 @@ namespace lysa {
             case SDL_EVENT_QUIT:
                 ctx.exit = true;
                 break;
-            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:{
-                const auto window = SDL_GetWindowFromID(event.window.windowID);
-                if (window) {
-                    auto* renderingWindow = static_cast<RenderingWindow*>(SDL_GetPointerProperty(
-                        SDL_GetWindowProperties(window),
-                        RenderingWindow::USER_DATA_PROPERTY_NAME,
-                        nullptr));
-                    if (renderingWindow) {
-                        renderingWindow->_closing();
-                    }
-                }
-                break;
-            }
+            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            case SDL_EVENT_WINDOW_MINIMIZED:
             case SDL_EVENT_WINDOW_RESIZED:
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                RenderingWindow::_processEvent(event);
                 break;
+            case SDL_EVENT_TEXT_INPUT:
             case SDL_EVENT_KEY_DOWN:
-                break;
             case SDL_EVENT_KEY_UP:
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+            case SDL_EVENT_MOUSE_MOTION:
+            case SDL_EVENT_MOUSE_WHEEL:
+            case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            case SDL_EVENT_GAMEPAD_ADDED:
+            case SDL_EVENT_GAMEPAD_REMOVED:
+                Input::_processEvent(event);
                 break;
             default:
                 break;

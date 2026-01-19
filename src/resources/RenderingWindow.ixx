@@ -5,6 +5,7 @@
 * https://opensource.org/licenses/MIT
 */
 module;
+#include "SDL3/SDL_events.h"
 #ifdef _WIN32
 #include <windows.h>
 #elifdef USE_SDL3
@@ -167,22 +168,20 @@ export namespace lysa {
 
         bool isPaused() const { return renderTarget.isPaused(); }
 
+        bool isMinimized() const;
+
         void _closing();
 
         void _resized(const Rect& rect);
 
         void _input(const InputEvent& inputEvent) const;
 
-#ifdef _WIN32
-        RECT _rect{};
+#ifdef USE_SDL3
+        static RenderingWindow* _getFromId(SDL_WindowID windowId);
+        static void _processEvent(const SDL_Event& event);
+#endif
         /** Internal flag used to suppress synthetic mouse‑move feedback. */
         static bool _resettingMousePosition;
-        /** Cached OS cursors per MouseCursor enum value. */
-        static std::map<MouseCursor, HCURSOR> _mouseCursors;
-#elifdef USE_SDL3
-        static constexpr auto USER_DATA_PROPERTY_NAME = "renderingWindow";
-        SDL_WindowID windowId;
-#endif
 
     private:
         // Platform-specific handle/ID
@@ -192,6 +191,16 @@ export namespace lysa {
         //! True once the platform window has been requested to close
         bool closed{false};
         Rect rect;
+#ifdef _WIN32
+        RECT _rect{};
+        /** Cached OS cursors per MouseCursor enum value. */
+        static std::map<MouseCursor, HCURSOR> _mouseCursors;
+#elifdef USE_SDL3
+        static constexpr auto _USER_DATA_PROPERTY_NAME = "renderingWindow";
+        SDL_WindowID _windowId;
+        /** Cached OS cursors per MouseCursor enum value. */
+        static std::map<MouseCursor, SDL_Cursor*> _mouseCursors;
+#endif
 
         vireo::PlatformWindowHandle openPlatformWindow(const RenderingWindowConfiguration& config);
     };

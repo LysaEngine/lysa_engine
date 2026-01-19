@@ -15,7 +15,6 @@ import lysa.utils;
 
 namespace lysa {
 
-    bool RenderingWindow::_resettingMousePosition{false};
 
     std::map<MouseCursor, HCURSOR> RenderingWindow::_mouseCursors;
 
@@ -37,6 +36,10 @@ namespace lysa {
 
     void RenderingWindow::close() const {
         PostMessage(handle, WM_CLOSE, 0, 0);
+    }
+
+    bool RenderingWindow::isMinimized() const {
+        return IsIconic(handle);
     }
 
     vireo::PlatformWindowHandle RenderingWindow::openPlatformWindow(const RenderingWindowConfiguration& config) {
@@ -153,7 +156,7 @@ namespace lysa {
         }
         switch (message) {
         case WM_SIZE:
-            if (IsIconic(hWnd)) {
+            if (window->isMinimized()) {
                 window->setPause(true);
             } else {
                 window->setPause(false);

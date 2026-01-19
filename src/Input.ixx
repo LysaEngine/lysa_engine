@@ -9,6 +9,8 @@ module;
 #define DIRECTINPUT_VERSION 0x0800
 #include <windows.h>
 #include <dinput.h>
+#elifdef USE_SDL3
+#include <SDL3/SDL_events.h>
 #endif
 export module lysa.input;
 
@@ -185,13 +187,13 @@ export namespace lysa {
          */
         static bool isAction(const std::string& actionName, const InputEvent &inputEvent);
 
-        static std::string keyToChar(Key key);
-
 #ifdef _WIN32
         /* Updates all input states for the given window (Win32 message pump tick). */
         static void _updateInputStates(RenderingWindow& window);
         /* Win32 window procedure used to intercept input messages. */
         static LRESULT CALLBACK _windowProcedure(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+#elifdef USE_SDL3
+        static void _processEvent(const SDL_Event& event);
 #endif
 
     private:
@@ -233,7 +235,7 @@ export namespace lysa {
         static float applyDeadzone(float value, float deadzonePercent);
 
         /* Emits a synthetic gamepad button event toward the window/event system. */
-        static void generateGamepadButtonEvent(RenderingWindow& window, GamepadButton,bool);
+        static void generateGamepadButtonEvent(const RenderingWindow& window, GamepadButton,bool);
 
 #ifdef _WIN32
         // DirectInput axis range (symmetric); used for normalization.
@@ -246,6 +248,8 @@ export namespace lysa {
         static BOOL CALLBACK deviceObjectCallback(const DIDEVICEOBJECTINSTANCEW *doi, void *user);
         /* DirectInput enumeration callback for gamepad devices. */
         static BOOL CALLBACK enumGamepadsCallback(const DIDEVICEINSTANCE *pdidInstance, VOID *pContext);
+#elifdef USE_SDL3
+        static std::map<SDL_JoystickID, SDL_Gamepad*> _activeGamepads;
 #endif
     };
 
