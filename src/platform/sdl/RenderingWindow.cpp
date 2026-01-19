@@ -16,9 +16,13 @@ import lysa.utils;
 namespace lysa {
 
     void RenderingWindow::show() const {
+        if (!SDL_ShowWindow(handle)) {
+            throw Exception("Error SDL_ShowWindow : ", SDL_GetError());
+        }
     }
 
     void RenderingWindow::close() const {
+        SDL_DestroyWindow(handle);
     }
 
     vireo::PlatformWindowHandle RenderingWindow::openPlatformWindow(const RenderingWindowConfiguration& config) {

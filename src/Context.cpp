@@ -19,6 +19,7 @@ namespace  lysa {
     void vireoDebugCallback(const vireo::DebugLevel level, const std::string& message) {
         switch (level) {
         case vireo::DebugLevel::VERBOSE:
+            break;
         case vireo::DebugLevel::INFO:
 #ifdef _WIN32
             if (IsDebuggerPresent()) {
