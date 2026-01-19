@@ -22,26 +22,50 @@ namespace lysa {
     }
 
     vireo::PlatformWindowHandle RenderingWindow::openPlatformWindow(const RenderingWindowConfiguration& config) {
-
-        if (config.mode == RenderingWindowMode::FULLSCREEN) {
-
+        SDL_WindowFlags flags = SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN;
+        int w = config.width;
+        int h = config.height;
+        if (w == 0 || h == 0 || config.mode == RenderingWindowMode::WINDOWED_FULLSCREEN || config.mode == RenderingWindowMode::FULLSCREEN) {
+            flags |= SDL_WINDOW_FULLSCREEN;
+            const auto mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+            if (!mode) {
+                throw Exception("Error SDL_GetCurrentDisplayMode : ", SDL_GetError());
+            }
+            w = mode->w;
+            h = mode->h;
         }
-        // if (w == 0 || h == 0 || config.mode != RenderingWindowMode::WINDOWED) {
-            // if (config.mode == RenderingWindowMode::WINDOWED_FULLSCREEN || config.mode == RenderingWindowMode::FULLSCREEN) {
-            // } else {
-            // }
-
-        // }
-        if (config.mode == RenderingWindowMode::WINDOWED || config.mode == RenderingWindowMode::WINDOWED_MAXIMIZED) {
-
+        if (config.mode == RenderingWindowMode::WINDOWED) {
+            flags |= SDL_WINDOW_RESIZABLE;
+        }
+        else if (config.mode == RenderingWindowMode::WINDOWED_MAXIMIZED) {
+            flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED;
+            SDL_Rect usable;
+            if (!SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable)) {
+                throw Exception("Error SDL_GetDisplayUsableBounds : ", SDL_GetError());
+            }
+            w  = usable.w;
+            h = usable.h;
         }
 
-        // if (windowId == nullptr) { throw Exception("Error creating window", std::to_string(SDL_GetError())); }
+        SDL_Window* windowId{nullptr};
+        if (!(windowId = SDL_CreateWindow(config.title.c_str(), w, h, flags))) {
+            throw vireo::Exception("Error creating SDL window : ", SDL_GetError());
+        }
 
-        rect = {
-
+        if (!SDL_GetWindowSizeInPixels(windowId, &w, &h)) {
+            throw Exception("Error SDL_GetWindowSizeInPixels : ", SDL_GetError());
+        }
+        int x, y;
+        if (!SDL_GetWindowPosition(windowId, &x, &y)) {
+            throw Exception("Error SDL_GetWindowPosition : ", SDL_GetError());
+        }
+        rect = Rect{
+            static_cast<float>(x),
+            static_cast<float>(y),
+            static_cast<float>(w),
+            static_cast<float>(h)
         };
-        return nullptr;
+        return windowId;
     }
 
     void RenderingWindow::setTitle(const std::string& title) const {

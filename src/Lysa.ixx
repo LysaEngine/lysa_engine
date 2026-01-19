@@ -86,6 +86,11 @@ export namespace  lysa {
         static inline const event_type QUIT{"MAIN_LOOP_QUIT"};
     };
 
+    struct _LysaInit {
+        _LysaInit(const LoggingConfiguration &loggingConfiguration);
+        virtual ~_LysaInit();
+    };
+
     /**
      * Main entry class of the Lysa runtime.
      *
@@ -93,18 +98,19 @@ export namespace  lysa {
      * scripting environment. It provides the run loop and basic integration
      * points for both C++ and %Lua code.
      */
-    class Lysa final {
+    class Lysa final : _LysaInit {
     public:
         //! Global runtime context (events, resources, etc.).
         Context ctx;
 
         /**
          * Construct the runtime and initialize subsystems.
-         * @param config Configuration values used during startup.
+         * @param config Global Context configuration
+         * @param loggingConfiguration Logging system configuration
          */
-        Lysa(const ContextConfiguration& config = {});
+        Lysa(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration);
 
-        ~Lysa();
+        ~Lysa() override;
 
         /**
          * Run the main loop until quit is requested.
