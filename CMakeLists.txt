@@ -347,6 +347,9 @@ target_link_libraries(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET}
         Freetype::Freetype
         harfbuzz
 )
+if (USE_SDL3)
+    target_link_libraries(${LYSA_ENGINE_TARGET} SDL3::SDL3)
+endif ()
 if(LUA_BINDING)
     target_link_libraries(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET}
         lua
