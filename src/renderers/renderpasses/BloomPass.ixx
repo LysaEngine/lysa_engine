@@ -27,7 +27,8 @@ export namespace lysa {
          */
         BloomPass(
             const Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /**
           * Updates the render pass state for the current frame

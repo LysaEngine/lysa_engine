@@ -37,7 +37,7 @@ export namespace lysa {
 
     struct RendererConfiguration {
         RendererType rendererType{static_cast<int>(RendererType::DEFERRED)};
-        //! Postprocessing & swap chain image format
+        //! Postprocessing & swap chain image format. Note that the real format can be different if the surface does not support the requested format
         vireo::ImageFormat swapChainFormat{vireo::ImageFormat::R8G8B8A8_UNORM};
         //! Main color pass frame buffer format
         vireo::ImageFormat colorRenderingFormat{vireo::ImageFormat::R16G16B16A16_UNORM};

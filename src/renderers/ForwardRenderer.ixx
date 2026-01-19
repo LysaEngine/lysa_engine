@@ -29,7 +29,8 @@ export namespace lysa {
     public:
         ForwardRenderer(
             const Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /** Updates/creates pipelines following the materials mapping. */
         void updatePipelines(

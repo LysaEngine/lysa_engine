@@ -20,15 +20,16 @@ namespace lysa {
 
     std::unique_ptr<Renderer> Renderer::create(
         Context& ctx,
-        const RendererConfiguration& config) {
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat) {
 #ifdef FORWARD_RENDERER
         if (config.rendererType == RendererType::FORWARD) {
-            return std::make_unique<ForwardRenderer>(ctx, config);
+            return std::make_unique<ForwardRenderer>(ctx, config, outputFormat);
         }
 #endif
 #ifdef DEFERRED_RENDERER
         if (config.rendererType == RendererType::DEFERRED) {
-            return std::make_unique<DeferredRenderer>(ctx, config);
+            return std::make_unique<DeferredRenderer>(ctx, config, outputFormat);
         }
 #endif
         throw Exception("Unknown renderer type");
@@ -36,7 +37,8 @@ namespace lysa {
 
     Renderer::Renderer(
         const Context& ctx,
-        const RendererConfiguration& config) :
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat) :
         ctx(ctx),
         withStencil(
             config.depthStencilFormat == vireo::ImageFormat::D32_SFLOAT_S8_UINT ||
@@ -58,20 +60,21 @@ namespace lysa {
             gammaCorrectionPass = std::make_unique<GammaCorrectionPass>(
                 ctx,
                 config,
+                outputFormat,
                 needToneMapping ? config.toneMappingType : ToneMappingType::NONE);
         }
         switch (config.antiAliasingType) {
         case AntiAliasingType::FXAA:
-            fxaaPass = std::make_unique<FXAAPass>(ctx, config);
+            fxaaPass = std::make_unique<FXAAPass>(ctx, config, outputFormat);
             break;
         case AntiAliasingType::SMAA:
-            smaaPass = std::make_unique<SMAAPass>(ctx, config);
+            smaaPass = std::make_unique<SMAAPass>(ctx, config, outputFormat);
             break;
         default:
             break;
         }
         if (config.bloomEnabled) {
-            bloomPass = std::make_unique<BloomPass>(ctx, config);
+            bloomPass = std::make_unique<BloomPass>(ctx, config, outputFormat);
         }
         framesData.resize(ctx.config.framesInFlight);
     }

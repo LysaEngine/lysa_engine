@@ -12,25 +12,23 @@ namespace lysa {
 
     BloomPass::BloomPass(
         const Context& ctx,
-        const RendererConfiguration& config):
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat):
         PostProcessing(
             ctx,
             config,
+            outputFormat,
             "bloom",
             nullptr, 0,
-            config.swapChainFormat,
         "Bloom"),
         blurData{ .kernelSize = config.bloomBlurKernelSize },
         blurPass(ctx,
             config,
+            outputFormat,
             "blur",
             &blurData,
             sizeof(blurData),
-            config.colorRenderingFormat,
-            "Bloom blur")
-    {
-
-    }
+            "Bloom blur") { }
 
     void BloomPass::update(const uint32 frameIndex) {
         PostProcessing::update(frameIndex);
