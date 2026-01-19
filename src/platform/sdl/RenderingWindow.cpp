@@ -6,6 +6,7 @@
 */
 module;
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_video.h>
 module lysa.resources.rendering_window;
 
 import lysa.exception;
@@ -22,7 +23,9 @@ namespace lysa {
     }
 
     void RenderingWindow::close() const {
-        SDL_DestroyWindow(handle);
+        if (SDL_GetWindowFromID(windowId)) {
+            SDL_DestroyWindow(handle);
+        }
     }
 
     vireo::PlatformWindowHandle RenderingWindow::openPlatformWindow(const RenderingWindowConfiguration& config) {
@@ -51,16 +54,16 @@ namespace lysa {
             h = usable.h;
         }
 
-        SDL_Window* windowId{nullptr};
-        if (!(windowId = SDL_CreateWindow(config.title.c_str(), w, h, flags))) {
+        SDL_Window* window{nullptr};
+        if (!(window = SDL_CreateWindow(config.title.c_str(), w, h, flags))) {
             throw vireo::Exception("Error creating SDL window : ", SDL_GetError());
         }
 
-        if (!SDL_GetWindowSizeInPixels(windowId, &w, &h)) {
+        if (!SDL_GetWindowSizeInPixels(window, &w, &h)) {
             throw Exception("Error SDL_GetWindowSizeInPixels : ", SDL_GetError());
         }
         int x, y;
-        if (!SDL_GetWindowPosition(windowId, &x, &y)) {
+        if (!SDL_GetWindowPosition(window, &x, &y)) {
             throw Exception("Error SDL_GetWindowPosition : ", SDL_GetError());
         }
         rect = Rect{
@@ -69,7 +72,9 @@ namespace lysa {
             static_cast<float>(w),
             static_cast<float>(h)
         };
-        return windowId;
+        windowId = SDL_GetWindowID(window);
+        SDL_SetPointerProperty(SDL_GetWindowProperties(window), USER_DATA_PROPERTY_NAME, this);
+        return window;
     }
 
     void RenderingWindow::setTitle(const std::string& title) const {

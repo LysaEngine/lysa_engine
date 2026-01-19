@@ -7,6 +7,8 @@
 module;
 #ifdef _WIN32
 #include <windows.h>
+#elifdef USE_SDL3
+#include <SDL3/SDL_video.h>
 #endif
 export module lysa.resources.rendering_window;
 
@@ -177,6 +179,9 @@ export namespace lysa {
         static bool _resettingMousePosition;
         /** Cached OS cursors per MouseCursor enum value. */
         static std::map<MouseCursor, HCURSOR> _mouseCursors;
+#elifdef USE_SDL3
+        static constexpr auto USER_DATA_PROPERTY_NAME = "renderingWindow";
+        SDL_WindowID windowId;
 #endif
 
     private:
