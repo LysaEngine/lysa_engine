@@ -67,6 +67,8 @@ export namespace lysa {
             materialsOverride.erase(surfaceIndex);
         }
 
+        unique_id getSurfaceMaterialOverride(const uint32 surfaceIndex) const;
+
         MeshInstanceData getData() const;
 
         ~MeshInstance() override;

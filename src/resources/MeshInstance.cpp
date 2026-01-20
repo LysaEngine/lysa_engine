@@ -55,6 +55,13 @@ namespace lysa {
         return mesh.getSurfaces()[surfaceIndex].material;
     }
 
+    unique_id MeshInstance::getSurfaceMaterialOverride(const uint32 surfaceIndex) const {
+        if (materialsOverride.contains(surfaceIndex)) {
+            return materialsOverride.at(surfaceIndex);
+        }
+        return INVALID_ID;
+    }
+
     MeshInstanceData MeshInstance::getData() const {
         return {
             .transform = worldTransform,
