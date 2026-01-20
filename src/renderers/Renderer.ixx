@@ -130,6 +130,8 @@ export namespace lysa {
 
         BloomPass& getBloomPass() const { return *bloomPass; }
 
+        const auto& getExtent() const { return currentExtent; }
+
         virtual ~Renderer() = default;
         Renderer(Renderer&) = delete;
         Renderer& operator=(Renderer&) = delete;
