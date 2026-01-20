@@ -5,11 +5,11 @@
 * https://opensource.org/licenses/MIT
 */
 module;
-#include "SDL3/SDL_events.h"
 #ifdef _WIN32
 #include <windows.h>
 #elifdef USE_SDL3
 #include <SDL3/SDL_video.h>
+#include <SDL3/SDL_events.h>
 #endif
 export module lysa.resources.rendering_window;
 

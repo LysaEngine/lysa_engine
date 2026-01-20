@@ -5,7 +5,6 @@
 * https://opensource.org/licenses/MIT
 */
 module;
-#define NOMINMAX
 #include <windows.h>
 module lysa.directory_watcher;
 

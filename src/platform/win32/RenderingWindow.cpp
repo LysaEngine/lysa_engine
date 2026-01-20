@@ -130,6 +130,7 @@ namespace lysa {
             nullptr);
         if (hwnd == nullptr) { throw Exception("Error creating window", std::to_string(GetLastError())); }
 
+        SetFocus(hwnd);
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
         rect = {
             static_cast<float>(_rect.left),
@@ -172,9 +173,9 @@ namespace lysa {
         case WM_CLOSE:
             window->_closing();
             return 0;
+        case WM_CHAR:
         case WM_KEYDOWN:
         case WM_KEYUP:
-            return Input::_windowProcedure(hWnd, message, wParam, lParam);
         case WM_LBUTTONDOWN:
         case WM_LBUTTONUP:
         case WM_RBUTTONDOWN:

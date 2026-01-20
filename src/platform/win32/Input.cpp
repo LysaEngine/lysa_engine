@@ -227,10 +227,13 @@ namespace lysa {
     }
 
     uint32 Input::getConnectedJoypads() {
-        int count = 0;
-        auto* gamepads = SDL_GetGamepads(&count);
-        SDL_free(gamepads);
-        return static_cast<uint32_t>(count);
+        uint32 count = 0;
+        if (useXInput) {
+            count = _xinputStates.size();
+        } else {
+            count = _directInputStates.size();
+        }
+        return count;
     }
 
     bool Input::isGamepad(const uint32 index) {
@@ -349,37 +352,6 @@ namespace lysa {
         return "??";
     }
 
-    std::string Input::keyToChar(const Key key) {
-        const auto sc = keyToOsKey(key);
-        const auto layout = GetKeyboardLayout(0);
-        const auto vk = MapVirtualKeyExW(sc, MAPVK_VSC_TO_VK_EX, layout);
-        if (vk == 0) return "";
-
-        // current state (Shift/Ctrl/Alt, toggles)
-        BYTE keyboardState[256];
-        if (!GetKeyboardState(keyboardState)) {
-            return "";
-        }
-
-        wchar_t buffer[8] = {0};
-        const int rc = ToUnicodeEx(
-            vk,
-            sc,
-            keyboardState,
-            buffer,
-            static_cast<int>(std::size(buffer)),
-            0,
-            layout
-        );
-
-        if (rc > 0) {
-            const auto ws = std::wstring(buffer, buffer + rc);
-            return std::to_string(ws);
-        }
-        return "";
-    }
-
-    // Helper to translate Windows get state to lysa key modifiers
     int _getKeyboardModifiers() {
         int modifiers = 0;
         if (GetKeyState(VK_SHIFT) & 0x8000) modifiers |= static_cast<int>(KeyModifier::SHIFT);
@@ -404,6 +376,23 @@ namespace lysa {
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
         switch (message) {
+            case WM_CHAR:{
+                const auto wc = static_cast<wchar_t>(wParam);
+                char buffer[4]; // UTF-8 max 4 bytes
+                const int len = WideCharToMultiByte(
+                    CP_UTF8,
+                    0,
+                    &wc,
+                    1,
+                    buffer,
+                    sizeof(buffer),
+                    nullptr,
+                    nullptr
+                );
+                auto event = InputEventTextInput{std::string(buffer, len)};
+                window->_input({InputEventType::TEXT_INPUT, event});
+                break;
+            }
             case WM_KEYDOWN:{
                 const auto scanCode = static_cast<OsKey>((lParam & 0x00FF0000) >> 16);
                 const auto key = osKeyToKey(scanCode);
