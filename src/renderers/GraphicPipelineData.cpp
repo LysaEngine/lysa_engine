@@ -151,9 +151,11 @@ namespace lysa {
                 drawCommandsStagingBuffer->map();
             }
 
-            drawCommandsStagingBuffer->write(drawCommands.data(),
-                sizeof(DrawCommand) * drawCommandsCount);
-            commandList.copy(drawCommandsStagingBuffer, drawCommandsBuffer, sizeof(DrawCommand) * drawCommandsCount);
+            if (drawCommandsCount > 0) {
+                drawCommandsStagingBuffer->write(drawCommands.data(),
+                    sizeof(DrawCommand) * drawCommandsCount);
+               commandList.copy(drawCommandsStagingBuffer, drawCommandsBuffer, sizeof(DrawCommand) * drawCommandsCount);
+            }
             instancesUpdated = false;
             commandList.barrier(
                 *drawCommandsBuffer,
