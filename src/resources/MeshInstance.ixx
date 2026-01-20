@@ -47,7 +47,7 @@ export namespace lysa {
 
         bool isCastShadows() const { return castShadows; }
 
-        void setCastShadow(const bool castShadows) { this->castShadows = castShadows; }
+        void setCastShadows(const bool castShadows) { this->castShadows = castShadows; }
 
         const AABB& getAABB() const { return worldAABB; }
 
