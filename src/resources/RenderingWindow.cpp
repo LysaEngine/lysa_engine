@@ -40,11 +40,6 @@ namespace lysa {
         if (closed || renderTarget.isPaused()) { return; }
         this->rect = rect;
         renderTarget.resize();
-        renderTarget.getContext().events.push({
-            static_cast<event_type>(RenderingWindowEvent::RESIZED),
-            renderTarget.getExtent(),
-            id
-        });
     }
 
 }
