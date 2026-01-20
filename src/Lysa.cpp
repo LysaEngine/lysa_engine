@@ -75,6 +75,19 @@ namespace lysa {
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             auto frameTime = newTime - currentTime;
             if (frameTime > 0.25) frameTime = 0.25; // Note: Max frame time to avoid spiral of death
+
+            // Display the average FPS in the log
+            if (ctx.config.displayFPS) {
+                elapsedSeconds += static_cast<float>(frameTime);
+                frameCount++;
+                if (elapsedSeconds >= 1.0) {
+                    fps            = static_cast<uint32_t>(frameCount / elapsedSeconds);
+                    frameCount     = 0;
+                    elapsedSeconds = 0;
+                    Log::info("FPS ", fps);
+                }
+            }
+
             currentTime = newTime;
             accumulator += frameTime;
             while (accumulator >= fixedDeltaTime) {

@@ -55,6 +55,8 @@ export namespace  lysa {
         ResourcesCapacity resourcesCapacity;
         size_t eventsReserveCapacity{100};
         size_t commandsReserveCapacity{1000};
+        //! Display FPS in log
+        bool displayFPS{false};
         //! Virtual file system configuration
         VirtualFSConfiguration virtualFsConfiguration;
     };

@@ -122,6 +122,12 @@ export namespace  lysa {
         const double fixedDeltaTime;
         double currentTime{0.0};
         double accumulator{0.0};
+        // Frame count since last fps update
+        uint32 frameCount = 0;
+        // Number of seconds since last fps update
+        float elapsedSeconds{0.0f};
+        // Average FPS,
+        uint32 fps{0};
 
         ImageManager imageManager;
         MaterialManager materialManager;
