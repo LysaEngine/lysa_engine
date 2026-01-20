@@ -8,6 +8,8 @@ module lysa.resources.rendering_window;
 
 namespace lysa {
 
+    bool RenderingWindow::_resettingMousePosition{false};
+
     RenderingWindow::RenderingWindow(Context& ctx, const RenderingWindowConfiguration& config) :
         handle(openPlatformWindow(config)),
         renderTarget(ctx, config.renderTargetConfiguration, handle) {
@@ -40,7 +42,7 @@ namespace lysa {
         renderTarget.resize();
         renderTarget.getContext().events.push({
             static_cast<event_type>(RenderingWindowEvent::RESIZED),
-            renderTarget.getSwapChain()->getExtent(),
+            renderTarget.getExtent(),
             id
         });
     }

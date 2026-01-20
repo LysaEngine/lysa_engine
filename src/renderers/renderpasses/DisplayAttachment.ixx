@@ -19,14 +19,15 @@ export namespace lysa {
         DisplayAttachment(
             const Context& ctx,
             const RendererConfiguration& config,
+            const vireo::ImageFormat outputFormat,
             const std::string& shader = "",
             void* data = nullptr, const uint32 dataSize = 0) :
             PostProcessing(
                 ctx,
                 config,
+                outputFormat,
                 shader.empty() ? "passthrough" : shader,
                 data, dataSize,
-                config.swapChainFormat,
                 "DisplayAttachment") {
         }
 

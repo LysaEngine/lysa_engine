@@ -12,10 +12,10 @@ namespace lysa {
     PostProcessing::PostProcessing(
         const Context& ctx,
         const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat,
         const std::string& fragShaderName,
         void* data,
         uint32 dataSize,
-        const vireo::ImageFormat outputFormat,
         const std::string& name):
         Renderpass{ctx, config, name.empty() ? fragShaderName : name},
         fragShaderName{fragShaderName},
@@ -38,8 +38,7 @@ namespace lysa {
         descriptorLayout->add(BINDING_TEXTURES, vireo::DescriptorType::SAMPLED_IMAGE, TEXTURES_COUNT);
         descriptorLayout->build();
 
-        pipelineConfig.colorRenderFormats.push_back(
-            outputFormat == vireo::ImageFormat::UNDEFINED ? config.swapChainFormat : outputFormat);
+        pipelineConfig.colorRenderFormats.push_back(outputFormat);
         pipelineConfig.resources = ctx.vireo->createPipelineResources({
             descriptorLayout,
             ctx.samplers.getDescriptorLayout()},

@@ -35,6 +35,7 @@ export namespace lysa {
          * Constructs a vector renderer.
          * @param ctx                Global context
          * @param config             Rendering config.
+         * @param outputFormat
          * @param useCamera          True to apply Scene view/projection.
          * @param depthTestEnable    Enable depth test for 3D primitives.
          * @param enableAlphaBlending Enable alpha blending (for UI/text).
@@ -46,6 +47,7 @@ export namespace lysa {
         Vector3DRenderer(
             const Context& ctx,
             const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat,
             bool useCamera = true,
             bool depthTestEnable = true,
             bool filledTriangles = false,

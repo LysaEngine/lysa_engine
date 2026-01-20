@@ -11,8 +11,10 @@ namespace lysa {
 
     SMAAPass::SMAAPass(
         const Context& ctx,
-        const RendererConfiguration& config):
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat):
         Renderpass{ctx, config, "SMAA"},
+        outputFormat(outputFormat),
         data{ .edgeThreshold = config.smaaEdgeThreshold, .blendMaxSteps = config.smaaBlendMaxSteps } {
 
         textures.resize(3);
@@ -43,7 +45,7 @@ namespace lysa {
         pipelineConfig.fragmentShader = loadShader(BLEND_WEIGHT_FRAGMENT_SHADER);
         blendWeightPipeline = ctx.vireo->createGraphicPipeline(pipelineConfig);
 
-        pipelineConfig.colorRenderFormats[0] = config.swapChainFormat;
+        pipelineConfig.colorRenderFormats[0] = outputFormat;
         pipelineConfig.fragmentShader = loadShader(BLEND_FRAGMENT_SHADER);
         blendPipeline = ctx.vireo->createGraphicPipeline(pipelineConfig);
 
@@ -137,7 +139,7 @@ namespace lysa {
                 vireo::MSAA::NONE,
                 "SMAA Blend weight");
             frame.colorBuffer = ctx.vireo->createRenderTarget(
-                config.swapChainFormat,
+                outputFormat,
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
                 renderingConfig.colorRenderTargets[0].clearValue,

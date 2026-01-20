@@ -23,11 +23,14 @@ export namespace lysa {
     public:
         /**
          * Constructs an SMAAPass
-         * @param ctx The engine context
+         * @param ctx The lysa context
          * @param config The renderer configuration
+         * @param outputFormat
          */
-        SMAAPass(const Context& ctx,
-            const RendererConfiguration& config);
+        SMAAPass(
+            const Context& ctx,
+            const RendererConfiguration& config,
+            const vireo::ImageFormat outputFormat);
 
         /**
          * Renders the SMAA pass
@@ -91,6 +94,7 @@ export namespace lysa {
             .colorRenderTargets = {{ }},
         };
 
+        const vireo::ImageFormat outputFormat;
         Data data;
         std::vector<FrameData> framesData;
         PostProcessing::PostProcessingParams params;

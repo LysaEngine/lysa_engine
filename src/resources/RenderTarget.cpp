@@ -31,7 +31,7 @@ namespace lysa {
             renderingWindowHandle,
             configuration.presentMode,
             ctx.config.framesInFlight);
-        renderer = Renderer::create(ctx, rendererConfiguration);
+        renderer = Renderer::create(ctx, rendererConfiguration, swapChain->getFormat());
         framesData.resize(ctx.config.framesInFlight);
         for (auto& frame : framesData) {
             frame.inFlightFence = ctx.vireo->createFence(true, "inFlightFence");
@@ -111,7 +111,6 @@ namespace lysa {
 
     void RenderTarget::resize() {
         setPause(true);
-        const auto previousExtent = swapChain->getExtent();
         swapChain->recreate();
         const auto newExtent = swapChain->getExtent();
         if (newExtent.width == 0 || newExtent.height == 0) {
@@ -123,7 +122,7 @@ namespace lysa {
         mainScissors = vireo::Rect {
             newExtent.width,
             newExtent.height};
-        if (previousExtent.width != newExtent.width || previousExtent.height != newExtent.height) {
+        if (renderer->getExtent().width != newExtent.width || renderer->getExtent().height != newExtent.height) {
             const auto& frame = framesData[0];
             // viewportManager.resize(id, newExtent);
             frame.commandAllocator->reset();

@@ -27,15 +27,16 @@ export namespace lysa {
         GammaCorrectionPass(
             const Context& ctx,
             const RendererConfiguration& config,
+            const vireo::ImageFormat outputFormat,
             const ToneMappingType toneMappingType) :
             PostProcessing(
                 ctx,
                 config,
+                outputFormat,
                 toneMappingType == ToneMappingType::REINHARD ? "reinhard" :
                 toneMappingType == ToneMappingType::ACES ? "aces" :
                 "gamma_correction",
                 &gammaCorrectionData, sizeof(gammaCorrectionData),
-                config.swapChainFormat,
                 "Gamma correction"),
             gammaCorrectionData{ .gamma = config.gamma, .exposure = config.exposure } {
         }

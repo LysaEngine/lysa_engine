@@ -38,7 +38,8 @@ export namespace lysa {
     public:
         static std::unique_ptr<Renderer> create(
             Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /** Accessor for the color render target of the frame. */
         auto getColorAttachment(const uint32 frameIndex) const {
@@ -129,6 +130,8 @@ export namespace lysa {
 
         BloomPass& getBloomPass() const { return *bloomPass; }
 
+        const auto& getExtent() const { return currentExtent; }
+
         virtual ~Renderer() = default;
         Renderer(Renderer&) = delete;
         Renderer& operator=(Renderer&) = delete;
@@ -149,7 +152,8 @@ export namespace lysa {
 
         Renderer(
             const Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /*
         * Records the pipeline-specific color pass for the concrete renderer.

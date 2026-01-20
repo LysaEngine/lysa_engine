@@ -47,7 +47,6 @@ export namespace lysa {
 #ifdef _WIN32
             if (IsDebuggerPresent()) {
                 OutputDebugStringA(message.c_str());
-#else
 #endif
 #ifdef __has_builtin
     __builtin_debugtrap();

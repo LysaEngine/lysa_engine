@@ -145,14 +145,24 @@ compile_options(xxhash)
 
 #######################################################
 if(WIN32)
-    set(OS_SRC
-            ${ENGINE_SRC_DIR}/os/win32/DirectoryWatcher.cpp
-            ${ENGINE_SRC_DIR}/os/win32/Input.cpp
-            ${ENGINE_SRC_DIR}/os/win32/Lysa.cpp
-            ${ENGINE_SRC_DIR}/os/win32/Main.cpp
-            ${ENGINE_SRC_DIR}/os/win32/RenderingWindow.cpp
+    set(WIN32_SRC
+            ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
+            ${ENGINE_SRC_DIR}/platform/win32/Input.cpp
+            ${ENGINE_SRC_DIR}/platform/win32/Lysa.cpp
+            ${ENGINE_SRC_DIR}/platform/win32/Main.cpp
+            ${ENGINE_SRC_DIR}/platform/win32/RenderingWindow.cpp
     )
-    set(OS_MODULES ""
+    set(WIN32_MODULES ""
+    )
+elseif (UNIX AND NOT APPLE)
+    set(POSIX_SRC
+            ${ENGINE_SRC_DIR}/platform/posix/Main.cpp
+#            ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
+            ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
+    )
+    set(POSIX_MODULES ""
     )
 endif ()
 
@@ -252,7 +262,8 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
 
-        ${OS_SRC}
+        ${POSIX_SRC}
+        ${WIN32_SRC}
         ${PHYSICS_SRC}
         ${LUA_BINDINGS_SRC}
         ${DEPENDS_SRC_DIR}/stb/stb.cpp
@@ -324,7 +335,8 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
 
-        ${OS_MODULES}
+        ${POSIX_MODULES}
+        ${WIN32_MODULES}
         ${PHYSICS_MODULES}
         ${LUA_BINDINGS_MODULES}
 )
@@ -347,6 +359,9 @@ target_link_libraries(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET}
         Freetype::Freetype
         harfbuzz
 )
+if (USE_SDL3)
+    target_link_libraries(${LYSA_ENGINE_TARGET} SDL3::SDL3)
+endif ()
 if(LUA_BINDING)
     target_link_libraries(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET}
         lua

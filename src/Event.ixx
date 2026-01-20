@@ -77,6 +77,8 @@ export namespace lysa {
 
         /**
          * Subscribe a C++ handler to a given event type and target id.
+         * Subscribers are called in reverse order of subscription, allowing the more recent subscription
+         * to stop the event processing by setting `consumed` to `true`
          * @param type The event kind to listen to.
          * @param id The specific target id to filter on.
          * @param callback Reference to a callable receiving the event.
@@ -84,7 +86,8 @@ export namespace lysa {
         unique_id subscribe(const event_type& type, unique_id id, EventHandlerCallback callback);
 
         /**
-         * Subscribe a C++ handler to a given global event type
+         * Subscribe a C++ handler to a given global event type.
+         * Subscribers are called in reverse order of subscription.
          * @param type The event kind to listen to.
          * @param callback Reference to a callable receiving the event.
          */
@@ -139,20 +142,20 @@ export namespace lysa {
         /* Protects the event queue during data operations. */
         std::mutex queueMutex;
         /* C++ subscribers to global events. */
-        std::unordered_map<event_type, std::vector<EventHandler>> globalHandlers{};
+        std::unordered_map<event_type, std::list<EventHandler>> globalHandlers{};
         /* Protects the global events subscribers map. */
         std::mutex globalHandlersMutex;
         /* C++ subscribers to targeted events. */
-        std::unordered_map<event_type, std::unordered_map<unique_id, std::vector<EventHandler>>> handlers{};
+        std::unordered_map<event_type, std::unordered_map<unique_id, std::list<EventHandler>>> handlers{};
         /* Protects the targeted events subscribers map. */
         std::mutex handlersMutex;
         /* The identifier to be assigned to the next subscriber. */
         std::atomic<unique_id> nextId{1};
 #ifdef LUA_BINDING
         /* Lua subscribers to global events. */
-        std::unordered_map<event_type, std::vector<EventHandlerLua>> globalHandlersLua{};
+        std::unordered_map<event_type, std::veclisttor<EventHandlerLua>> globalHandlersLua{};
         /* Lua subscribers to targeted events. */
-        std::unordered_map<event_type, std::unordered_map<unique_id, std::vector<EventHandlerLua>>> handlersLua{};
+        std::unordered_map<event_type, std::unordered_map<unique_id, std::list<EventHandlerLua>>> handlersLua{};
 #endif
     };
 

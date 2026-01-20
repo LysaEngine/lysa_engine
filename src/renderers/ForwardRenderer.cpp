@@ -10,8 +10,9 @@ namespace lysa {
 
     ForwardRenderer::ForwardRenderer(
         const Context& ctx,
-        const RendererConfiguration& config) :
-        Renderer(ctx, config),
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat) :
+        Renderer(ctx, config, outputFormat),
         forwardColorPass(ctx, config) {
     }
 

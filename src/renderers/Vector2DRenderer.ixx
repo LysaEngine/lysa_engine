@@ -32,10 +32,12 @@ export namespace lysa {
          * Constructs a new Vector2DRenderer
          * @param ctx The engine context
          * @param config The renderer configuration
+         * @param outputFormat
          */
         Vector2DRenderer(
             const Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /**
          * Resizes the renderer's viewport

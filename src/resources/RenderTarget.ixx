@@ -65,7 +65,11 @@ export namespace lysa {
 
         uint32 getFramesInFlight() const { return swapChain->getFramesInFlight(); }
 
-        auto getSwapChain() const { return swapChain; }
+        uint32 getCurrentFrameIndex() const { return swapChain->getCurrentFrameIndex(); }
+
+        const vireo::Extent& getExtent() const { return swapChain->getExtent(); }
+
+        vireo::ImageFormat getImageFormat() const { return swapChain->getFormat(); }
 
         void waitIdle() const { swapChain->waitIdle(); }
 

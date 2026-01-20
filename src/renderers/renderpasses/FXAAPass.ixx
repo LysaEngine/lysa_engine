@@ -25,13 +25,14 @@ export namespace lysa {
          */
         FXAAPass(
             const Context& ctx,
-            const RendererConfiguration& config) :
+            const RendererConfiguration& config,
+            const vireo::ImageFormat outputFormat) :
             PostProcessing(
                 ctx,
                 config,
+                outputFormat,
                 "fxaa",
                 &fxaaData, sizeof(fxaaData),
-                config.swapChainFormat,
             "FXAA"),
             fxaaData{ .spanMax = config.fxaaSpanMax, .reduceMul = config.fxaaReduceMul, .reduceMin = config.fxaaReduceMin} {
         }

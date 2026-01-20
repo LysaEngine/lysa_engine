@@ -6,6 +6,9 @@
 */
 module lysa.input;
 
+import lysa.log;
+import lysa.utils;
+
 namespace lysa {
 
     void Input::addAction(const InputAction& action) {
@@ -209,6 +212,31 @@ namespace lysa {
         if (it != _keyMap.end())
             return it->first;
         return KEY_NONE;
+    }
+
+    float2 Input::getKeyboardVector(const Key keyNegX, const Key keyPosX, const Key keyNegY, const Key keyPosY) {
+        const auto  x = keyPressedStates[keyNegX] ? -1 : keyPressedStates[keyPosX] ? 1 : 0;
+        const auto  y = keyPressedStates[keyNegY] ? -1 : keyPressedStates[keyPosY] ? 1 : 0;
+        const float2  vector{x, y};
+        const float l = length(vector);
+        return (l > 1.0f) ? vector / l : vector;
+    }
+
+
+    void Input::generateGamepadButtonEvent(const RenderingWindow& window, const GamepadButton button, const bool pressed) {
+        if (pressed && (!gamepadButtonPressedStates[button])) {
+            gamepadButtonJustPressedStates[button] = true;
+            gamepadButtonJustReleasedStates[button] = false;
+            auto event = InputEventGamepadButton(button, pressed);
+            window._input({InputEventType::GAMEPAD_BUTTON, event});
+        }
+        if ((!pressed) && (gamepadButtonPressedStates[button])) {
+            gamepadButtonJustPressedStates[button] = false;
+            gamepadButtonJustReleasedStates[button] = true;
+            auto event = InputEventGamepadButton(button, pressed);
+            window._input({InputEventType::GAMEPAD_BUTTON, event});
+        }
+        gamepadButtonPressedStates[button] = pressed;
     }
 
     float Input::applyDeadzone(const float value, const float deadzonePercent) {

@@ -33,10 +33,12 @@ export namespace lysa {
          * Constructs a deferred renderer instance.
          * @param ctx
          * @param config Rendering configuration (attachments, frames in flight).
+         * @param outputFormat
          */
         DeferredRenderer(
             const Context& ctx,
-            const RendererConfiguration& config);
+            const RendererConfiguration& config,
+            vireo::ImageFormat outputFormat);
 
         /** Performs per-frame housekeeping (e.g., SSAO/bloom data updates). */
         void update(uint32 frameIndex) override;

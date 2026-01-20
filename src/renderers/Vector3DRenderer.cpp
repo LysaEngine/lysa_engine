@@ -15,6 +15,7 @@ namespace lysa {
     Vector3DRenderer::Vector3DRenderer(
         const Context& ctx,
         const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat,
         const bool useCamera,
         const bool depthTestEnable,
         const bool filledTriangles,
@@ -22,11 +23,11 @@ namespace lysa {
         const std::string& name,
         const std::string& shadersName,
         const std::string& glyphShadersName) :
-        config{config},
         imageManager(ctx.res.get<ImageManager>()),
+        config{config},
+        ctx(ctx),
         useCamera{useCamera},
-        name{name},
-        ctx(ctx) {
+        name{name} {
 
         descriptorLayout = ctx.vireo->createDescriptorLayout(name);
         if (useCamera) {
@@ -71,7 +72,7 @@ namespace lysa {
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         pipelineConfig.depthTestEnable = depthTestEnable;
         pipelineConfig.depthWriteEnable = depthTestEnable;
-        pipelineConfig.colorRenderFormats.push_back(config.swapChainFormat);
+        pipelineConfig.colorRenderFormats.push_back(outputFormat);
         pipelineConfig.vertexInputLayout = ctx.vireo->createVertexLayout(sizeof(Vertex), vertexAttributes);
         auto tempBuffer = std::vector<char>{};
         ctx.fs.loadShader(shadersName + ".vert", tempBuffer);

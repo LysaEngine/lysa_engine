@@ -12,10 +12,12 @@ namespace lysa {
 
     Vector2DRenderer::Vector2DRenderer(
         const Context& ctx,
-        const RendererConfiguration& config) :
+        const RendererConfiguration& config,
+        const vireo::ImageFormat outputFormat) :
         Vector3DRenderer{
             ctx,
             config,
+            outputFormat,
             false,
             false,
             true,
