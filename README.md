@@ -18,7 +18,9 @@ Lysa Engine is a hobby 3D engine created for learning and experimenting with low
     - **Logging**: Flexible logging to console, file, or virtual debug window.
 - **Resource Management**: Dedicated managers for Meshes, Textures, and Materials with automatic GPU uploading.
 - **Modern C++**: Built with C++23, utilizing C++ modules for clean architecture.
+- **Lua Bindings**: Optional Lua 5.4+ bindings for high-level logic and rapid prototyping.
 - **Multi-API Support**: Vulkan and DirectX 12 support through [Vireo RHI](https://github.com/HenriMichelon/vireo_rhi).
+- **Cross-Platform**: Designed for Windows (DirectX 12 & Vulkan), Linux (Vulkan) and potentially other platforms supporting Vulkan.
 - **Scripting**: [Lua](https://lua.org/) bindings for high-level logic and rapid prototyping.
 
 ## Getting Started
