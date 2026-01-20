@@ -21,7 +21,7 @@ endif()
 
 #######################################################
 set(LYSA_ENGINE_TARGET ${PROJECT_NAME})
-if (NOT LYSA_ENGINE_AS_DEPENDENCY)
+if (NOT DEFINED LYSA_ENGINE_PROJECT_DIR)
     message("Building Lysa Engine as standalone project")
     set(DIRECTX_BACKEND ON)
     set(LUA_BINDING OFF)
@@ -380,7 +380,6 @@ set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 #######################################################
 if(WIN32)
-    target_compile_definitions(${LYSA_ENGINE_TARGET} PRIVATE WIN32_LEAN_AND_MEAN)
     target_link_libraries(${LYSA_ENGINE_TARGET} Ws2_32)
     if (DIRECTX_BACKEND)
         target_link_libraries(${LYSA_ENGINE_TARGET} d3d12)
