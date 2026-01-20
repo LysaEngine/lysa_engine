@@ -28,7 +28,7 @@ namespace lysa {
     unique_id EventManager::subscribe(const event_type& type, EventHandlerCallback callback) {
         auto lock = std::lock_guard(globalHandlersMutex);
         const auto hid = nextId++;
-        globalHandlers[type].push_front({hid, std::move(callback)});
+        globalHandlers[type].push_back({hid, std::move(callback)});
         return hid;
     }
 

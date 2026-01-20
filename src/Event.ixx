@@ -87,7 +87,7 @@ export namespace lysa {
 
         /**
          * Subscribe a C++ handler to a given global event type.
-         * Subscribers are called in reverse order of subscription.
+         * Subscribers are called in order of subscription.
          * @param type The event kind to listen to.
          * @param callback Reference to a callable receiving the event.
          */
