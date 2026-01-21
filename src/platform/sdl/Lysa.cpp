@@ -20,7 +20,12 @@ namespace lysa {
                 ctx.exit = true;
                 break;
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            case SDL_EVENT_WINDOW_FOCUS_LOST:
+            case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            case SDL_EVENT_WINDOW_OCCLUDED:
+            case SDL_EVENT_WINDOW_EXPOSED:
             case SDL_EVENT_WINDOW_MINIMIZED:
+            case SDL_EVENT_WINDOW_RESTORED:
             case SDL_EVENT_WINDOW_RESIZED:
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
                 RenderingWindow::_processEvent(event);

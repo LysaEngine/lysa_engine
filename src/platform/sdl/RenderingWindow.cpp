@@ -106,21 +106,41 @@ namespace lysa {
     void RenderingWindow::_processEvent(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:{
-                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+                auto* renderingWindow = _getFromId(event.window.windowID);
                 if (renderingWindow) {
                     renderingWindow->_closing();
                 }
                 break;
             }
-            case SDL_EVENT_WINDOW_MINIMIZED:{
-                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+            // for wayland
+            case SDL_EVENT_WINDOW_OCCLUDED:{
+                auto* renderingWindow = _getFromId(event.window.windowID);
                 if (renderingWindow) {
+                    renderingWindow->setPause(true);
+                }
+                break;
+            }
+            // for wayland
+            case SDL_EVENT_WINDOW_EXPOSED:{
+                auto* renderingWindow = _getFromId(event.window.windowID);
+                if (renderingWindow) {
+                    renderingWindow->setPause(false);
+                }
+                break;
+            }
+            case SDL_EVENT_WINDOW_FOCUS_LOST: // for wayland
+            case SDL_EVENT_WINDOW_FOCUS_GAINED: // for wayland
+            case SDL_EVENT_WINDOW_MINIMIZED:
+            case SDL_EVENT_WINDOW_RESTORED:{
+                auto* renderingWindow = _getFromId(event.window.windowID);
+                if (renderingWindow) {
+                    Log::trace();
                     renderingWindow->setPause(renderingWindow->isMinimized());
                 }
             }
             case SDL_EVENT_WINDOW_RESIZED:
             case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
-                auto* renderingWindow = RenderingWindow::_getFromId(event.window.windowID);
+                auto* renderingWindow = _getFromId(event.window.windowID);
                 if (renderingWindow) {
                     if (renderingWindow->isMinimized()) {
                         renderingWindow->setPause(true);

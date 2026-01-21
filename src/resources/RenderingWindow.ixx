@@ -162,7 +162,9 @@ export namespace lysa {
 
         const RenderTarget& getRenderTarget() const { return renderTarget; }
 
-        void setPause(const bool pause) { renderTarget.setPause(pause); }
+        void setPause(const bool pause) {
+            renderTarget.setPause(pause);
+        }
 
         bool isPaused() const { return renderTarget.isPaused(); }
 
