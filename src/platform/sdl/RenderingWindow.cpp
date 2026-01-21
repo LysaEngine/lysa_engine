@@ -134,7 +134,6 @@ namespace lysa {
             case SDL_EVENT_WINDOW_RESTORED:{
                 auto* renderingWindow = _getFromId(event.window.windowID);
                 if (renderingWindow) {
-                    Log::trace();
                     renderingWindow->setPause(renderingWindow->isMinimized());
                 }
             }
