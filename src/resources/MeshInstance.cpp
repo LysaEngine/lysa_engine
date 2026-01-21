@@ -55,7 +55,7 @@ namespace lysa {
         return mesh.getSurfaces()[surfaceIndex].material;
     }
 
-    unique_id MeshInstance::getSurfaceMaterialOverride(const uint32 surfaceIndex) const {
+    unique_id MeshInstance::getSurfaceOverrideMaterial(const uint32 surfaceIndex) const {
         if (materialsOverride.contains(surfaceIndex)) {
             return materialsOverride.at(surfaceIndex);
         }
