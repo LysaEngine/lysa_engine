@@ -19,7 +19,6 @@ import lysa.renderers.deferred_renderer;
 namespace lysa {
 
     std::unique_ptr<Renderer> Renderer::create(
-
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat) {
 #ifdef FORWARD_RENDERER
