@@ -34,6 +34,7 @@ namespace lysa {
 
     void EventManager::unsubscribe(const unique_id id) {
         {
+            if (id == INVALID_ID) { return; }
             auto lock = std::lock_guard(globalHandlersMutex);
             for (auto& handlers : globalHandlers) {
                 std::erase_if(handlers.second,[&](const EventHandler& e) { return e.id == id; });
