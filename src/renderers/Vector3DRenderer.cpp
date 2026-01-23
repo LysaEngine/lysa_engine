@@ -13,7 +13,6 @@ import lysa.exception;
 namespace lysa {
 
     Vector3DRenderer::Vector3DRenderer(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat,
         const bool useCamera,
@@ -23,13 +22,12 @@ namespace lysa {
         const std::string& name,
         const std::string& shadersName,
         const std::string& glyphShadersName) :
-        imageManager(ctx.res.get<ImageManager>()),
+        imageManager(Context::ctx->res.get<ImageManager>()),
         config{config},
-        ctx(ctx),
         useCamera{useCamera},
         name{name} {
 
-        descriptorLayout = ctx.vireo->createDescriptorLayout(name);
+        descriptorLayout = Context::ctx->vireo->createDescriptorLayout(name);
         if (useCamera) {
             globalUniformIndex = 0;
             texturesIndex = 1;
@@ -40,27 +38,27 @@ namespace lysa {
 
         textures.resize(MAX_TEXTURES);
         descriptorLayout->add(texturesIndex, vireo::DescriptorType::SAMPLED_IMAGE, textures.size());
-        blankImage = ctx.res.get<ImageManager>().getBlankImage();
+        blankImage = Context::ctx->res.get<ImageManager>().getBlankImage();
         for (int i = 0; i < textures.size(); i++) {
             textures[i] = blankImage;
         }
         descriptorLayout->build();
 
         fontsParams.resize(MAX_FONTS);
-        fontDescriptorLayout = ctx.vireo->createDescriptorLayout(name + " fonts");
+        fontDescriptorLayout = Context::ctx->vireo->createDescriptorLayout(name + " fonts");
         fontDescriptorLayout->add(FONT_PARAMS_BINDING, vireo::DescriptorType::UNIFORM);
         fontDescriptorLayout->build();
-        fontDescriptorSet = ctx.vireo->createDescriptorSet(fontDescriptorLayout);
-        fontsParamsUniform = ctx.vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(FontParams) * fontsParams.size(), 1, name + " fonts params");
+        fontDescriptorSet = Context::ctx->vireo->createDescriptorSet(fontDescriptorLayout);
+        fontsParamsUniform = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(FontParams) * fontsParams.size(), 1, name + " fonts params");
         fontsParamsUniform->map();
         fontsParamsUniform->write(fontsParams.data());
         fontDescriptorSet->update(FONT_PARAMS_BINDING, fontsParamsUniform);
 
-        framesData.resize(ctx.config.framesInFlight);
+        framesData.resize(Context::ctx->config.framesInFlight);
         for (auto& frameData : framesData) {
-            frameData.descriptorSet = ctx.vireo->createDescriptorSet(descriptorLayout, name);
+            frameData.descriptorSet = Context::ctx->vireo->createDescriptorSet(descriptorLayout, name);
             if (useCamera) {
-                frameData.globalUniform = ctx.vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(GlobalUniform), 1, name);
+                frameData.globalUniform = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(GlobalUniform), 1, name);
                 frameData.globalUniform->map();
                 frameData.descriptorSet->update(globalUniformIndex, frameData.globalUniform);
             }
@@ -73,38 +71,38 @@ namespace lysa {
         pipelineConfig.depthTestEnable = depthTestEnable;
         pipelineConfig.depthWriteEnable = depthTestEnable;
         pipelineConfig.colorRenderFormats.push_back(outputFormat);
-        pipelineConfig.vertexInputLayout = ctx.vireo->createVertexLayout(sizeof(Vertex), vertexAttributes);
+        pipelineConfig.vertexInputLayout = Context::ctx->vireo->createVertexLayout(sizeof(Vertex), vertexAttributes);
         auto tempBuffer = std::vector<char>{};
-        ctx.fs.loadShader(shadersName + ".vert", tempBuffer);
-        pipelineConfig.vertexShader = ctx.vireo->createShaderModule(tempBuffer, shadersName + ".vert");
-        ctx.fs.loadShader(shadersName + ".frag", tempBuffer);
-        pipelineConfig.fragmentShader = ctx.vireo->createShaderModule(tempBuffer, shadersName + ".frag");
-        pipelineConfig.resources = ctx.vireo->createPipelineResources(
+        Context::ctx->fs.loadShader(shadersName + ".vert", tempBuffer);
+        pipelineConfig.vertexShader = Context::ctx->vireo->createShaderModule(tempBuffer, shadersName + ".vert");
+        Context::ctx->fs.loadShader(shadersName + ".frag", tempBuffer);
+        pipelineConfig.fragmentShader = Context::ctx->vireo->createShaderModule(tempBuffer, shadersName + ".frag");
+        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources(
            {
                 descriptorLayout,
-                ctx.samplers.getDescriptorLayout(),
+                Context::ctx->samplers.getDescriptorLayout(),
                 fontDescriptorLayout
            },
            {},
            name);
         pipelineConfig.primitiveTopology = vireo::PrimitiveTopology::LINE_LIST;
-        pipelineLines = ctx.vireo->createGraphicPipeline(pipelineConfig, name + " lines");
+        pipelineLines = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name + " lines");
         pipelineConfig.polygonMode = filledTriangles ?
             vireo::PolygonMode::FILL :
             vireo::PolygonMode::WIREFRAME;
         pipelineConfig.primitiveTopology = vireo::PrimitiveTopology::TRIANGLE_LIST;
-        pipelineTriangles = ctx.vireo->createGraphicPipeline(pipelineConfig, name + " triangles");
+        pipelineTriangles = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name + " triangles");
 
         pipelineConfig.polygonMode = vireo::PolygonMode::FILL;
         pipelineConfig.depthWriteEnable = false;
         pipelineConfig.colorBlendDesc = glyphPipelineConfig.colorBlendDesc;
-        pipelineImages = ctx.vireo->createGraphicPipeline(pipelineConfig, name + " images");
+        pipelineImages = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name + " images");
 
-        ctx.fs.loadShader(glyphShadersName + ".vert", tempBuffer);
-        pipelineConfig.vertexShader = ctx.vireo->createShaderModule(tempBuffer, glyphShadersName + ".vert");
-        ctx.fs.loadShader(glyphShadersName + ".frag", tempBuffer);
-        pipelineConfig.fragmentShader = ctx.vireo->createShaderModule(tempBuffer, glyphShadersName + ".frag");
-        pipelineGlyphs = ctx.vireo->createGraphicPipeline(pipelineConfig, name + " glyphs");
+        Context::ctx->fs.loadShader(glyphShadersName + ".vert", tempBuffer);
+        pipelineConfig.vertexShader = Context::ctx->vireo->createShaderModule(tempBuffer, glyphShadersName + ".vert");
+        Context::ctx->fs.loadShader(glyphShadersName + ".frag", tempBuffer);
+        pipelineConfig.fragmentShader = Context::ctx->vireo->createShaderModule(tempBuffer, glyphShadersName + ".frag");
+        pipelineGlyphs = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name + " glyphs");
     }
 
     void Vector3DRenderer::drawLine(const float3& from, const float3& to, const float4& color) {
@@ -225,9 +223,9 @@ namespace lysa {
                 oldBuffers.push_back(vertexBuffer);
                 // Allocate new buffers to change size
                 vertexCount = totalVertexCount;
-                stagingBuffer = ctx.vireo->createBuffer(vireo::BufferType::BUFFER_UPLOAD, sizeof(Vertex), vertexCount, name + " vertices staging");
+                stagingBuffer = Context::ctx->vireo->createBuffer(vireo::BufferType::BUFFER_UPLOAD, sizeof(Vertex), vertexCount, name + " vertices staging");
                 stagingBuffer->map();
-                vertexBuffer = ctx.vireo->createBuffer(vireo::BufferType::VERTEX, sizeof(Vertex), vertexCount, name + " vertices");
+                vertexBuffer = Context::ctx->vireo->createBuffer(vireo::BufferType::VERTEX, sizeof(Vertex), vertexCount, name + " vertices");
                 // commandList.barrier(*vertexBuffer, vireo::ResourceState::UNDEFINED, vireo::ResourceState::COPY_DST);
             }
             if (vertexBufferDirty) {
@@ -290,7 +288,7 @@ namespace lysa {
         commandList.beginRendering(renderingConfig);
         if (pipelineImages && !imagesVertices.empty()) {
             commandList.bindPipeline(pipelineImages);
-            commandList.bindDescriptors({frame.descriptorSet, ctx.samplers.getDescriptorSet(), fontDescriptorSet});
+            commandList.bindDescriptors({frame.descriptorSet, Context::ctx->samplers.getDescriptorSet(), fontDescriptorSet});
             commandList.draw(
                 imagesVertices.size(),
                 1,
@@ -299,17 +297,17 @@ namespace lysa {
         }
         if (!triangleVertices.empty()) {
             commandList.bindPipeline(pipelineTriangles);
-            commandList.bindDescriptors({frame.descriptorSet, ctx.samplers.getDescriptorSet(), fontDescriptorSet});
+            commandList.bindDescriptors({frame.descriptorSet, Context::ctx->samplers.getDescriptorSet(), fontDescriptorSet});
             commandList.draw(triangleVertices.size(), 1, linesVertices.size(), 0);
         }
         if (!linesVertices.empty()) {
             commandList.bindPipeline(pipelineLines);
-            commandList.bindDescriptors({frame.descriptorSet, ctx.samplers.getDescriptorSet(), fontDescriptorSet});
+            commandList.bindDescriptors({frame.descriptorSet, Context::ctx->samplers.getDescriptorSet(), fontDescriptorSet});
             commandList.draw(linesVertices.size(), 1, 0, 0);
         }
         if (!glyphVertices.empty()) {
             commandList.bindPipeline(pipelineGlyphs);
-            commandList.bindDescriptors({frame.descriptorSet, ctx.samplers.getDescriptorSet(), fontDescriptorSet});
+            commandList.bindDescriptors({frame.descriptorSet, Context::ctx->samplers.getDescriptorSet(), fontDescriptorSet});
             commandList.draw(
                 glyphVertices.size(),
                 1,

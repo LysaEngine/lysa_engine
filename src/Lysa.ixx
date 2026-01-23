@@ -87,7 +87,7 @@ export namespace  lysa {
     };
 
     struct _LysaInit {
-        _LysaInit(const LoggingConfiguration &loggingConfiguration);
+        _LysaInit(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration);
         virtual ~_LysaInit();
     };
 
@@ -100,9 +100,6 @@ export namespace  lysa {
      */
     class Lysa final : _LysaInit {
     public:
-        //! Global runtime context (events, resources, etc.).
-        Context ctx;
-
         /**
          * Construct the runtime and initialize subsystems.
          * @param config Global Context configuration
@@ -117,6 +114,8 @@ export namespace  lysa {
          */
         void run();
 
+        static Context& getContext() { return *Context::ctx; }
+
     private:
         // Fixed delta time bookkeeping for the physics update loop
         const double fixedDeltaTime;
@@ -124,7 +123,7 @@ export namespace  lysa {
         double accumulator{0.0};
         // Frame count since last fps update
         uint32 frameCount = 0;
-        // Number of seconds since last fps update
+        // Number of seconds since the last fps update
         float elapsedSeconds{0.0f};
         // Average FPS,
         uint32 fps{0};

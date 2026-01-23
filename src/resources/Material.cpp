@@ -12,12 +12,12 @@ import lysa.log;
 
 namespace lysa {
 
-    Material::Material(Context& ctx, const Type type):
-        ManagedResource{}, ctx(ctx), type{type} {
+    Material::Material(const Type type):
+        ManagedResource{}, type{type} {
     }
 
     void Material::upload() const {
-        ctx.res.get<MaterialManager>().upload(*this);
+        Context::ctx->res.get<MaterialManager>().upload(*this);
     }
 
     MaterialData StandardMaterial::getMaterialData() const {
@@ -69,9 +69,9 @@ namespace lysa {
         return data;
     }
 
-    StandardMaterial::StandardMaterial(Context& ctx):
-        Material(ctx, STANDARD),
-        imageManager(ctx.res.get<ImageManager>()) {
+    StandardMaterial::StandardMaterial():
+        Material(STANDARD),
+        imageManager(Context::ctx->res.get<ImageManager>()) {
     }
 
     void StandardMaterial::setAlbedoColor(const float4 &color) {
@@ -172,8 +172,8 @@ namespace lysa {
         return XXH32(name.c_str(), name.size(), 0);
     }
 
-    ShaderMaterial::ShaderMaterial(Context& ctx, const std::shared_ptr<ShaderMaterial> &orig):
-        Material{ctx, SHADER},
+    ShaderMaterial::ShaderMaterial(const std::shared_ptr<ShaderMaterial> &orig):
+        Material{SHADER},
         fragFileName{orig->fragFileName},
         vertFileName{orig->vertFileName} {
         for (int i = 0; i < SHADER_MATERIAL_MAX_PARAMETERS; i++) {
@@ -182,10 +182,10 @@ namespace lysa {
         upload();
     }
 
-    ShaderMaterial::ShaderMaterial(Context& ctx,
-                                    const std::string &fragShaderFileName,
-                                   const std::string &vertShaderFileName):
-        Material{ctx, SHADER},
+    ShaderMaterial::ShaderMaterial(
+        const std::string &fragShaderFileName,
+        const std::string &vertShaderFileName):
+        Material{SHADER},
         fragFileName{fragShaderFileName},
         vertFileName{vertShaderFileName} {
     }
@@ -212,26 +212,26 @@ namespace lysa {
         };
     }
 
-    MaterialManager::MaterialManager(Context& ctx, const size_t capacity) :
-        ResourcesManager(ctx, capacity, "MaterialManager"),
+    MaterialManager::MaterialManager( const size_t capacity) :
+        ResourcesManager(capacity, "MaterialManager"),
         memoryArray {
-            ctx.vireo,
+            Context::ctx->vireo,
             sizeof(MaterialData),
             static_cast<size_t>(capacity),
             static_cast<size_t>(capacity),
             vireo::BufferType::DEVICE_STORAGE,
             "Global material array"} {
-        ctx.res.enroll(*this);
+        Context::ctx->res.enroll(*this);
     }
 
     StandardMaterial& MaterialManager::create() {
-        auto& material = dynamic_cast<StandardMaterial&>(allocate(std::make_unique<StandardMaterial>(ctx)));
+        auto& material = dynamic_cast<StandardMaterial&>(allocate(std::make_unique<StandardMaterial>()));
         material.upload();
         return material;
     }
 
     ShaderMaterial& MaterialManager::create(const std::shared_ptr<ShaderMaterial> &orig) {
-        auto& material = dynamic_cast<ShaderMaterial&>(allocate(std::make_unique<ShaderMaterial>(ctx, orig)));
+        auto& material = dynamic_cast<ShaderMaterial&>(allocate(std::make_unique<ShaderMaterial>(orig)));
         material.upload();
         return material;
     }
@@ -239,7 +239,7 @@ namespace lysa {
     ShaderMaterial& MaterialManager::create(
         const std::string &fragShaderFileName,
         const std::string &vertShaderFileName) {
-        auto& material = dynamic_cast<ShaderMaterial&>(allocate(std::make_unique<ShaderMaterial>(ctx, fragShaderFileName, vertShaderFileName)));
+        auto& material = dynamic_cast<ShaderMaterial&>(allocate(std::make_unique<ShaderMaterial>(fragShaderFileName, vertShaderFileName)));
         material.upload();
         return material;
     }
@@ -261,9 +261,9 @@ namespace lysa {
                 memoryArray.write(material.memoryBloc, &materialData);
             }
             needUpload.clear();
-            const auto command = ctx.asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
+            const auto command = Context::ctx->asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
             memoryArray.flush(*command.commandList);
-            ctx.asyncQueue.endCommand(command);
+            Context::ctx->asyncQueue.endCommand(command);
         }
     }
 

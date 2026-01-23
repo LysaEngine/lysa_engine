@@ -19,36 +19,34 @@ import lysa.renderers.deferred_renderer;
 namespace lysa {
 
     std::unique_ptr<Renderer> Renderer::create(
-        Context& ctx,
+
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat) {
 #ifdef FORWARD_RENDERER
         if (config.rendererType == RendererType::FORWARD) {
-            return std::make_unique<ForwardRenderer>(ctx, config, outputFormat);
+            return std::make_unique<ForwardRenderer>(config, outputFormat);
         }
 #endif
 #ifdef DEFERRED_RENDERER
         if (config.rendererType == RendererType::DEFERRED) {
-            return std::make_unique<DeferredRenderer>(ctx, config, outputFormat);
+            return std::make_unique<DeferredRenderer>(config, outputFormat);
         }
 #endif
         throw Exception("Unknown renderer type");
     }
 
     Renderer::Renderer(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat) :
-        ctx(ctx),
         withStencil(
             config.depthStencilFormat == vireo::ImageFormat::D32_SFLOAT_S8_UINT ||
             config.depthStencilFormat == vireo::ImageFormat::D24_UNORM_S8_UINT
         ),
         config(config),
-        depthPrePass(ctx, config, withStencil),
-        meshManager(ctx.res.get<MeshManager>()),
-        shaderMaterialPass(ctx, config),
-        transparencyPass(ctx, config) {
+        depthPrePass(config, withStencil),
+        meshManager(Context::ctx->res.get<MeshManager>()),
+        shaderMaterialPass(config),
+        transparencyPass(config) {
         const auto needToneMapping =
             config.colorRenderingFormat == vireo::ImageFormat::R16G16B16A16_UNORM ||
             config.colorRenderingFormat == vireo::ImageFormat::R32G32B32A32_SFLOAT ||
@@ -58,25 +56,24 @@ namespace lysa {
             config.colorRenderingFormat == vireo::ImageFormat::R8G8B8A8_SNORM;
         if (needGammaCorrection || needToneMapping) {
             gammaCorrectionPass = std::make_unique<GammaCorrectionPass>(
-                ctx,
                 config,
                 outputFormat,
                 needToneMapping ? config.toneMappingType : ToneMappingType::NONE);
         }
         switch (config.antiAliasingType) {
         case AntiAliasingType::FXAA:
-            fxaaPass = std::make_unique<FXAAPass>(ctx, config, outputFormat);
+            fxaaPass = std::make_unique<FXAAPass>(config, outputFormat);
             break;
         case AntiAliasingType::SMAA:
-            smaaPass = std::make_unique<SMAAPass>(ctx, config, outputFormat);
+            smaaPass = std::make_unique<SMAAPass>(config, outputFormat);
             break;
         default:
             break;
         }
         if (config.bloomEnabled) {
-            bloomPass = std::make_unique<BloomPass>(ctx, config, outputFormat);
+            bloomPass = std::make_unique<BloomPass>(config, outputFormat);
         }
-        framesData.resize(ctx.config.framesInFlight);
+        framesData.resize(Context::ctx->config.framesInFlight);
     }
 
     void Renderer::update(const uint32 frameIndex) {
@@ -160,7 +157,7 @@ namespace lysa {
     void Renderer::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         currentExtent = extent;
         for (auto& frame : framesData) {
-            frame.colorAttachment = ctx.vireo->createRenderTarget(
+            frame.colorAttachment = Context::ctx->vireo->createRenderTarget(
                config.colorRenderingFormat,
                extent.width, extent.height,
                vireo::RenderTargetType::COLOR,
@@ -168,7 +165,7 @@ namespace lysa {
                1,
                vireo::MSAA::NONE,
                "Main color attachment");
-            frame.depthAttachment = ctx.vireo->createRenderTarget(
+            frame.depthAttachment = Context::ctx->vireo->createRenderTarget(
                 config.depthStencilFormat,
                 extent.width, extent.height,
                 vireo::RenderTargetType::DEPTH,

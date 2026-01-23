@@ -14,9 +14,9 @@ import lysa.utils;
 
 namespace lysa {
 
-    DirectoryWatcher::DirectoryWatcher(Context& ctx, const std::string& uri, const uint32 debounceTimer) :
+    DirectoryWatcher::DirectoryWatcher( const std::string& uri, const uint32 debounceTimer) :
         ctx(ctx), debounceTimer(std::chrono::milliseconds(debounceTimer)) {
-        directoryName = std::to_wstring(ctx.fs.getPath(uri));
+        directoryName = std::to_wstring(Context::ctx->fs.getPath(uri));
         directory = CreateFileW(
             directoryName.c_str(),
             FILE_LIST_DIRECTORY,
@@ -115,7 +115,7 @@ namespace lysa {
                 if ((changed != lastFileName) ||
                     ((now - lastFileTime) > debounceTimer)) {
                     auto event = Event{DirectoryWatcherEvent::FILE_CHANGE, to_string(changed)};
-                    ctx.events.fire(event);
+                    Context::ctx->events.fire(event);
                     lastFileName = std::move(changed);
                     lastFileTime = now;
                 }

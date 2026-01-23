@@ -23,11 +23,9 @@ export namespace lysa {
     public:
         /**
          * Constructs a ShaderMaterialPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          */
         ShaderMaterialPass(
-            const Context& ctx,
             const RendererConfiguration& config);
 
         /**

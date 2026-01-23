@@ -65,14 +65,20 @@ export namespace  lysa {
      * Lysa instance-wide runtime context.
      */
     struct Context {
+        //! Global runtime context (events, resources, etc.).
+        static std::unique_ptr<Context> ctx;
+
         /**
-         * Quit flag controlling the main loop termination.
+         * Flag controlling the main loop termination.
          *
          * When set to true, the main loop (see @ref Lysa::run) will exit
          * at the end of the current iteration.
          */
         bool exit{false};
 
+        /**
+         * Global context configuration
+         */
         const ContextConfiguration config;
 
         /**
@@ -125,7 +131,14 @@ export namespace  lysa {
          */
         AsyncQueue asyncQueue;
 
+        /**
+         *  Global descriptor set layout for GPU-ready shared resources.
+         */
         std::shared_ptr<vireo::DescriptorLayout> globalDescriptorLayout;
+
+        /**
+        *  Global descriptor set layout for GPU-ready shared resources.
+        */
         std::shared_ptr<vireo::DescriptorSet> globalDescriptorSet;
 
         Context(const ContextConfiguration& config);

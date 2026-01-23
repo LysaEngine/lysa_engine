@@ -23,11 +23,9 @@ export namespace lysa {
     public:
         /**
          * Constructs a ForwardColorPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          */
         ForwardColorPass(
-            const Context& ctx,
             const RendererConfiguration& config);
 
         /**

@@ -33,9 +33,8 @@ export namespace lysa {
 
         /**
          * Constructs a new GlobalDescriptorSet.
-         * @param ctx Reference to the rendering context.
          */
-        GlobalDescriptorSet(Context& ctx);
+        GlobalDescriptorSet();
 
         /**
          * Destroys the GlobalDescriptorSet.
@@ -60,8 +59,6 @@ export namespace lysa {
         void update();
 
     private:
-        /* Reference to the engine context. */
-        Context& ctx;
         /*Reference to the image manager. */
         ImageManager& imageManager;
         /* Global descriptor set layout. */

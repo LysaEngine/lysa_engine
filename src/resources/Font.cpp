@@ -77,7 +77,6 @@ namespace lysa {
     }
 
     Font::Font(const Font &font):
-        ctx(font.ctx),
         path{font.path},
         atlas{font.atlas},
         size{font.size},
@@ -86,8 +85,8 @@ namespace lysa {
         lineHeight{font.lineHeight},
         params{font.params},
         glyphs{font.glyphs}  {
-        if (FT_New_Face(ftLibrary, ctx.fs.getPath(path + ".ttf").c_str(), 0, &ftFace)) {
-            if (FT_New_Face(ftLibrary, ctx.fs.getPath(path + ".otf").c_str(), 0, &ftFace)) {
+        if (FT_New_Face(ftLibrary, Context::ctx->fs.getPath(path + ".ttf").c_str(), 0, &ftFace)) {
+            if (FT_New_Face(ftLibrary, Context::ctx->fs.getPath(path + ".otf").c_str(), 0, &ftFace)) {
                 throw Exception("Error loading font ", path);
             }
         }
@@ -95,17 +94,16 @@ namespace lysa {
         hbFont = hb_ft_font_create(ftFace, nullptr);
     }
 
-    Font::Font(const Context& ctx, const std::string &path):
-        ctx(ctx),
+    Font::Font(const std::string &path):
         path(path),
-        atlas(ctx.res.get<ImageManager>().load(path + ".png", vireo::ImageFormat::R8G8B8A8_SRGB)) {
+        atlas(Context::ctx->res.get<ImageManager>().load(path + ".png", vireo::ImageFormat::R8G8B8A8_SRGB)) {
         if (!ftLibrary) {
             if (FT_Init_FreeType(&ftLibrary)) {
                 throw Exception("Error initializing FreeType");
             }
         }
 
-        auto json = nlohmann::ordered_json::parse(ctx.fs.openReadStream(path + ".json"));
+        auto json = nlohmann::ordered_json::parse(Context::ctx->fs.openReadStream(path + ".json"));
         const auto& atlas = json["atlas"];
         // assert([&]{ return atlas["type"].get<std::string>() == "mtsdf"; }, "Only MTSDF font atlas are supported");
         atlas["size"].get_to(size);
@@ -115,8 +113,8 @@ namespace lysa {
         const auto pixelRange = atlas["distanceRange"].get<float>();
         params.pxRange = { pixelRange / atlasWidth, pixelRange / atlasHeight };
 
-        if (FT_New_Face(ftLibrary, ctx.fs.getPath(path + ".ttf").c_str(), 0, &ftFace)) {
-            if (FT_New_Face(ftLibrary, ctx.fs.getPath(path + ".otf").c_str(), 0, &ftFace)) {
+        if (FT_New_Face(ftLibrary, Context::ctx->fs.getPath(path + ".ttf").c_str(), 0, &ftFace)) {
+            if (FT_New_Face(ftLibrary, Context::ctx->fs.getPath(path + ".otf").c_str(), 0, &ftFace)) {
                 throw Exception("Error loading font ", path);
             }
         }

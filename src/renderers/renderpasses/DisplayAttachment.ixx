@@ -17,13 +17,11 @@ export namespace lysa {
     class DisplayAttachment : public PostProcessing {
     public:
         DisplayAttachment(
-            const Context& ctx,
             const RendererConfiguration& config,
             const vireo::ImageFormat outputFormat,
             const std::string& shader = "",
             void* data = nullptr, const uint32 dataSize = 0) :
             PostProcessing(
-                ctx,
                 config,
                 outputFormat,
                 shader.empty() ? "passthrough" : shader,

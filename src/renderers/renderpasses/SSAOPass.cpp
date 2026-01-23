@@ -9,15 +9,14 @@ module lysa.renderers.renderpasses.ssao_pass;
 namespace lysa {
 
     SSAOPass::SSAOPass(
-        const Context& ctx,
         const RendererConfiguration& config,
         const GBufferPass& gBufferPass,
         const bool withStencil):
-        Renderpass{ctx, config, "SSAO"},
+        Renderpass{config, "SSAO"},
         params{ .radius = config.ssaoRadius, .bias = config.ssaoBias, .power = config.ssaoStrength, .sampleCount = config.ssaoSampleCount },
         gBufferPass{gBufferPass}{
 
-        descriptorLayout = ctx.vireo->createDescriptorLayout();
+        descriptorLayout = Context::ctx->vireo->createDescriptorLayout();
         descriptorLayout->add(BINDING_PARAMS, vireo::DescriptorType::UNIFORM);
         descriptorLayout->add(BINDING_POSITION_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
         descriptorLayout->add(BINDING_NORMAL_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
@@ -27,9 +26,9 @@ namespace lysa {
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         pipelineConfig.stencilTestEnable = withStencil;
         pipelineConfig.backStencilOpState = pipelineConfig.frontStencilOpState;
-        pipelineConfig.resources = ctx.vireo->createPipelineResources({
-            ctx.globalDescriptorLayout,
-            ctx.samplers.getDescriptorLayout(),
+        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
+            Context::ctx->globalDescriptorLayout,
+            Context::ctx->samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             descriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -39,12 +38,12 @@ namespace lysa {
             {}, name);
         pipelineConfig.vertexShader = loadShader(VERTEX_SHADER);
         pipelineConfig.fragmentShader = loadShader(FRAGMENT_SHADER);
-        pipeline = ctx.vireo->createGraphicPipeline(pipelineConfig, name);
+        pipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
         renderingConfig.stencilTestEnable = pipelineConfig.stencilTestEnable;
 
-        framesData.resize(ctx.config.framesInFlight);
+        framesData.resize(Context::ctx->config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.descriptorSet = ctx.vireo->createDescriptorSet(descriptorLayout);
+            frame.descriptorSet = Context::ctx->vireo->createDescriptorSet(descriptorLayout);
         }
     }
 
@@ -66,8 +65,8 @@ namespace lysa {
            vireo::ResourceState::RENDER_TARGET_COLOR);
         commandList.bindPipeline(pipeline);
         commandList.bindDescriptors({
-             ctx.globalDescriptorSet,
-             ctx.samplers.getDescriptorSet(),
+             Context::ctx->globalDescriptorSet,
+             Context::ctx->samplers.getDescriptorSet(),
              scene.getDescriptorSet(),
              frame.descriptorSet,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -86,7 +85,7 @@ namespace lysa {
 
     void SSAOPass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         for (auto& frame : framesData) {
-            frame.ssaoColorBuffer = ctx.vireo->createRenderTarget(
+            frame.ssaoColorBuffer = Context::ctx->vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[0],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -101,8 +100,8 @@ namespace lysa {
         }
 
         if (paramsBuffer == nullptr) {
-            noiseTexture = ctx.vireo->createImage(vireo::ImageFormat::R32G32B32A32_SFLOAT, 4, 4, 1, 1, "SSAO Noise");
-            paramsBuffer = ctx.vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(Params), 1, "SSAO Params");
+            noiseTexture = Context::ctx->vireo->createImage(vireo::ImageFormat::R32G32B32A32_SFLOAT, 4, 4, 1, 1, "SSAO Noise");
+            paramsBuffer = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(Params), 1, "SSAO Params");
             paramsBuffer->map();
 
             // https://learnopengl.com/Advanced-Lighting/SSAO

@@ -59,6 +59,8 @@ namespace  lysa {
         }
     }
 
+    std::unique_ptr<Context> Context::ctx;
+
     Context::Context(const ContextConfiguration& config):
         config(config),
         vireo(vireo::Vireo::create(config.backend, vireoDebugCallback)),

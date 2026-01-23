@@ -121,8 +121,7 @@ export namespace lysa {
         void setBypassUpload(const bool bypass) { bypassUpload = bypass; }
 
     protected:
-        Context& ctx;
-        Material(Context& ctx, Type type);
+        Material(Type type);
 
     private:
         friend class MaterialManager;
@@ -150,7 +149,7 @@ export namespace lysa {
         /**
          * Creates a StandardMaterial with default parameters
          */
-        StandardMaterial(Context& ctx);
+        StandardMaterial();
 
         ~StandardMaterial() override;
 
@@ -293,17 +292,16 @@ export namespace lysa {
         /**
          * Creates a ShaderMaterial by copy
          */
-        ShaderMaterial(Context& ctx, const std::shared_ptr<ShaderMaterial> &orig);
+        ShaderMaterial( const std::shared_ptr<ShaderMaterial> &orig);
 
         /**
          * Creates a ShaderMaterial
-         * @param ctx
          * @param fragShaderFileName fragment shader file path, relative to the application directory
          * @param vertShaderFileName vertex shader file path, relative to the application directory
          */
-        ShaderMaterial(Context& ctx,
-                       const std::string &fragShaderFileName,
-                       const std::string &vertShaderFileName);
+        ShaderMaterial(
+            const std::string &fragShaderFileName,
+            const std::string &vertShaderFileName);
 
         pipeline_id getPipelineId() const override;
 
@@ -335,14 +333,13 @@ export namespace lysa {
         float4 parameters[SHADER_MATERIAL_MAX_PARAMETERS]{};
     };
 
-    class MaterialManager : public ResourcesManager<Context, Material> {
+    class MaterialManager : public ResourcesManager<Material> {
     public:
         /**
          * Construct a manager bound to the given runtime context.
-         * @param ctx Instance wide context
          * @param capacity Initial capacity
          */
-        MaterialManager(Context& ctx, size_t capacity);
+        MaterialManager(size_t capacity);
 
         StandardMaterial& create();
 

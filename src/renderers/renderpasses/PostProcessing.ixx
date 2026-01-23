@@ -50,7 +50,6 @@ export namespace lysa {
 
         /**
          * Constructs a PostProcessing render pass
-         * @param ctx The engine context
          * @param config The renderer configuration
          * @param outputFormat Format of the output image
          * @param fragShaderName Name of the fragment shader to use
@@ -59,7 +58,6 @@ export namespace lysa {
          * @param name Name of the render pass
          */
         PostProcessing(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat,
             const std::string& fragShaderName,

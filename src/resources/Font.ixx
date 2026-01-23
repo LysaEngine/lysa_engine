@@ -75,10 +75,9 @@ export namespace lysa {
 
         /**
          * Construct a font resource from a font file.
-         * @param ctx Application context used to access resources and GPU.
          * @param path Font file path, relative to the application working directory.
          */
-        Font(const Context& ctx, const std::string &path);
+        Font(const std::string &path);
 
         Font(const Font &font);
 
@@ -164,7 +163,6 @@ export namespace lysa {
         auto getHarfBuzzFont() const { return hbFont; }
 
     private:
-        const Context& ctx;
         const std::string path;
         const Image& atlas;
         uint32 size;

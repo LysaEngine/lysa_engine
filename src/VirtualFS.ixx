@@ -40,7 +40,7 @@ export namespace lysa {
          * @param filepath URI.
          * @return True if the directory exists; false otherwise.
          */
-        //static bool dirExists(Context& ctx, const std::string &filepath);
+        //static bool dirExists( const std::string &filepath);
 
         /**
          * Tests whether a regular file exists at the given path or URI.

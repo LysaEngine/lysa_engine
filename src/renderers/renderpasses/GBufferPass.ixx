@@ -23,12 +23,10 @@ export namespace lysa {
     public:
         /**
          * Constructs a GBufferPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          * @param withStencil Whether to enable stencil testing
          */
         GBufferPass(
-            const Context& ctx,
             const RendererConfiguration& config,
             bool withStencil);
 

@@ -13,14 +13,17 @@ import lysa.renderers.scene_frame_data;
 
 namespace lysa {
 
-    _LysaInit::_LysaInit(const LoggingConfiguration &loggingConfiguration) {
+    _LysaInit::_LysaInit(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration) {
         if constexpr (Log::isLoggingEnabled()) Log::init(loggingConfiguration);
+        assert([&]{ return Context::ctx == nullptr; }, "Context already initialized");
 #ifdef USE_SDL3
         SDL_Init(SDL_INIT_VIDEO);
 #endif
+        Context::ctx = std::make_unique<Context>(config);
     }
 
     _LysaInit::~_LysaInit() {
+        Context::ctx.reset();
 #ifdef USE_SDL3
         SDL_Quit();
 #endif
@@ -28,33 +31,30 @@ namespace lysa {
     }
 
     Lysa::Lysa(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration) :
-        _LysaInit(loggingConfiguration),
-        ctx(config),
+        _LysaInit(config, loggingConfiguration),
         fixedDeltaTime(config.deltaTime),
-        imageManager(ctx, config.resourcesCapacity.images),
-        materialManager(ctx, config.resourcesCapacity.material),
-        meshManager(ctx,
-                    config.resourcesCapacity.meshes,
-                    config.resourcesCapacity.vertices,
-                    config.resourcesCapacity.indices,
-                    config.resourcesCapacity.surfaces),
-        globalDescriptors(ctx)
-    {
-        ctx.globalDescriptorLayout = globalDescriptors.getDescriptorLayout();
-        ctx.globalDescriptorSet = globalDescriptors.getDescriptorSet();
-        SceneFrameData::createDescriptorLayouts(ctx);
+        imageManager(config.resourcesCapacity.images),
+        materialManager(config.resourcesCapacity.material),
+        meshManager(
+            config.resourcesCapacity.meshes,
+            config.resourcesCapacity.vertices,
+            config.resourcesCapacity.indices,
+            config.resourcesCapacity.surfaces) {
+        Context::ctx->globalDescriptorLayout = globalDescriptors.getDescriptorLayout();
+        Context::ctx->globalDescriptorSet = globalDescriptors.getDescriptorSet();
+        SceneFrameData::createDescriptorLayouts();
     }
 
     Lysa::~Lysa() {
-        ctx.graphicQueue->waitIdle();
+        Context::ctx->graphicQueue->waitIdle();
         SceneFrameData::destroyDescriptorLayouts();
         Renderpass::destroyShaderModules();
         FrustumCulling::cleanup();
     }
 
     void Lysa::uploadData() {
-        if (ctx.samplers.isUpdateNeeded()) {
-            ctx.samplers.update();
+        if (Context::ctx->samplers.isUpdateNeeded()) {
+            Context::ctx->samplers.update();
         }
         materialManager.flush();
         meshManager.flush();
@@ -62,12 +62,12 @@ namespace lysa {
     }
 
     void Lysa::run() {
-        while (!ctx.exit) {
+        while (!Context::ctx->exit) {
             uploadData();
-            ctx.defer._process();
-            ctx.threads._process();
+            Context::ctx->defer._process();
+            Context::ctx->threads._process();
             processPlatformEvents();
-            ctx.events._process();
+            Context::ctx->events._process();
             uploadData();
 
             // https://gafferongames.com/post/fix_your_timestep/
@@ -77,7 +77,7 @@ namespace lysa {
             if (frameTime > 0.25) frameTime = 0.25; // Note: Max frame time to avoid spiral of death
 
             // Display the average FPS in the log
-            if (ctx.config.displayFPS) {
+            if (Context::ctx->config.displayFPS) {
                 elapsedSeconds += static_cast<float>(frameTime);
                 frameCount++;
                 if (elapsedSeconds >= 1.0) {
@@ -92,16 +92,16 @@ namespace lysa {
             accumulator += frameTime;
             while (accumulator >= fixedDeltaTime) {
                 auto event = Event{MainLoopEvent::PHYSICS_PROCESS,fixedDeltaTime };
-                ctx.events.fire(event);
+                Context::ctx->events.fire(event);
                 accumulator -= fixedDeltaTime;
             }
             auto event = Event{MainLoopEvent::PROCESS,accumulator / fixedDeltaTime };
-            ctx.events.fire(event);
+            Context::ctx->events.fire(event);
         }
-        ctx.defer._process();
+        Context::ctx->defer._process();
         auto event = Event{ MainLoopEvent::QUIT };
-        ctx.events.fire(event);
-        ctx.graphicQueue->waitIdle();
+        Context::ctx->events.fire(event);
+        Context::ctx->graphicQueue->waitIdle();
     }
 
 }

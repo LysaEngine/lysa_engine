@@ -9,11 +9,10 @@ module lysa.renderers.forward_renderer;
 namespace lysa {
 
     ForwardRenderer::ForwardRenderer(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat) :
-        Renderer(ctx, config, outputFormat),
-        forwardColorPass(ctx, config) {
+        Renderer(config, outputFormat),
+        forwardColorPass(config) {
     }
 
     void ForwardRenderer::update(const uint32 frameIndex) {

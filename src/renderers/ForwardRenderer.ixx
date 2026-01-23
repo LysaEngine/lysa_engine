@@ -28,7 +28,6 @@ export namespace lysa {
     class ForwardRenderer : public Renderer {
     public:
         ForwardRenderer(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 

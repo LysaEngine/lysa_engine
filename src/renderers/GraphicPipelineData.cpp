@@ -31,39 +31,38 @@ namespace lysa {
     }
 
     GraphicPipelineData::GraphicPipelineData(
-        const Context& ctx,
         const uint32 pipelineId,
         const DeviceMemoryArray& meshInstancesDataArray,
         const uint32 maxMeshSurfacePerPipeline) :
         pipelineId{pipelineId},
-        frustumCullingPipeline{ctx, true, meshInstancesDataArray, pipelineId},
-        materialManager(ctx.res.get<MaterialManager>()),
-        vireo(ctx.vireo),
+        frustumCullingPipeline{true, meshInstancesDataArray, pipelineId},
+        materialManager(Context::ctx->res.get<MaterialManager>()),
+        vireo(Context::ctx->vireo),
         instancesArray{
-            ctx.vireo,
+            Context::ctx->vireo,
             sizeof(InstanceData),
             maxMeshSurfacePerPipeline,
             maxMeshSurfacePerPipeline,
             vireo::BufferType::DEVICE_STORAGE,
             "instance:" + std::to_string(pipelineId)},
         drawCommands(maxMeshSurfacePerPipeline),
-        drawCommandsBuffer{ctx.vireo->createBuffer(
+        drawCommandsBuffer{Context::ctx->vireo->createBuffer(
             vireo::BufferType::DEVICE_STORAGE,
             sizeof(DrawCommand) * maxMeshSurfacePerPipeline,
             1,
             "drawCommand:" + std::to_string(pipelineId))},
-        culledDrawCommandsCountBuffer{ctx.vireo->createBuffer(
+        culledDrawCommandsCountBuffer{Context::ctx->vireo->createBuffer(
             vireo::BufferType::READWRITE_STORAGE,
             sizeof(uint32),
             1,
             "culledDrawCommandsCount:" + std::to_string(pipelineId))},
-        culledDrawCommandsBuffer{ctx.vireo->createBuffer(
+        culledDrawCommandsBuffer{Context::ctx->vireo->createBuffer(
             vireo::BufferType::READWRITE_STORAGE,
             sizeof(DrawCommand) * maxMeshSurfacePerPipeline,
             1,
             "culledDrawCommands:" + std::to_string(pipelineId))}
     {
-        descriptorSet = ctx.vireo->createDescriptorSet(pipelineDescriptorLayout, "Graphic : " + std::to_string(pipelineId));
+        descriptorSet = Context::ctx->vireo->createDescriptorSet(pipelineDescriptorLayout, "Graphic : " + std::to_string(pipelineId));
         descriptorSet->update(BINDING_INSTANCES, instancesArray.getBuffer());
     }
 

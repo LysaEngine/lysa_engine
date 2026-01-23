@@ -2272,11 +2272,11 @@ static int stbtt__GetGlyphShapeT2(const stbtt_fontinfo *info, int glyph_index, s
    stbtt__csctx count_ctx = STBTT__CSCTX_INIT(1);
    stbtt__csctx output_ctx = STBTT__CSCTX_INIT(0);
    if (stbtt__run_charstring(info, glyph_index, &count_ctx)) {
-      *pvertices = (stbtt_vertex*)STBTT_malloc(count_ctx.num_vertices*sizeof(stbtt_vertex), info->userdata);
-      output_ctx.pvertices = *pvertices;
+      *pvertices = (stbtt_vertex*)STBTT_malloc(count_Context::ctx->num_vertices*sizeof(stbtt_vertex), info->userdata);
+      output_Context::ctx->pvertices = *pvertices;
       if (stbtt__run_charstring(info, glyph_index, &output_ctx)) {
-         STBTT_assert(output_ctx.num_vertices == count_ctx.num_vertices);
-         return output_ctx.num_vertices;
+         STBTT_assert(output_Context::ctx->num_vertices == count_Context::ctx->num_vertices);
+         return output_Context::ctx->num_vertices;
       }
    }
    *pvertices = NULL;

@@ -16,20 +16,20 @@ import lysa.resources.render_target;
 
 namespace lysa {
 
-    void AssetsPack::load(Context& ctx, const std::string &fileURI, const Callback& callback) {
-        auto stream = ctx.fs.openReadStream(fileURI);
-        return load(ctx, stream, callback);
+    void AssetsPack::load( const std::string &fileURI, const Callback& callback) {
+        auto stream = Context::ctx->fs.openReadStream(fileURI);
+        return load(stream, callback);
     }
 
-    void AssetsPack::load(Context& ctx,  std::ifstream &stream, const Callback& callback) {
+    void AssetsPack::load(  std::ifstream &stream, const Callback& callback) {
         AssetsPack loader;
-        loader.loadScene(ctx, stream, callback);
+        loader.loadScene(stream, callback);
     }
 
-    void AssetsPack::loadScene(Context& ctx, std::ifstream& stream, const Callback& callback) {
-        auto& imageManager = ctx.res.get<ImageManager>();
-        auto& materialManager = ctx.res.get<MaterialManager>();
-        auto& meshManager = ctx.res.get<MeshManager>();
+    void AssetsPack::loadScene( std::ifstream& stream, const Callback& callback) {
+        auto& imageManager = Context::ctx->res.get<ImageManager>();
+        auto& materialManager = Context::ctx->res.get<MaterialManager>();
+        auto& meshManager = Context::ctx->res.get<MeshManager>();
         // Read the file global header
         stream.read(reinterpret_cast<std::istream::char_type *>(&header), sizeof(header));
         if (header.magic[0] != MAGIC[0] &&
@@ -162,7 +162,7 @@ namespace lysa {
         std::vector<ImageTexture> textures;
         textures.reserve(header.imagesCount);
         if (header.imagesCount > 0) {
-            auto& asyncQueue = ctx.asyncQueue;
+            auto& asyncQueue = Context::ctx->asyncQueue;
             const auto command = asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
             // Upload all images into VRAM using one big staging buffer
             std::shared_ptr<vireo::Buffer> textureStagingBuffer;
@@ -173,7 +173,6 @@ namespace lysa {
                1);
             textureStagingBuffer->map();
             const auto images = loadImagesAndTextures(
-                ctx,
                 textures,
                 *textureStagingBuffer,
                 *command.commandList,
@@ -333,11 +332,11 @@ namespace lysa {
         }
 
         // Update renderers pipelines in current rendering targets
-        //ctx.res.get<RenderTargetManager>().updatePipelines(pipelineIds);  XXX
+        //Context::ctx->res.get<RenderTargetManager>().updatePipelines(pipelineIds);  XXX
     }
 
     std::vector<std::shared_ptr<vireo::Image>> AssetsPack::loadImagesAndTextures(
-        Context& ctx,
+
         std::vector<ImageTexture>& textures,
         const vireo::Buffer& stagingBuffer,
         const vireo::CommandList& commandList,
@@ -345,7 +344,7 @@ namespace lysa {
         const std::vector<ImageHeader>& imageHeaders,
         const std::vector<std::vector<MipLevelInfo>>&levelHeaders,
         const std::vector<TextureHeader>& textureHeaders) const {
-        const auto& vireo = ctx.vireo;
+        const auto& vireo = Context::ctx->vireo;
         std::vector<std::shared_ptr<vireo::Image>> images(header.texturesCount);
 
         // Create images upload buffer
@@ -395,12 +394,12 @@ namespace lysa {
                     // vireo::ResourceState::SHADER_READ,
                     // 0,
                     // imageHeader.mipLevels);
-                auto samplerIndex = ctx.samplers.addSampler(
+                auto samplerIndex = Context::ctx->samplers.addSampler(
                     static_cast<vireo::Filter>(texture.minFilter),
                     static_cast<vireo::Filter>(texture.magFilter),
                     static_cast<vireo::AddressMode>(texture.samplerAddressModeU),
                     static_cast<vireo::AddressMode>(texture.samplerAddressModeV));
-                auto& lImage = ctx.res.get<ImageManager>().create(image, name);
+                auto& lImage = Context::ctx->res.get<ImageManager>().create(image, name);
                 textures.push_back({lImage.id, samplerIndex});
             }
         }

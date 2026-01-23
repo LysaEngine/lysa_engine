@@ -35,7 +35,7 @@ template <> struct luabridge::Stack<lysa::MouseCursor> : Enum<lysa::MouseCursor>
 
 namespace lysa {
 
-    Lua::Lua(Context& ctx, const LuaConfiguration& luaConfiguration) :
+    Lua::Lua( const LuaConfiguration& luaConfiguration) :
         ctx(ctx),
         L(luaL_newstate()) {
         luaL_openlibs(L);
@@ -46,7 +46,7 @@ namespace lysa {
         luabridge::enableExceptions(L);
         bind();
 
-        const std::string path_chunk = "package.path = package.path .. ';?.lua;" + ctx.fs.getScriptsDirectory()  + "/?.lua'";
+        const std::string path_chunk = "package.path = package.path .. ';?.lua;" + Context::ctx->fs.getScriptsDirectory()  + "/?.lua'";
         if (luaL_dostring(L, path_chunk.c_str()) != LUA_OK) {
             Log::warning("[Lua] error: ", std::string(lua_tostring(L, -1)));
             lua_pop(L, 1);
@@ -1110,12 +1110,12 @@ end
         .endClass()
 
         .beginClass<Context>("Context")
-           .addProperty("exit", [this](Context*) { return &ctx.exit;})
-           .addProperty("vireo", [this](Context*) { return ctx.vireo;})
-           .addProperty("fs",  [this](Context*) { return &ctx.fs;})
-           .addProperty("events", [this](Context*) { return &ctx.events;})
-           .addProperty("res", [this](Context*) { return &ctx.res;})
-           .addProperty("graphic_queue", [this](Context*) { return ctx.graphicQueue;})
+           .addProperty("exit", [this](Context*) { return &Context::ctx->exit;})
+           .addProperty("vireo", [this](Context*) { return Context::ctx->vireo;})
+           .addProperty("fs",  [this](Context*) { return &Context::ctx->fs;})
+           .addProperty("events", [this](Context*) { return &Context::ctx->events;})
+           .addProperty("res", [this](Context*) { return &Context::ctx->res;})
+           .addProperty("graphic_queue", [this](Context*) { return Context::ctx->graphicQueue;})
        .endClass()
 
         .endNamespace();

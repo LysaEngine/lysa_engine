@@ -37,7 +37,7 @@ export namespace lysa {
     class Renderer {
     public:
         static std::unique_ptr<Renderer> create(
-            Context& ctx,
+
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 
@@ -143,7 +143,6 @@ export namespace lysa {
             std::shared_ptr<vireo::RenderTarget> depthAttachment;
         };
 
-        const Context& ctx;
         const bool withStencil;
         const RendererConfiguration config;
         std::vector<FrameData> framesData;
@@ -151,7 +150,6 @@ export namespace lysa {
         DepthPrepass depthPrePass;
 
         Renderer(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 

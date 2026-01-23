@@ -74,19 +74,18 @@ export namespace lysa {
     public:
         /**
          * Creates a Mesh from vertices
-         * @param ctx
          * @param vertices Vertices
          * @param indices Indexes of vertices
          * @param surfaces Surfaces
          * @param name
          */
-        Mesh(Context& ctx,
+        Mesh(
              const std::vector<Vertex>& vertices,
              const std::vector<uint32>& indices,
              const std::vector<MeshSurface>&surfaces,
              const std::string& name);
 
-        Mesh(Context& ctx, const std::string& name) : ctx(ctx), name(name) {}
+        Mesh(const std::string& name) : name(name) {}
 
         ~Mesh() override;
 
@@ -163,7 +162,6 @@ export namespace lysa {
         constexpr const std::string& getName() const { return name; }
 
     protected:
-        Context& ctx;
         const std::string name;
         AABB localAABB;
         std::vector<Vertex> vertices;
@@ -179,18 +177,16 @@ export namespace lysa {
         MemoryBlock surfacesMemoryBlock;
     };
 
-    class MeshManager : public ResourcesManager<Context, Mesh> {
+    class MeshManager : public ResourcesManager<Mesh> {
     public:
         /**
          * Construct a manager bound to the given runtime context.
-         * @param ctx Instance wide context
          * @param capacity maximum capacity
          * @param vertexCapacity
          * @param indexCapacity
          * @param surfaceCapacity
          */
         MeshManager(
-            Context& ctx,
             size_t capacity,
             size_t vertexCapacity,
             size_t indexCapacity,

@@ -10,17 +10,16 @@ import lysa.renderers.graphic_pipeline_data;
 
 namespace lysa {
     DepthPrepass::DepthPrepass(
-        const Context& ctx,
         const RendererConfiguration& config,
         const bool withStencil):
-        Renderpass{ctx, config, "Depth pre-pass"},
-        materialManager(ctx.res.get<MaterialManager>()) {
+        Renderpass{config, "Depth pre-pass"},
+        materialManager(Context::ctx->res.get<MaterialManager>()) {
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         pipelineConfig.stencilTestEnable = withStencil;
         pipelineConfig.backStencilOpState = pipelineConfig.frontStencilOpState;
-        pipelineConfig.resources = ctx.vireo->createPipelineResources({
-            ctx.globalDescriptorLayout,
-            ctx.samplers.getDescriptorLayout(),
+        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
+            Context::ctx->globalDescriptorLayout,
+            Context::ctx->samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             GraphicPipelineData::pipelineDescriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -29,7 +28,7 @@ namespace lysa {
         },
             SceneFrameData::instanceIndexConstantDesc, name);
         renderingConfig.stencilTestEnable = pipelineConfig.stencilTestEnable;
-        framesData.resize(ctx.config.framesInFlight);
+        framesData.resize(Context::ctx->config.framesInFlight);
     }
 
     void DepthPrepass::updatePipelines(const std::unordered_map<pipeline_id, std::vector<unique_id>>& pipelineIds) {
@@ -38,9 +37,9 @@ namespace lysa {
                 const auto& material = materials.at(0);
                 pipelineConfig.cullMode = materialManager[material].getCullMode();
                 pipelineConfig.vertexShader = loadShader(VERTEX_SHADER);
-                pipelineConfig.vertexInputLayout = ctx.vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
+                pipelineConfig.vertexInputLayout = Context::ctx->vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
                 pipelineConfig.msaa = config.msaa;
-                pipelines[pipelineId] = ctx.vireo->createGraphicPipeline(pipelineConfig, name + ":" + std::to_string(pipelineId));
+                pipelines[pipelineId] = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name + ":" + std::to_string(pipelineId));
             }
         }
     }
@@ -64,7 +63,7 @@ namespace lysa {
     void DepthPrepass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         if (config.msaa != vireo::MSAA::NONE) {
             for (auto& frame : framesData) {
-                frame.multisampledDepthAttachment = ctx.vireo->createRenderTarget(
+                frame.multisampledDepthAttachment = Context::ctx->vireo->createRenderTarget(
                     config.depthStencilFormat,
                     extent.width, extent.height,
                     vireo::RenderTargetType::DEPTH,

@@ -106,7 +106,7 @@ export namespace lysa {
     */
     class RenderingWindow : public UniqueResource {
     public:
-        RenderingWindow(Context& ctx, const RenderingWindowConfiguration& config = {});
+        RenderingWindow( const RenderingWindowConfiguration& config = {});
 
         ~RenderingWindow() override;
 

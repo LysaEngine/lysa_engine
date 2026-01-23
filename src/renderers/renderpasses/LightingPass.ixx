@@ -23,13 +23,11 @@ export namespace lysa {
     public:
         /**
          * Constructs a LightingPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          * @param gBufferPass Reference to the G-buffer pass providing input textures
          * @param withStencil Whether to enable stencil testing
          */
         LightingPass(
-            const Context& ctx,
             const RendererConfiguration& config, const
             GBufferPass& gBufferPass,
             bool withStencil);

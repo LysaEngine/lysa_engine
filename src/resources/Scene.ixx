@@ -47,11 +47,9 @@ export namespace lysa {
     public:
         /**
          * Constructs a Scene with a given configuration.
-         * @param ctx Reference to the rendering context.
          * @param config Scene configuration settings.
          */
-        Scene(Context& ctx,
-              const SceneConfiguration& config = {});
+        Scene(const SceneConfiguration& config = {});
 
         /** Virtual destructor for Scene. */
         ~Scene() override;
@@ -115,8 +113,6 @@ export namespace lysa {
         SceneFrameData& get(const uint32 frameIndex) const { return *framesData[frameIndex].scene; }
 
     protected:
-        /** Reference to the engine context. */
-        Context& ctx;
         /** Reference to the image manager. */
         ImageManager& imageManager;
         /** Reference to the material manager. */

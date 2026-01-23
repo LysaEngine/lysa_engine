@@ -11,18 +11,16 @@ import lysa.resources.image;
 namespace lysa {
 
     BloomPass::BloomPass(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat):
         PostProcessing(
-            ctx,
             config,
             outputFormat,
             "bloom",
             nullptr, 0,
         "Bloom"),
         blurData{ .kernelSize = config.bloomBlurKernelSize },
-        blurPass(ctx,
+        blurPass(
             config,
             outputFormat,
             "blur",

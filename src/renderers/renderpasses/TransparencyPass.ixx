@@ -23,11 +23,9 @@ export namespace lysa {
     public:
         /**
          * Constructs a TransparencyPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          */
         TransparencyPass(
-            const Context& ctx,
             const RendererConfiguration& config);
 
         /**

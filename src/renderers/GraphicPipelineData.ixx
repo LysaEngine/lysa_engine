@@ -149,7 +149,7 @@ export namespace lysa {
          * @param maxMeshSurfacePerPipeline Maximum number of mesh surfaces supported by this pipeline.
          */
         GraphicPipelineData(
-            const Context& ctx,
+            const
             uint32 pipelineId,
             const DeviceMemoryArray& meshInstancesDataArray,
             uint32 maxMeshSurfacePerPipeline);

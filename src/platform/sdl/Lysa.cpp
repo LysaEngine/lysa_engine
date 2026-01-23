@@ -17,7 +17,7 @@ namespace lysa {
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
             case SDL_EVENT_QUIT:
-                ctx.exit = true;
+                Context::ctx->exit = true;
                 break;
             case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
             case SDL_EVENT_WINDOW_FOCUS_LOST:

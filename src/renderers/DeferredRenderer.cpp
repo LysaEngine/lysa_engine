@@ -9,17 +9,15 @@ module lysa.renderers.deferred_renderer;
 namespace lysa {
 
     DeferredRenderer::DeferredRenderer(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat) :
-        Renderer{ctx, config, outputFormat},
+        Renderer{config, outputFormat},
         ssaoBlurData{.kernelSize = config.ssaoBlurKernelSize},
-        gBufferPass{ctx, config, withStencil},
-        lightingPass{ctx, config, gBufferPass, withStencil} {
+        gBufferPass{config, withStencil},
+        lightingPass{config, gBufferPass, withStencil} {
         if (config.ssaoEnabled) {
-            ssaoPass = std::make_unique<SSAOPass>(ctx, config, gBufferPass, withStencil);
+            ssaoPass = std::make_unique<SSAOPass>(config, gBufferPass, withStencil);
             ssaoBlurPass = std::make_unique<PostProcessing>(
-                ctx,
                 config,
                 ssaoPass->getSSAOBufferFormat(),
                 "ssao_blur",

@@ -12,10 +12,8 @@ namespace lysa {
     std::unordered_map<std::string, std::shared_ptr<vireo::ShaderModule>> Renderpass::shaderModules;
 
     Renderpass::Renderpass(
-        const Context& ctx,
         const RendererConfiguration& config,
         const std::string& name):
-        ctx{ctx},
         name{name},
         config{config} {
     }
@@ -24,8 +22,8 @@ namespace lysa {
         auto lock = std::lock_guard(shaderModulesMutex);
         if (!shaderModules.contains(shaderName)) {
             auto tempBuffer = std::vector<char>{};
-            ctx.fs.loadShader(shaderName, tempBuffer);
-            shaderModules[shaderName] = ctx.vireo->createShaderModule(tempBuffer, shaderName);
+            Context::ctx->fs.loadShader(shaderName, tempBuffer);
+            shaderModules[shaderName] = Context::ctx->vireo->createShaderModule(tempBuffer, shaderName);
         }
         return shaderModules[shaderName];
     }

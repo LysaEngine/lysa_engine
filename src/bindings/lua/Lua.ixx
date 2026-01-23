@@ -76,7 +76,7 @@ export namespace lysa {
         template <typename... Args>
         luabridge::LuaRef execute(const std::string& scriptName, Args&&... args) const {
             std::vector<char> data;
-            ctx.fs.loadScript(scriptName, data);
+            Context::ctx->fs.loadScript(scriptName, data);
             const auto script = std::string(data.begin(), data.end());
             if (script.empty()) {
                 throw Exception("Lua error: failed to load script");
@@ -116,7 +116,7 @@ export namespace lysa {
             lua_gc(L, LUA_GCCOLLECT);
         }
 
-        Lua(Context& ctx, const LuaConfiguration& luaConfiguration);
+        Lua( const LuaConfiguration& luaConfiguration);
 
         ~Lua();
 

@@ -10,11 +10,10 @@ module lysa.resources.mesh_instance;
 namespace lysa {
 
     MeshInstance::MeshInstance(
-          const Context& ctx,
           const Mesh& mesh,
           const std::string& name) :
-          materialManager(ctx.res.get<MaterialManager>()),
-          meshManager(ctx.res.get<MeshManager>()),
+          materialManager(Context::ctx->res.get<MaterialManager>()),
+          meshManager(Context::ctx->res.get<MeshManager>()),
           mesh(mesh),
           name(name) {
         meshManager.use(mesh.id);

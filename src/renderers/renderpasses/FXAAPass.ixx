@@ -24,11 +24,9 @@ export namespace lysa {
          * @param config The renderer configuration
          */
         FXAAPass(
-            const Context& ctx,
             const RendererConfiguration& config,
             const vireo::ImageFormat outputFormat) :
             PostProcessing(
-                ctx,
                 config,
                 outputFormat,
                 "fxaa",

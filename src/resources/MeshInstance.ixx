@@ -35,7 +35,7 @@ export namespace lysa {
     public:
         MeshInstance(const MeshInstance& orig);
 
-        MeshInstance(const Context& ctx, const Mesh& mesh, const std::string& name = "");
+        MeshInstance(const Mesh& mesh, const std::string& name = "");
 
         MeshInstance(const MeshInstance& mi, const std::string& name);
 

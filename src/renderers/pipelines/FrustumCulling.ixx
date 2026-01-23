@@ -17,7 +17,6 @@ export namespace lysa {
     class FrustumCulling {
     public:
         FrustumCulling(
-            const Context& ctx,
             bool isForScene,
             const DeviceMemoryArray& meshInstancesArray,
             pipeline_id pipelineId);

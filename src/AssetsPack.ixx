@@ -257,22 +257,22 @@ export namespace lysa {
         /*
          * Load a scene from an assets pack file
          */
-        static void load(Context& ctx, const std::string &fileURI, const Callback& callback);
+        static void load( const std::string &fileURI, const Callback& callback);
 
         /*
          * Load a scene from an assets pack data stream
          */
-        static void load(Context& ctx, std::ifstream &stream, const Callback& callback);
+        static void load( std::ifstream &stream, const Callback& callback);
 
         AssetsPack() = default;
 
     private:
         Header header{};;
 
-        void loadScene(Context& ctx, std::ifstream& stream, const Callback& callback);
+        void loadScene( std::ifstream& stream, const Callback& callback);
 
         std::vector<std::shared_ptr<vireo::Image>> loadImagesAndTextures(
-            Context& ctx,
+
             std::vector<ImageTexture>& textures,
             const vireo::Buffer& stagingBuffer,
             const vireo::CommandList& commandList,
