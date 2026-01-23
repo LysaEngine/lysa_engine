@@ -211,8 +211,6 @@ namespace lysa {
         }
         renderer->postprocess(
            *commandList,
-           mainViewport,
-           mainScissors,
            frameIndex);
 
         auto colorAttachment = renderer->getCurrentColorAttachment(frameIndex);
@@ -230,8 +228,6 @@ namespace lysa {
         }
         colorAttachment = renderer->gammaCorrection(
             *commandList,
-            mainViewport,
-            mainScissors,
             colorAttachment,
             frameIndex);
 

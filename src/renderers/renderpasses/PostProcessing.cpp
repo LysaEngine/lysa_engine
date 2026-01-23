@@ -68,30 +68,24 @@ namespace lysa {
 
     void PostProcessing::render(
            vireo::CommandList& commandList,
-           const vireo::Viewport&viewport,
-           const vireo::Rect&scissor,
            const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
            const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
            const uint32 frameIndex) {
-        render(commandList, viewport, scissor, colorAttachment, depthAttachment, nullptr, frameIndex);
+        render(commandList,colorAttachment, depthAttachment, nullptr, frameIndex);
     }
 
     void PostProcessing::render(
         vireo::CommandList& commandList,
-        const vireo::Viewport& viewport,
-        const vireo::Rect& scissor,
         const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
         const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
         const std::shared_ptr<vireo::RenderTarget>& bloomColorAttachment,
         const uint32 frameIndex) {
         textures[INPUT_BUFFER] = colorAttachment->getImage();
-        _render(commandList, viewport, scissor, depthAttachment, bloomColorAttachment, frameIndex);
+        _render(commandList, depthAttachment, bloomColorAttachment, frameIndex);
     }
 
     void PostProcessing::_render(
        vireo::CommandList& commandList,
-       const vireo::Viewport& viewport,
-       const vireo::Rect& scissor,
        const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
        const std::shared_ptr<vireo::RenderTarget>& bloomColorAttachment,
        const uint32 frameIndex) {
@@ -107,8 +101,9 @@ namespace lysa {
             vireo::ResourceState::UNDEFINED,
             vireo::ResourceState::RENDER_TARGET_COLOR);
         commandList.beginRendering(renderingConfig);
-        commandList.setViewport(viewport);
-        commandList.setScissors(scissor);
+        commandList.setViewport({
+        static_cast<float>(frame.colorAttachment->getImage()->getWidth()),
+        static_cast<float>(frame.colorAttachment->getImage()->getHeight())});
         commandList.bindPipeline(pipeline);
         commandList.bindDescriptors({
             frame.descriptorSet,

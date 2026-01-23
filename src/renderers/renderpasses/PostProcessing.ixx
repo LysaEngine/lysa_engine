@@ -74,16 +74,12 @@ export namespace lysa {
         /**
          * Renders the post-processing effect
          * @param frameIndex Index of the current frame
-         * @param viewport The viewport to render into
-         * @param scissor The scissor rectangle
          * @param colorAttachment The input color attachment
          * @param depthAttachment The input depth attachment
          * @param commandList The command list to record rendering commands into
          */
         virtual void render(
            vireo::CommandList& commandList,
-           const vireo::Viewport&viewport,
-           const vireo::Rect&scissor,
            const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
            const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
            uint32 frameIndex);
@@ -141,8 +137,6 @@ export namespace lysa {
         /**
          * Renders the post-processing effect
          * @param frameIndex Index of the current frame
-         * @param viewport The viewport to render into
-         * @param scissor The scissor rectangle
          * @param colorAttachment The input color attachment
          * @param depthAttachment The input depth attachment
          * @param bloomColorAttachment The input bloom color attachment
@@ -150,8 +144,6 @@ export namespace lysa {
          */
         virtual void render(
            vireo::CommandList& commandList,
-           const vireo::Viewport&viewport,
-           const vireo::Rect&scissor,
            const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
            const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
            const std::shared_ptr<vireo::RenderTarget>& bloomColorAttachment,
@@ -159,8 +151,6 @@ export namespace lysa {
 
         void _render(
            vireo::CommandList& commandList,
-           const vireo::Viewport&viewport,
-           const vireo::Rect&scissor,
            const std::shared_ptr<vireo::RenderTarget>& depthAttachment,
            const std::shared_ptr<vireo::RenderTarget>& bloomColorAttachment,
            uint32 frameIndex);

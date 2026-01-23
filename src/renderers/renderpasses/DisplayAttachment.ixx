@@ -38,15 +38,13 @@ export namespace lysa {
 
         void render(
             vireo::CommandList& commandList,
-            const vireo::Viewport& viewport,
-            const vireo::Rect& scissor,
             const std::shared_ptr<vireo::RenderTarget>&,
             const std::shared_ptr<vireo::RenderTarget>&,
             const std::shared_ptr<vireo::RenderTarget>&,
             const uint32 frameIndex) override {
             if (attachment) {
                 textures[INPUT_BUFFER] = attachment->getImage();
-                _render(commandList, viewport, scissor, nullptr, nullptr, frameIndex);
+                _render(commandList, nullptr, nullptr, frameIndex);
             } else {
                 commandList.barrier(
                     framesData[frameIndex].colorAttachment,

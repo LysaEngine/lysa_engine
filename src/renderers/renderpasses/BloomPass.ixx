@@ -45,8 +45,6 @@ export namespace lysa {
          */
         void render(
             vireo::CommandList& commandList,
-            const vireo::Viewport& viewport,
-            const vireo::Rect& scissor,
             const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
             const std::shared_ptr<vireo::RenderTarget>& bloomAttachment,
             uint32 frameIndex) override;

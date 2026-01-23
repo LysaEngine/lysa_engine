@@ -61,8 +61,6 @@ namespace lysa {
                 frameIndex);
             ssaoBlurPass->render(
                 commandList,
-                viewport,
-                scissors,
                 ssaoPass->getSSAOColorBuffer(frameIndex),
                 nullptr,
                 frameIndex);

@@ -201,8 +201,6 @@ namespace lysa {
 
      std::shared_ptr<vireo::RenderTarget> Renderer::gammaCorrection(
         vireo::CommandList& commandList,
-        const vireo::Viewport&viewport,
-        const vireo::Rect&scissor,
         const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
         const uint32 frameIndex) const {
         commandList.barrier(
@@ -211,8 +209,6 @@ namespace lysa {
            vireo::ResourceState::SHADER_READ);
         gammaCorrectionPass->render(
             commandList,
-            viewport,
-            scissor,
             colorAttachment,
             nullptr,
             frameIndex);
@@ -229,8 +225,6 @@ namespace lysa {
 
     void Renderer::postprocess(
         vireo::CommandList& commandList,
-        const vireo::Viewport&viewport,
-        const vireo::Rect&scissor,
         uint32 frameIndex) {
         const auto& frame = framesData[frameIndex];
         commandList.barrier(
@@ -241,8 +235,6 @@ namespace lysa {
         if (bloomPass) {
             bloomPass->render(
                 commandList,
-                viewport,
-                scissor,
                 colorAttachment,
                 getBloomColorAttachment(frameIndex),
                 frameIndex);
@@ -261,8 +253,6 @@ namespace lysa {
             std::ranges::for_each(postProcessingPasses, [&](auto* postProcessingPass) {
                 postProcessingPass->render(
                     commandList,
-                    viewport,
-                    scissor,
                     colorAttachment,
                     frame.depthAttachment,
                     frameIndex);
@@ -282,8 +272,6 @@ namespace lysa {
         if (fxaaPass) {
             fxaaPass->render(
                 commandList,
-                viewport,
-                scissor,
                 colorAttachment,
                 frame.depthAttachment,
                 frameIndex);

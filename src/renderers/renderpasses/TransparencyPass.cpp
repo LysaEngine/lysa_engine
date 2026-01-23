@@ -106,6 +106,9 @@ namespace lysa {
             scene.getDescriptorSet(),
             frame.compositeDescriptorSet
        });
+        commandList.setViewport({
+                static_cast<float>(colorAttachment->getImage()->getWidth()),
+                static_cast<float>(colorAttachment->getImage()->getHeight())});
         commandList.draw(3);
         commandList.endRendering();
         commandList.barrier(

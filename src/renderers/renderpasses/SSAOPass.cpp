@@ -64,6 +64,9 @@ namespace lysa {
            vireo::ResourceState::SHADER_READ,
            vireo::ResourceState::RENDER_TARGET_COLOR);
         commandList.bindPipeline(pipeline);
+        commandList.setViewport({
+            static_cast<float>(frame.ssaoColorBuffer->getImage()->getWidth()),
+            static_cast<float>(frame.ssaoColorBuffer->getImage()->getHeight())});
         commandList.bindDescriptors({
              ctx().globalDescriptorSet,
              ctx().samplers.getDescriptorSet(),
