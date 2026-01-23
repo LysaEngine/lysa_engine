@@ -14,11 +14,11 @@ namespace lysa {
 
     Scene::Scene(
         const SceneConfiguration& config) :
-        imageManager(Context::ctx->res.get<ImageManager>()),
-        materialManager(Context::ctx->res.get<MaterialManager>()),
-        meshManager(Context::ctx->res.get<MeshManager>()),
+        imageManager(ctx().res.get<ImageManager>()),
+        materialManager(ctx().res.get<MaterialManager>()),
+        meshManager(ctx().res.get<MeshManager>()),
         maxAsyncNodesUpdatedPerFrame(config.asyncObjectUpdatesPerFrame) {
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& data : framesData) {
             data.scene =std::make_unique<SceneFrameData>(
                 config.maxLights,
@@ -28,7 +28,7 @@ namespace lysa {
     }
 
     Scene::~Scene() {
-        Context::ctx->graphicQueue->waitIdle();
+        ctx().graphicQueue->waitIdle();
     }
 
     void Scene::setEnvironment(const Environment& environment) {

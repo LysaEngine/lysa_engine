@@ -44,7 +44,7 @@ namespace lysa {
         ),
         config(config),
         depthPrePass(config, withStencil),
-        meshManager(Context::ctx->res.get<MeshManager>()),
+        meshManager(ctx().res.get<MeshManager>()),
         shaderMaterialPass(config),
         transparencyPass(config) {
         const auto needToneMapping =
@@ -73,7 +73,7 @@ namespace lysa {
         if (config.bloomEnabled) {
             bloomPass = std::make_unique<BloomPass>(config, outputFormat);
         }
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
     }
 
     void Renderer::update(const uint32 frameIndex) {
@@ -157,7 +157,7 @@ namespace lysa {
     void Renderer::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         currentExtent = extent;
         for (auto& frame : framesData) {
-            frame.colorAttachment = Context::ctx->vireo->createRenderTarget(
+            frame.colorAttachment = ctx().vireo->createRenderTarget(
                config.colorRenderingFormat,
                extent.width, extent.height,
                vireo::RenderTargetType::COLOR,
@@ -165,7 +165,7 @@ namespace lysa {
                1,
                vireo::MSAA::NONE,
                "Main color attachment");
-            frame.depthAttachment = Context::ctx->vireo->createRenderTarget(
+            frame.depthAttachment = ctx().vireo->createRenderTarget(
                 config.depthStencilFormat,
                 extent.width, extent.height,
                 vireo::RenderTargetType::DEPTH,

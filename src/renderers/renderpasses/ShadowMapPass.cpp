@@ -21,18 +21,18 @@ namespace lysa {
         maxMeshSurfacePerPipeline(maxMeshSurfacePerPipeline),
         isCascaded{light->type == LightType::LIGHT_DIRECTIONAL},
         isCubeMap{light->type == LightType::LIGHT_OMNI} {
-        const auto& vireo = *Context::ctx->vireo;
+        const auto& vireo = *ctx().vireo;
 
         descriptorLayout = vireo.createDescriptorLayout();
         descriptorLayout->add(BINDING_GLOBAL, vireo::DescriptorType::UNIFORM);
         descriptorLayout->build();
 
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
-              Context::ctx->globalDescriptorLayout,
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
+              ctx().globalDescriptorLayout,
               SceneFrameData::sceneDescriptorLayout,
               GraphicPipelineData::pipelineDescriptorLayout,
               descriptorLayout,
-              Context::ctx->samplers.getDescriptorLayout()
+              ctx().samplers.getDescriptorLayout()
           },
           SceneFrameData::instanceIndexConstantDesc,name);
 
@@ -88,10 +88,10 @@ namespace lysa {
                     // INFO("ShadowMapPass::updatePipelines for light ", std::to_string(light->getName()));
                     data.frustumCullingPipelines[pipelineId] =
                         std::make_shared<FrustumCulling>(false, meshInstancesDataArray, pipelineId);
-                    data.culledDrawCommandsCountBuffers[pipelineId] = Context::ctx->vireo->createBuffer(
+                    data.culledDrawCommandsCountBuffers[pipelineId] = ctx().vireo->createBuffer(
                       vireo::BufferType::READWRITE_STORAGE,
                       sizeof(uint32));
-                    data.culledDrawCommandsBuffers[pipelineId] = Context::ctx->vireo->createBuffer(
+                    data.culledDrawCommandsBuffers[pipelineId] = ctx().vireo->createBuffer(
                       vireo::BufferType::READWRITE_STORAGE,
                       sizeof(DrawCommand) * maxMeshSurfacePerPipeline);
                 }
@@ -326,10 +326,10 @@ namespace lysa {
             renderingConfig.depthStencilRenderTarget = data.shadowMap;
             commandList.beginRendering(renderingConfig);
             commandList.bindPipeline(pipeline);
-            commandList.bindDescriptor(Context::ctx->globalDescriptorSet, SET_RESOURCES);
+            commandList.bindDescriptor(ctx().globalDescriptorSet, SET_RESOURCES);
             commandList.bindDescriptor(scene.getDescriptorSet(), SET_SCENE);
             commandList.bindDescriptor(data.descriptorSet, SET_PASS);
-            commandList.bindDescriptor(Context::ctx->samplers.getDescriptorSet(), SET_SAMPLERS);
+            commandList.bindDescriptor(ctx().samplers.getDescriptorSet(), SET_SAMPLERS);
             scene.drawModels(
                 commandList,
                 SET_PIPELINE,

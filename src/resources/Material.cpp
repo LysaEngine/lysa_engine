@@ -17,7 +17,7 @@ namespace lysa {
     }
 
     void Material::upload() const {
-        Context::ctx->res.get<MaterialManager>().upload(*this);
+        ctx().res.get<MaterialManager>().upload(*this);
     }
 
     MaterialData StandardMaterial::getMaterialData() const {
@@ -71,7 +71,7 @@ namespace lysa {
 
     StandardMaterial::StandardMaterial():
         Material(STANDARD),
-        imageManager(Context::ctx->res.get<ImageManager>()) {
+        imageManager(ctx().res.get<ImageManager>()) {
     }
 
     void StandardMaterial::setAlbedoColor(const float4 &color) {
@@ -215,13 +215,13 @@ namespace lysa {
     MaterialManager::MaterialManager( const size_t capacity) :
         ResourcesManager(capacity, "MaterialManager"),
         memoryArray {
-            Context::ctx->vireo,
+            ctx().vireo,
             sizeof(MaterialData),
             static_cast<size_t>(capacity),
             static_cast<size_t>(capacity),
             vireo::BufferType::DEVICE_STORAGE,
             "Global material array"} {
-        Context::ctx->res.enroll(*this);
+        ctx().res.enroll(*this);
     }
 
     StandardMaterial& MaterialManager::create() {
@@ -261,9 +261,9 @@ namespace lysa {
                 memoryArray.write(material.memoryBloc, &materialData);
             }
             needUpload.clear();
-            const auto command = Context::ctx->asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
+            const auto command = ctx().asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
             memoryArray.flush(*command.commandList);
-            Context::ctx->asyncQueue.endCommand(command);
+            ctx().asyncQueue.endCommand(command);
         }
     }
 

@@ -18,39 +18,39 @@ namespace lysa {
 
         textures.resize(3);
 
-        descriptorLayout = Context::ctx->vireo->createDescriptorLayout();
+        descriptorLayout = ctx().vireo->createDescriptorLayout();
         descriptorLayout->add(PostProcessing::BINDING_PARAMS, vireo::DescriptorType::UNIFORM);
         descriptorLayout->add(PostProcessing::BINDING_DATA, vireo::DescriptorType::UNIFORM);
         descriptorLayout->add(PostProcessing::BINDING_TEXTURES, vireo::DescriptorType::SAMPLED_IMAGE, textures.size());
         descriptorLayout->build();
 
-        dataBuffer = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(Data), 1, name + " Data");
+        dataBuffer = ctx().vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(Data), 1, name + " Data");
         dataBuffer->map();
         dataBuffer->write(&data);
         dataBuffer->unmap();
 
-        paramsBuffer = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(PostProcessing::PostProcessingParams), 1, name + " Params");
+        paramsBuffer = ctx().vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(PostProcessing::PostProcessingParams), 1, name + " Params");
         paramsBuffer->map();
 
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
             descriptorLayout,
-            Context::ctx->samplers.getDescriptorLayout()},
+            ctx().samplers.getDescriptorLayout()},
         {}, name);
         pipelineConfig.vertexShader = loadShader(PostProcessing::VERTEX_SHADER);
 
         pipelineConfig.fragmentShader = loadShader(EDGE_DETECT_FRAGMENT_SHADER);
-        edgeDetectPipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
+        edgeDetectPipeline = ctx().vireo->createGraphicPipeline(pipelineConfig, name);
 
         pipelineConfig.fragmentShader = loadShader(BLEND_WEIGHT_FRAGMENT_SHADER);
-        blendWeightPipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig);
+        blendWeightPipeline = ctx().vireo->createGraphicPipeline(pipelineConfig);
 
         pipelineConfig.colorRenderFormats[0] = outputFormat;
         pipelineConfig.fragmentShader = loadShader(BLEND_FRAGMENT_SHADER);
-        blendPipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig);
+        blendPipeline = ctx().vireo->createGraphicPipeline(pipelineConfig);
 
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.descriptorSet = Context::ctx->vireo->createDescriptorSet(descriptorLayout);
+            frame.descriptorSet = ctx().vireo->createDescriptorSet(descriptorLayout);
             frame.descriptorSet->update(PostProcessing::BINDING_PARAMS, paramsBuffer);
             frame.descriptorSet->update(PostProcessing::BINDING_DATA, dataBuffer);
         }
@@ -75,7 +75,7 @@ namespace lysa {
         commandList.bindPipeline(edgeDetectPipeline);
         commandList.bindDescriptors({
            frame.descriptorSet,
-           Context::ctx->samplers.getDescriptorSet()});
+           ctx().samplers.getDescriptorSet()});
         commandList.beginRendering(renderingConfig);
         commandList.draw(3);
         commandList.endRendering();
@@ -92,7 +92,7 @@ namespace lysa {
         commandList.bindPipeline(blendWeightPipeline);
         commandList.bindDescriptors({
            frame.descriptorSet,
-           Context::ctx->samplers.getDescriptorSet()});
+           ctx().samplers.getDescriptorSet()});
         commandList.beginRendering(renderingConfig);
         commandList.draw(3);
         commandList.endRendering();
@@ -109,7 +109,7 @@ namespace lysa {
         commandList.bindPipeline(blendPipeline);
         commandList.bindDescriptors({
            frame.descriptorSet,
-           Context::ctx->samplers.getDescriptorSet()});
+           ctx().samplers.getDescriptorSet()});
         commandList.beginRendering(renderingConfig);
         commandList.draw(3);
         commandList.endRendering();
@@ -121,7 +121,7 @@ namespace lysa {
 
     void SMAAPass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         for (auto& frame : framesData) {
-            frame.edgeDetectBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.edgeDetectBuffer = ctx().vireo->createRenderTarget(
                 vireo::ImageFormat::R16G16_SFLOAT,
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -129,7 +129,7 @@ namespace lysa {
                 1,
                 vireo::MSAA::NONE,
                 "SMAA Edge detect");
-            frame.blendWeightBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.blendWeightBuffer = ctx().vireo->createRenderTarget(
                 vireo::ImageFormat::R16G16_SFLOAT,
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -137,7 +137,7 @@ namespace lysa {
                 1,
                 vireo::MSAA::NONE,
                 "SMAA Blend weight");
-            frame.colorBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.colorBuffer = ctx().vireo->createRenderTarget(
                 outputFormat,
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,

@@ -87,7 +87,7 @@ export namespace  lysa {
     };
 
     struct _LysaInit {
-        _LysaInit(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration);
+        _LysaInit(const ContextConfiguration& config);
         virtual ~_LysaInit();
     };
 
@@ -103,9 +103,8 @@ export namespace  lysa {
         /**
          * Construct the runtime and initialize subsystems.
          * @param config Global Context configuration
-         * @param loggingConfiguration Logging system configuration
          */
-        Lysa(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration);
+        Lysa(const ContextConfiguration& config);
 
         ~Lysa() override;
 
@@ -113,8 +112,6 @@ export namespace  lysa {
          * Run the main loop until quit is requested.
          */
         void run();
-
-        static Context& getContext() { return *Context::ctx; }
 
     private:
         // Fixed delta time bookkeeping for the physics update loop

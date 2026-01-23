@@ -30,7 +30,7 @@ namespace lysa {
     }
 
     Mesh::~Mesh() {
-        auto& materialManager = Context::ctx->res.get<MaterialManager>();
+        auto& materialManager = ctx().res.get<MaterialManager>();
         for (const auto& surface : surfaces) {
             materialManager.destroy(surface.material);
         }
@@ -39,9 +39,9 @@ namespace lysa {
     void Mesh::setSurfaceMaterial(const uint32 surfaceIndex, const unique_id material) {
         assert([&]{return surfaceIndex < surfaces.size();}, "Invalid surface index");
         surfaces[surfaceIndex].material = material;
-        Context::ctx->res.get<MaterialManager>().use(material);
+        ctx().res.get<MaterialManager>().use(material);
         materials.insert(surfaces[surfaceIndex].material);
-        Context::ctx->res.get<MeshManager>().upload(id);
+        ctx().res.get<MeshManager>().upload(id);
     }
 
     bool Mesh::operator==(const Mesh &other) const {
@@ -74,29 +74,29 @@ namespace lysa {
         const size_t indexCapacity,
         const size_t surfaceCapacity) :
         ResourcesManager(capacity, "MeshManager"),
-        materialManager(Context::ctx->res.get<MaterialManager>()),
+        materialManager(ctx().res.get<MaterialManager>()),
         vertexArray {
-            Context::ctx->vireo,
+            ctx().vireo,
             sizeof(VertexData),
             vertexCapacity,
             vertexCapacity,
             vireo::BufferType::VERTEX,
             "Vertex Array"},
         indexArray {
-            Context::ctx->vireo,
+            ctx().vireo,
             sizeof(uint32),
             indexCapacity,
             indexCapacity,
             vireo::BufferType::INDEX,
             "Index Array"},
         meshSurfaceArray {
-            Context::ctx->vireo,
+            ctx().vireo,
             sizeof(MeshSurfaceData),
             surfaceCapacity,
             surfaceCapacity,
             vireo::BufferType::DEVICE_STORAGE,
             "MeshSurface Array"} {
-        Context::ctx->res.enroll(*this);
+        ctx().res.enroll(*this);
     }
 
       void MeshManager::upload(const unique_id id) {
@@ -172,11 +172,11 @@ namespace lysa {
         needUpload.clear();
 
         auto lock = std::unique_lock(mutex, std::try_to_lock);
-        const auto command = Context::ctx->asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
+        const auto command = ctx().asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
         vertexArray.flush(*command.commandList);
         indexArray.flush(*command.commandList);
         meshSurfaceArray.flush(*command.commandList);
-        Context::ctx->asyncQueue.endCommand(command);
+        ctx().asyncQueue.endCommand(command);
     }
 
 #ifdef LUA_BINDING

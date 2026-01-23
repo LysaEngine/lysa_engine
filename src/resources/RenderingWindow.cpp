@@ -13,7 +13,7 @@ namespace lysa {
     RenderingWindow::RenderingWindow(const RenderingWindowConfiguration& config) :
         handle(openPlatformWindow(config)),
         renderTarget(config.renderTargetConfiguration, handle) {
-        Context::ctx->events.push({ .type = static_cast<event_type>(RenderingWindowEvent::READY), .id = id});
+        ctx().events.push({ .type = static_cast<event_type>(RenderingWindowEvent::READY), .id = id});
     }
 
     RenderingWindow::~RenderingWindow() {
@@ -26,14 +26,14 @@ namespace lysa {
 
     void RenderingWindow::_input(const InputEvent& inputEvent) const {
         if (closed || renderTarget.isPaused()) { return; }
-        Context::ctx->events.push({static_cast<event_type>(RenderingWindowEvent::INPUT), inputEvent, id});
+        ctx().events.push({static_cast<event_type>(RenderingWindowEvent::INPUT), inputEvent, id});
     }
 
     void RenderingWindow::_closing() {
         if (closed || renderTarget.isPaused()) { return; }
         renderTarget.setPause(true);
         closed = true;
-        Context::ctx->events.push({.type = static_cast<event_type>(RenderingWindowEvent::CLOSING), .id = id});
+        ctx().events.push({.type = static_cast<event_type>(RenderingWindowEvent::CLOSING), .id = id});
     }
 
     void RenderingWindow::_resized(const Rect& rect) {

@@ -19,10 +19,10 @@ namespace lysa {
         Renderpass{config, name.empty() ? fragShaderName : name},
         fragShaderName{fragShaderName},
         data{data},
-        descriptorLayout{Context::ctx->vireo->createDescriptorLayout(this->name)} {
+        descriptorLayout{ctx().vireo->createDescriptorLayout(this->name)} {
         textures.resize(TEXTURES_COUNT);
         for (int i = 0; i < TEXTURES_COUNT; i++) {
-            textures[i] = Context::ctx->res.get<ImageManager>().getBlankImage();
+            textures[i] = ctx().res.get<ImageManager>().getBlankImage();
         }
 
         if (!data) {
@@ -32,26 +32,26 @@ namespace lysa {
 
         descriptorLayout->add(BINDING_PARAMS, vireo::DescriptorType::UNIFORM);
         descriptorLayout->add(BINDING_DATA, vireo::DescriptorType::UNIFORM);
-        dataUniform = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, dataSize, 1, name + " Data");
+        dataUniform = ctx().vireo->createBuffer(vireo::BufferType::UNIFORM, dataSize, 1, name + " Data");
         dataUniform->map();
         descriptorLayout->add(BINDING_TEXTURES, vireo::DescriptorType::SAMPLED_IMAGE, TEXTURES_COUNT);
         descriptorLayout->build();
 
         pipelineConfig.colorRenderFormats.push_back(outputFormat);
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
             descriptorLayout,
-            Context::ctx->samplers.getDescriptorLayout()},
+            ctx().samplers.getDescriptorLayout()},
             {},
             name);
         pipelineConfig.vertexShader = loadShader(VERTEX_SHADER);
         pipelineConfig.fragmentShader = loadShader(fragShaderName + ".frag");
-        pipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
+        pipeline = ctx().vireo->createGraphicPipeline(pipelineConfig, name);
 
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.paramsUniform = Context::ctx->vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(PostProcessingParams), 1, name + " Params");
+            frame.paramsUniform = ctx().vireo->createBuffer(vireo::BufferType::UNIFORM, sizeof(PostProcessingParams), 1, name + " Params");
             frame.paramsUniform->map();
-            frame.descriptorSet = Context::ctx->vireo->createDescriptorSet(descriptorLayout, name);
+            frame.descriptorSet = ctx().vireo->createDescriptorSet(descriptorLayout, name);
             frame.descriptorSet->update(BINDING_PARAMS, frame.paramsUniform);
             frame.descriptorSet->update(BINDING_DATA, dataUniform);
         }
@@ -112,7 +112,7 @@ namespace lysa {
         commandList.bindPipeline(pipeline);
         commandList.bindDescriptors({
             frame.descriptorSet,
-            Context::ctx->samplers.getDescriptorSet()});
+            ctx().samplers.getDescriptorSet()});
         commandList.draw(3);
         commandList.endRendering();
         commandList.barrier(
@@ -124,7 +124,7 @@ namespace lysa {
     void PostProcessing::resize(const vireo::Extent& extent) {
         if (extent.width == 0 || extent.height == 0) { return; }
         for (auto& frame : framesData) {
-            frame.colorAttachment = Context::ctx->vireo->createRenderTarget(
+            frame.colorAttachment = ctx().vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[0],
                 extent.width, extent.height,
                 vireo::RenderTargetType::COLOR,

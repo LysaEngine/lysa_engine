@@ -22,8 +22,8 @@ namespace lysa {
         auto lock = std::lock_guard(shaderModulesMutex);
         if (!shaderModules.contains(shaderName)) {
             auto tempBuffer = std::vector<char>{};
-            Context::ctx->fs.loadShader(shaderName, tempBuffer);
-            shaderModules[shaderName] = Context::ctx->vireo->createShaderModule(tempBuffer, shaderName);
+            ctx().fs.loadShader(shaderName, tempBuffer);
+            shaderModules[shaderName] = ctx().vireo->createShaderModule(tempBuffer, shaderName);
         }
         return shaderModules[shaderName];
     }

@@ -12,6 +12,7 @@ import lysa.async_queue;
 import lysa.async_pool;
 import lysa.command_buffer;
 import lysa.event;
+import lysa.log;
 import lysa.virtual_fs;
 import lysa.types;
 import lysa.resources.samplers;
@@ -59,6 +60,7 @@ export namespace  lysa {
         bool displayFPS{false};
         //! Virtual file system configuration
         VirtualFSConfiguration virtualFsConfiguration;
+        LoggingConfiguration loggingConfiguration;
     };
 
     /**
@@ -143,5 +145,7 @@ export namespace  lysa {
 
         Context(const ContextConfiguration& config);
     };
+
+    constexpr Context& ctx() { return *Context::ctx; }
 
 }

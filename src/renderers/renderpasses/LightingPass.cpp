@@ -18,7 +18,7 @@ namespace lysa {
         Renderpass{config, "Deferred Lighting"},
         gBufferPass{gBufferPass} {
 
-        descriptorLayout = Context::ctx->vireo->createDescriptorLayout();
+        descriptorLayout = ctx().vireo->createDescriptorLayout();
         descriptorLayout->add(BINDING_POSITION_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
         descriptorLayout->add(BINDING_NORMAL_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
         descriptorLayout->add(BINDING_ALBEDO_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
@@ -35,9 +35,9 @@ namespace lysa {
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         pipelineConfig.stencilTestEnable = withStencil;
         pipelineConfig.backStencilOpState = pipelineConfig.frontStencilOpState;
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
-            Context::ctx->globalDescriptorLayout,
-            Context::ctx->samplers.getDescriptorLayout(),
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
+            ctx().globalDescriptorLayout,
+            ctx().samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             descriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -47,12 +47,12 @@ namespace lysa {
             {}, name);
         pipelineConfig.vertexShader = loadShader(VERTEX_SHADER);
         pipelineConfig.fragmentShader = loadShader(config.bloomEnabled ? FRAGMENT_SHADER_BLOOM : FRAGMENT_SHADER);
-        pipeline = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
+        pipeline = ctx().vireo->createGraphicPipeline(pipelineConfig, name);
 
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.descriptorSet = Context::ctx->vireo->createDescriptorSet(descriptorLayout);
-            frame.descriptorSet->update(BINDING_AO_MAP, Context::ctx->res.get<ImageManager>().getBlankImage());
+            frame.descriptorSet = ctx().vireo->createDescriptorSet(descriptorLayout);
+            frame.descriptorSet->update(BINDING_AO_MAP, ctx().res.get<ImageManager>().getBlankImage());
         }
 
         renderingConfig.colorRenderTargets[0].clearValue = {
@@ -99,8 +99,8 @@ namespace lysa {
            vireo::ResourceState::RENDER_TARGET_COLOR);
         commandList.bindPipeline(pipeline);
         commandList.bindDescriptors({
-            Context::ctx->globalDescriptorSet,
-            Context::ctx->samplers.getDescriptorSet(),
+            ctx().globalDescriptorSet,
+            ctx().samplers.getDescriptorSet(),
             scene.getDescriptorSet(),
             frame.descriptorSet,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -124,7 +124,7 @@ namespace lysa {
     void LightingPass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         for (auto& frame : framesData) {
             if (config.bloomEnabled) {
-                frame.brightnessBuffer = Context::ctx->vireo->createRenderTarget(
+                frame.brightnessBuffer = ctx().vireo->createRenderTarget(
                     pipelineConfig.colorRenderFormats[1],
                     extent.width,extent.height,
                     vireo::RenderTargetType::COLOR,
@@ -133,7 +133,7 @@ namespace lysa {
                     vireo::MSAA::NONE,
                     "Brightness");
             } else {
-                frame.brightnessBuffer = Context::ctx->vireo->createRenderTarget(
+                frame.brightnessBuffer = ctx().vireo->createRenderTarget(
                     pipelineConfig.colorRenderFormats[0],
                     1, 1,
                     vireo::RenderTargetType::COLOR,

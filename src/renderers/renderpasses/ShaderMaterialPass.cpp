@@ -12,13 +12,13 @@ namespace lysa {
     ShaderMaterialPass::ShaderMaterialPass(
         const RendererConfiguration& config):
         Renderpass{config, "ShaderMaterialPass"},
-        materialManager(Context::ctx->res.get<MaterialManager>()) {
+        materialManager(ctx().res.get<MaterialManager>()) {
 
         pipelineConfig.colorRenderFormats.push_back(config.colorRenderingFormat);
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
-            Context::ctx->globalDescriptorLayout,
-            Context::ctx->samplers.getDescriptorLayout(),
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
+            ctx().globalDescriptorLayout,
+            ctx().samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             GraphicPipelineData::pipelineDescriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -26,7 +26,7 @@ namespace lysa {
 #endif
             },
             SceneFrameData::instanceIndexConstantDesc, name);
-        pipelineConfig.vertexInputLayout = Context::ctx->vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
+        pipelineConfig.vertexInputLayout = ctx().vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
 
         renderingConfig.colorRenderTargets[0].clearValue = {
             config.clearColor.r,
@@ -54,7 +54,7 @@ namespace lysa {
                 pipelineConfig.cullMode = material.getCullMode();
                 pipelineConfig.vertexShader = loadShader(vertShaderName);
                 pipelineConfig.fragmentShader = loadShader(fragShaderName);
-                pipelines[pipelineId] = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
+                pipelines[pipelineId] = ctx().vireo->createGraphicPipeline(pipelineConfig, name);
             }
         }
     }

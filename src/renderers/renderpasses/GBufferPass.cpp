@@ -14,14 +14,14 @@ namespace lysa {
         const RendererConfiguration& config,
         const bool withStencil):
         Renderpass{config, "GBuffer"},
-        materialManager(Context::ctx->res.get<MaterialManager>()) {
+        materialManager(ctx().res.get<MaterialManager>()) {
 
         pipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         pipelineConfig.stencilTestEnable = withStencil;
         pipelineConfig.backStencilOpState = pipelineConfig.frontStencilOpState;
-        pipelineConfig.resources = Context::ctx->vireo->createPipelineResources({
-            Context::ctx->globalDescriptorLayout,
-            Context::ctx->samplers.getDescriptorLayout(),
+        pipelineConfig.resources = ctx().vireo->createPipelineResources({
+            ctx().globalDescriptorLayout,
+            ctx().samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             GraphicPipelineData::pipelineDescriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -29,7 +29,7 @@ namespace lysa {
 #endif
             },
             SceneFrameData::instanceIndexConstantDesc, name);
-        pipelineConfig.vertexInputLayout = Context::ctx->vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
+        pipelineConfig.vertexInputLayout = ctx().vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
         renderingConfig.colorRenderTargets[BUFFER_ALBEDO].clearValue = {
             config.clearColor.r,
             config.clearColor.g,
@@ -37,7 +37,7 @@ namespace lysa {
             1.0f};
         renderingConfig.stencilTestEnable = pipelineConfig.stencilTestEnable;
 
-        framesData.resize(Context::ctx->config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
     }
 
     void GBufferPass::updatePipelines(const std::unordered_map<pipeline_id, std::vector<unique_id>>& pipelineIds) {
@@ -48,7 +48,7 @@ namespace lysa {
                 pipelineConfig.cullMode = material.getCullMode();
                 pipelineConfig.vertexShader = loadShader(VERTEX_SHADER);
                 pipelineConfig.fragmentShader = loadShader(FRAGMENT_SHADER);
-                pipelines[pipelineId] = Context::ctx->vireo->createGraphicPipeline(pipelineConfig, name);
+                pipelines[pipelineId] = ctx().vireo->createGraphicPipeline(pipelineConfig, name);
             }
         }
     }
@@ -93,7 +93,7 @@ namespace lysa {
 
     void GBufferPass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         for (auto& frame : framesData) {
-            frame.positionBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.positionBuffer = ctx().vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[BUFFER_POSITION],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -101,7 +101,7 @@ namespace lysa {
                 1,
                 vireo::MSAA::NONE,
                 "Position");
-            frame.normalBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.normalBuffer = ctx().vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[BUFFER_NORMAL],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -109,7 +109,7 @@ namespace lysa {
                 1,
                 vireo::MSAA::NONE,
                 "Normal");
-            frame.albedoBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.albedoBuffer = ctx().vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[BUFFER_ALBEDO],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
@@ -117,7 +117,7 @@ namespace lysa {
                 1,
                 vireo::MSAA::NONE,
                 "Albedo");
-            frame.emissiveBuffer = Context::ctx->vireo->createRenderTarget(
+            frame.emissiveBuffer = ctx().vireo->createRenderTarget(
                 pipelineConfig.colorRenderFormats[BUFFER_EMISSIVE],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,

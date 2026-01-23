@@ -17,7 +17,7 @@ import lysa.resources.render_target;
 namespace lysa {
 
     void AssetsPack::load( const std::string &fileURI, const Callback& callback) {
-        auto stream = Context::ctx->fs.openReadStream(fileURI);
+        auto stream = ctx().fs.openReadStream(fileURI);
         return load(stream, callback);
     }
 
@@ -27,9 +27,9 @@ namespace lysa {
     }
 
     void AssetsPack::loadScene( std::ifstream& stream, const Callback& callback) {
-        auto& imageManager = Context::ctx->res.get<ImageManager>();
-        auto& materialManager = Context::ctx->res.get<MaterialManager>();
-        auto& meshManager = Context::ctx->res.get<MeshManager>();
+        auto& imageManager = ctx().res.get<ImageManager>();
+        auto& materialManager = ctx().res.get<MaterialManager>();
+        auto& meshManager = ctx().res.get<MeshManager>();
         // Read the file global header
         stream.read(reinterpret_cast<std::istream::char_type *>(&header), sizeof(header));
         if (header.magic[0] != MAGIC[0] &&
@@ -162,7 +162,7 @@ namespace lysa {
         std::vector<ImageTexture> textures;
         textures.reserve(header.imagesCount);
         if (header.imagesCount > 0) {
-            auto& asyncQueue = Context::ctx->asyncQueue;
+            auto& asyncQueue = ctx().asyncQueue;
             const auto command = asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
             // Upload all images into VRAM using one big staging buffer
             std::shared_ptr<vireo::Buffer> textureStagingBuffer;
@@ -332,7 +332,7 @@ namespace lysa {
         }
 
         // Update renderers pipelines in current rendering targets
-        //Context::ctx->res.get<RenderTargetManager>().updatePipelines(pipelineIds);  XXX
+        //ctx().res.get<RenderTargetManager>().updatePipelines(pipelineIds);  XXX
     }
 
     std::vector<std::shared_ptr<vireo::Image>> AssetsPack::loadImagesAndTextures(
@@ -344,7 +344,7 @@ namespace lysa {
         const std::vector<ImageHeader>& imageHeaders,
         const std::vector<std::vector<MipLevelInfo>>&levelHeaders,
         const std::vector<TextureHeader>& textureHeaders) const {
-        const auto& vireo = Context::ctx->vireo;
+        const auto& vireo = ctx().vireo;
         std::vector<std::shared_ptr<vireo::Image>> images(header.texturesCount);
 
         // Create images upload buffer
@@ -394,12 +394,12 @@ namespace lysa {
                     // vireo::ResourceState::SHADER_READ,
                     // 0,
                     // imageHeader.mipLevels);
-                auto samplerIndex = Context::ctx->samplers.addSampler(
+                auto samplerIndex = ctx().samplers.addSampler(
                     static_cast<vireo::Filter>(texture.minFilter),
                     static_cast<vireo::Filter>(texture.magFilter),
                     static_cast<vireo::AddressMode>(texture.samplerAddressModeU),
                     static_cast<vireo::AddressMode>(texture.samplerAddressModeV));
-                auto& lImage = Context::ctx->res.get<ImageManager>().create(image, name);
+                auto& lImage = ctx().res.get<ImageManager>().create(image, name);
                 textures.push_back({lImage.id, samplerIndex});
             }
         }

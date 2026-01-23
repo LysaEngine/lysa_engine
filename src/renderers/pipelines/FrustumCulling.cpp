@@ -19,7 +19,7 @@ namespace lysa {
         const bool isForScene,
         const DeviceMemoryArray& meshInstancesArray,
         pipeline_id pipelineId) {
-        const auto& vireo = *Context::ctx->vireo;
+        const auto& vireo = *ctx().vireo;
         auto debugName = DEBUG_NAME + ":" + std::to_string(pipelineId);
         globalBuffer = vireo.createBuffer(vireo::BufferType::UNIFORM, sizeof(Utils), 1, debugName + "/global");
         globalBuffer->map();
@@ -54,7 +54,7 @@ namespace lysa {
                 {},
                 DEBUG_NAME);
             auto tempBuffer = std::vector<char>{};
-            Context::ctx->fs.loadShader(shaderName, tempBuffer);
+            ctx().fs.loadShader(shaderName, tempBuffer);
             shaderModules[shaderName] = vireo.createShaderModule(tempBuffer, shaderName);
             pipelines[shaderName] = vireo.createComputePipeline(pipelineResources, shaderModules[shaderName], shaderName);
         }
