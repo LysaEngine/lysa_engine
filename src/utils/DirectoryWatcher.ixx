@@ -56,8 +56,6 @@ export namespace lysa {
         void stop() noexcept;
 
     private:
-        /* Reference to the application context. */
-        Context& ctx;
         /* Duration to wait before repeating events for the same file. */
         const std::chrono::steady_clock::duration debounceTimer;
         /* The background worker thread. */

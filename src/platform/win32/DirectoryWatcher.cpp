@@ -9,13 +9,14 @@ module;
 module lysa.directory_watcher;
 
 import vireo;
+import lysa.context;
 import lysa.exception;
 import lysa.utils;
 
 namespace lysa {
 
     DirectoryWatcher::DirectoryWatcher( const std::string& uri, const uint32 debounceTimer) :
-        ctx(ctx), debounceTimer(std::chrono::milliseconds(debounceTimer)) {
+        debounceTimer(std::chrono::milliseconds(debounceTimer)) {
         directoryName = std::to_wstring(ctx().fs.getPath(uri));
         directory = CreateFileW(
             directoryName.c_str(),
