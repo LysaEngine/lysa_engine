@@ -37,6 +37,10 @@ export namespace lysa {
             std::string animationName;
         };
 
+        AnimationPlayer() = default;
+
+        AnimationPlayer(const AnimationPlayer& animationPlayer);
+
         /**
          * Returns the current library name
          */

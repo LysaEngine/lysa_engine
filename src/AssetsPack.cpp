@@ -11,7 +11,6 @@ import lysa.log;
 import lysa.virtual_fs;
 import lysa.resources.animation;
 import lysa.resources.animation_library;
-import lysa.resources.animation_player;
 import lysa.resources.image;
 import lysa.resources.material;
 import lysa.resources.mesh;
@@ -138,7 +137,7 @@ namespace lysa {
             auto anim = std::make_shared<Animation>(animationHeaders[animationIndex].tracksCount,
                 animationHeaders[animationIndex].name);
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
-                auto animationPlayer = std::shared_ptr<AnimationPlayer>{};
+                auto animationPlayer = std::shared_ptr<AnimationPlayer>();
                 auto& trackInfo = tracksInfos[animationIndex][trackIndex];
                 auto nodeIndex = trackInfo.nodeIndex;
                 if (animationPlayers.contains(nodeIndex)) {
@@ -324,7 +323,7 @@ namespace lysa {
         }
         materialManager.flush();
         meshManager.flush();
-        callback(nodeHeaders, meshes, childrenIndexes, animationHeaders, tracksInfos);
+        callback(nodeHeaders, meshes, childrenIndexes, animationHeaders, tracksInfos, animationPlayers);
 
         for (auto& texture : textures) {
             auto& image = imageManager[texture.image];
