@@ -37,6 +37,9 @@ endif()
 #add_compile_definitions(SHADOW_TRANSPARENCY_COLOR_ENABLED ON)
 
 #######################################################
+if (LYSA_CONSOLE)
+    add_compile_definitions(LYSA_CONSOLE)
+endif ()
 if (LUA_BINDING)
     add_compile_definitions(LUA_BINDING)
 endif ()
