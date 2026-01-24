@@ -11,10 +11,10 @@ import lysa.event;
 
 namespace lysa {
     AnimationPlayer::AnimationPlayer(const AnimationPlayer& animationPlayer) :
-    autoStart(animationPlayer.autoStart),
-    currentLibrary(animationPlayer.currentLibrary),
-    currentAnimation(animationPlayer.currentAnimation),
-    libraries(animationPlayer.libraries) {
+        autoStart(animationPlayer.autoStart),
+        currentLibrary(animationPlayer.currentLibrary),
+        currentAnimation(animationPlayer.currentAnimation),
+        libraries(animationPlayer.libraries) {
     }
 
     void AnimationPlayer::seek(const float duration) {
