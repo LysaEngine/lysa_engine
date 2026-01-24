@@ -171,7 +171,9 @@ namespace lysa {
             .ambientLight = float4(environment.color, environment.intensity),
             .lightsCount = static_cast<uint32>(lights.size()),
             .bloomEnabled = config.bloomEnabled ? 1u : 0u,
+#ifdef DEFERRED_RENDERER
             .ssaoEnabled = config.ssaoEnabled ? 1u : 0u,
+#endif
         };
         sceneUniformBuffer->write(&sceneUniform);
 

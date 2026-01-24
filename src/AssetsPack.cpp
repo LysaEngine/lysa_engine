@@ -321,7 +321,7 @@ namespace lysa {
         }
         materialManager.flush();
         meshManager.flush();
-        callback(nodeHeaders, meshes, childrenIndexes);
+        callback(nodeHeaders, meshes, childrenIndexes, animationHeaders, tracksInfos);
 
         for (auto& texture : textures) {
             auto& image = imageManager[texture.image];

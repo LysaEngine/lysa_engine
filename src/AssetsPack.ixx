@@ -13,6 +13,54 @@ import lysa.resources.texture;
 
 export namespace lysa {
 
+    /**
+    * Animation type for an animation track
+    */
+    enum class AnimationType : uint8 {
+        /**
+         * The values are the translation along the X, Y, and Z axes.
+         */
+        TRANSLATION = 1,
+        /**
+         * The values are a quaternion in the order x, y, z, w where w is the scalar.
+         */
+        ROTATION = 2,
+        /**
+         * The values are scaling factors along the X, Y, and Z axes.
+         */
+        SCALE = 3,
+        // Weights = 4,
+    };
+
+    /**
+     * Interpolation type to apply when calculating animation values
+     */
+    enum class AnimationInterpolation : uint8 {
+        /**
+         * The animated values are linearly interpolated between keyframes..
+         */
+        LINEAR = 0,
+        /**
+         * The animated values remain constant to the output of the first keyframe, until the next
+         * keyframe.
+         */
+        STEP = 1,
+        /**
+         * The animation’s interpolation is computed using a cubic spline with specified tangents.
+         */
+        // CUBIC = 2,
+    };
+
+    /**
+     * Animation loop mode
+     */
+    enum class AnimationLoopMode : uint8 {
+        //! No loop (default)
+        NONE    = 0,
+        //! Restart from the start of the track
+        LINEAR  = 1,
+    };
+
     /*
      * Lysa assets pack binary file format containing resources for a scene : meshes, materials, textures and images.<br>
      * It can also be used as a complete scene file since it contains a node tree.<br>
@@ -252,27 +300,28 @@ export namespace lysa {
         using Callback = std::function<void(
             const std::vector<NodeHeader>& nodeHeaders,
             const std::vector<unique_id>& meshes,
-            const std::vector<std::vector<uint32>>& childrenIndexes)>;
+            const std::vector<std::vector<uint32>>& childrenIndexes,
+            const std::vector<AnimationHeader>& animationHeaders,
+            const std::vector<std::vector<TrackInfo>>& tracksInfos)>;
 
         /*
          * Load a scene from an assets pack file
          */
-        static void load( const std::string &fileURI, const Callback& callback);
+        static void load(const std::string &fileURI, const Callback& callback);
 
         /*
          * Load a scene from an assets pack data stream
          */
-        static void load( std::ifstream &stream, const Callback& callback);
+        static void load(std::ifstream &stream, const Callback& callback);
 
         AssetsPack() = default;
 
     private:
         Header header{};;
 
-        void loadScene( std::ifstream& stream, const Callback& callback);
+        void loadScene(std::ifstream& stream, const Callback& callback);
 
         std::vector<std::shared_ptr<vireo::Image>> loadImagesAndTextures(
-
             std::vector<ImageTexture>& textures,
             const vireo::Buffer& stagingBuffer,
             const vireo::CommandList& commandList,

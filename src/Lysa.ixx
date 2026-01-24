@@ -26,9 +26,17 @@ export import lysa.rect;
 export import lysa.types;
 export import lysa.virtual_fs;
 
-export import lysa.renderers.configuration;
+#ifdef DEFERRED_RENDERER
 export import lysa.renderers.deferred_renderer;
+export import lysa.renderers.renderpasses.gbuffer_pass;
+export import lysa.renderers.renderpasses.lighting_pass;
+export import lysa.renderers.renderpasses.ssao_pass;
+#endif
+#ifdef FORWARD_RENDERER
 export import lysa.renderers.forward_renderer;
+export import lysa.renderers.renderpasses.forward_color_pass;
+#endif
+export import lysa.renderers.configuration;
 export import lysa.renderers.global_descriptor_set;
 export import lysa.renderers.graphic_pipeline_data;
 export import lysa.renderers.renderer;
@@ -39,16 +47,13 @@ export import lysa.renderers.pipelines.frustum_culling;
 export import lysa.renderers.renderpasses.bloom_pass;
 export import lysa.renderers.renderpasses.depth_prepass;
 export import lysa.renderers.renderpasses.display_attachment;
-export import lysa.renderers.renderpasses.forward_color_pass;
 export import lysa.renderers.renderpasses.fxaa_pass;
 export import lysa.renderers.renderpasses.gamma_correction_pass;
-export import lysa.renderers.renderpasses.gbuffer_pass;
 export import lysa.renderers.renderpasses.post_processing;
 export import lysa.renderers.renderpasses.renderpass;
 export import lysa.renderers.renderpasses.shader_material_pass;
 export import lysa.renderers.renderpasses.shadow_map_pass;
 export import lysa.renderers.renderpasses.smaa_pass;
-export import lysa.renderers.renderpasses.ssao_pass;
 export import lysa.renderers.renderpasses.transparency_pass;
 
 export import lysa.resources.camera;

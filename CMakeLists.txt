@@ -42,9 +42,6 @@ if (LUA_BINDING)
 endif ()
 
 #######################################################
-if(NOT FORWARD_RENDERER AND NOT DEFERRED_RENDERER)
-    message(FATAL_ERROR "Please activate a renderer with FORWARD_RENDERER or DEFERRED_RENDERER")
-endif()
 if (FORWARD_RENDERER)
     add_compile_definitions(FORWARD_RENDERER)
 endif ()
