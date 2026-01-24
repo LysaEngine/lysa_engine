@@ -336,7 +336,6 @@ namespace lysa {
     }
 
     std::vector<std::shared_ptr<vireo::Image>> AssetsPack::loadImagesAndTextures(
-
         std::vector<ImageTexture>& textures,
         const vireo::Buffer& stagingBuffer,
         const vireo::CommandList& commandList,
@@ -349,14 +348,21 @@ namespace lysa {
 
         // Create images upload buffer
         static constexpr size_t BLOCK_SIZE = 64 * 1024;
+        auto blockSize = BLOCK_SIZE;
         auto transferBuffer = std::vector<char> (BLOCK_SIZE);
         auto transferOffset = size_t{0};
-        while (stream.read(transferBuffer.data(), BLOCK_SIZE) || stream.gcount() > 0) {
+        while (stream.read(transferBuffer.data(), blockSize) || stream.gcount() > 0) {
             const auto bytesRead = stream.gcount();
             stagingBuffer.write(transferBuffer.data(), bytesRead, transferOffset);
             transferOffset += bytesRead;
+            if ((transferOffset + blockSize) > stagingBuffer.getSize()) {
+                blockSize = stagingBuffer.getSize() - transferOffset;
+                if (blockSize == 0) {
+                    break;
+                }
+            }
         }
-        // std::printf("%llu bytes read\n", transferOffset);
+        // std::printf("%lu bytes read\n", transferOffset);
 
         // Create all images from this upload buffer
         for (auto textureIndex = 0; textureIndex < header.texturesCount; ++textureIndex) {

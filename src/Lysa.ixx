@@ -18,8 +18,10 @@ export import lysa.directory_watcher;
 export import lysa.event;
 export import lysa.exception;
 export import lysa.utils;
+#ifndef LYSA_CONSOLE
 export import lysa.input;
 export import lysa.input_event;
+#endif
 export import lysa.log;
 export import lysa.math;
 export import lysa.rect;
@@ -68,7 +70,9 @@ export import lysa.resources.mesh_instance;
 export import lysa.resources.registry;
 export import lysa.resources.render_target;
 export import lysa.resources.render_view;
+#ifndef LYSA_CONSOLE
 export import lysa.resources.rendering_window;
+#endif
 export import lysa.resources.samplers;
 export import lysa.resources.scene;
 export import lysa.resources.texture;

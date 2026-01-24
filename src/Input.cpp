@@ -90,6 +90,7 @@ namespace lysa {
     std::unordered_map<GamepadButton, bool> Input::gamepadButtonJustPressedStates;
     std::unordered_map<GamepadButton, bool> Input::gamepadButtonJustReleasedStates;
 
+#ifndef LYSA_CONSOLE
     static std::map<Key, OsKey> _keyMap{
             {KEY_SPACE, OS_KEY_SPACE},
             {KEY_DASH, OS_KEY_DASH},
@@ -213,6 +214,7 @@ namespace lysa {
             return it->first;
         return KEY_NONE;
     }
+#endif
 
     float2 Input::getKeyboardVector(const Key keyNegX, const Key keyPosX, const Key keyNegY, const Key keyPosY) {
         const auto  x = keyPressedStates[keyNegX] ? -1 : keyPressedStates[keyPosX] ? 1 : 0;

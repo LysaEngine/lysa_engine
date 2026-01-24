@@ -66,7 +66,9 @@ namespace lysa {
             uploadData();
             ctx().defer._process();
             ctx().threads._process();
+#ifndef LYSA_CONSOLE
             processPlatformEvents();
+#endif
             ctx().events._process();
             uploadData();
 
@@ -81,7 +83,7 @@ namespace lysa {
                 elapsedSeconds += static_cast<float>(frameTime);
                 frameCount++;
                 if (elapsedSeconds >= 1.0) {
-                    fps            = static_cast<uint32_t>(frameCount / elapsedSeconds);
+                    fps            = static_cast<uint32>(frameCount / elapsedSeconds);
                     frameCount     = 0;
                     elapsedSeconds = 0;
                     Log::info("FPS ", fps);

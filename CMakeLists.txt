@@ -59,8 +59,10 @@ if(WIN32)
     endif ()
     add_compile_definitions(UNICODE _UNICODE)
 elseif (LINUX AND NOT APPLE)
-    set(USE_SDL3 ON)
-    add_compile_definitions(USE_SDL3)
+    if (NOT DEFINED USE_SDL3)
+        set(USE_SDL3 ON)
+        add_compile_definitions(USE_SDL3)
+    endif ()
 endif ()
 
 #######################################################
@@ -142,22 +144,32 @@ compile_options(xxhash)
 
 #######################################################
 if(WIN32)
+    if (NOT LYSA_CONSOLE)
+        set(WIN32_UI_SRC
+                ${ENGINE_SRC_DIR}/platform/win32/Input.cpp
+                ${ENGINE_SRC_DIR}/platform/win32/Lysa.cpp
+                ${ENGINE_SRC_DIR}/platform/win32/RenderingWindow.cpp
+        )
+    endif ()
     set(WIN32_SRC
+            ${WIN32_UI_SRC}
             ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/Input.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/Lysa.cpp
             ${ENGINE_SRC_DIR}/platform/win32/Main.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/RenderingWindow.cpp
     )
     set(WIN32_MODULES ""
     )
 elseif (UNIX AND NOT APPLE)
+    if (NOT LYSA_CONSOLE)
+        set(SDL_SRC
+                ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
+                ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
+                ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
+        )
+    endif ()
     set(POSIX_SRC
+            ${SDL_SRC}
             ${ENGINE_SRC_DIR}/platform/posix/Main.cpp
 #            ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
     )
     set(POSIX_MODULES ""
     )
