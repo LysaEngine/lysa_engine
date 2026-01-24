@@ -58,6 +58,9 @@ export import lysa.renderers.renderpasses.shadow_map_pass;
 export import lysa.renderers.renderpasses.smaa_pass;
 export import lysa.renderers.renderpasses.transparency_pass;
 
+export import lysa.resources.animation;
+export import lysa.resources.animation_library;
+export import lysa.resources.animation_player;
 export import lysa.resources.camera;
 export import lysa.resources.environment;
 export import lysa.resources.font;
