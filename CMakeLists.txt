@@ -264,6 +264,8 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/renderers/renderpasses/SMAAPass.cpp
         ${ENGINE_SRC_DIR}/renderers/renderpasses/TransparencyPass.cpp
 
+        ${ENGINE_SRC_DIR}/resources/Animation.cpp
+        ${ENGINE_SRC_DIR}/resources/AnimationPlayer.cpp
         ${ENGINE_SRC_DIR}/resources/Font.cpp
         ${ENGINE_SRC_DIR}/resources/Image.cpp
         ${ENGINE_SRC_DIR}/resources/Material.cpp
@@ -329,6 +331,9 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/renderers/renderpasses/SMAAPass.ixx
         ${ENGINE_SRC_DIR}/renderers/renderpasses/TransparencyPass.ixx
 
+        ${ENGINE_SRC_DIR}/resources/Animation.ixx
+        ${ENGINE_SRC_DIR}/resources/AnimationLibrary.ixx
+        ${ENGINE_SRC_DIR}/resources/AnimationPlayer.ixx
         ${ENGINE_SRC_DIR}/resources/Camera.ixx
         ${ENGINE_SRC_DIR}/resources/Environment.ixx
         ${ENGINE_SRC_DIR}/resources/Font.ixx

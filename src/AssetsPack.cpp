@@ -9,6 +9,9 @@ module lysa.assets_pack;
 import lysa.exception;
 import lysa.log;
 import lysa.virtual_fs;
+import lysa.resources.animation;
+import lysa.resources.animation_library;
+import lysa.resources.animation_player;
 import lysa.resources.image;
 import lysa.resources.material;
 import lysa.resources.mesh;
@@ -130,33 +133,33 @@ namespace lysa {
         // }
 
         // Read the animations data
-        // auto animationPlayers = std::map<uint32, std::shared_ptr<AnimationPlayer>>{};
-        // for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
-        //     auto anim = std::make_shared<Animation>(animationHeaders[animationIndex].tracksCount,
-        //         animationHeaders[animationIndex].name);
-        //     for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
-        //         auto animationPlayer = std::shared_ptr<AnimationPlayer>{};
-        //         auto& trackInfo = tracksInfos[animationIndex][trackIndex];
-        //         auto nodeIndex = trackInfo.nodeIndex;
-        //         if (animationPlayers.contains(nodeIndex)) {
-        //             animationPlayer = animationPlayers[nodeIndex];
-        //         } else {
-        //             animationPlayer = std::make_shared<AnimationPlayer>(); // node association is made later
-        //             animationPlayer->add("", std::make_shared<AnimationLibrary>());
-        //             animationPlayers[nodeIndex] = animationPlayer;
-        //         }
-        //         animationPlayer->getLibrary()->add(anim->getName(), anim);
-        //         animationPlayer->setCurrentAnimation(anim->getName());
-        //         auto& track = anim->getTrack(trackIndex);
-        //         track.type = static_cast<AnimationType>(trackInfo.type);
-        //         track.interpolation = static_cast<AnimationInterpolation>(trackInfo.interpolation);
-        //         track.keyTime.resize(trackInfo.keysCount);
-        //         stream.read(reinterpret_cast<std::istream::char_type *>(track.keyTime.data()), trackInfo.keysCount * sizeof(float));
-        //         track.duration = track.keyTime.back() + track.keyTime.front();
-        //         track.keyValue.resize(trackInfo.keysCount);
-        //         stream.read(reinterpret_cast<std::istream::char_type *>(track.keyValue.data()), trackInfo.keysCount * sizeof(float3));
-        //     }
-        // }
+        auto animationPlayers = std::map<uint32, std::shared_ptr<AnimationPlayer>>{};
+        for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
+            auto anim = std::make_shared<Animation>(animationHeaders[animationIndex].tracksCount,
+                animationHeaders[animationIndex].name);
+            for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
+                auto animationPlayer = std::shared_ptr<AnimationPlayer>{};
+                auto& trackInfo = tracksInfos[animationIndex][trackIndex];
+                auto nodeIndex = trackInfo.nodeIndex;
+                if (animationPlayers.contains(nodeIndex)) {
+                    animationPlayer = animationPlayers[nodeIndex];
+                } else {
+                    animationPlayer = std::make_shared<AnimationPlayer>(); // node association is made later
+                    animationPlayer->add("", std::make_shared<AnimationLibrary>());
+                    animationPlayers[nodeIndex] = animationPlayer;
+                }
+                animationPlayer->getLibrary()->add(anim->getName(), anim);
+                animationPlayer->setCurrentAnimation(anim->getName());
+                auto& track = anim->getTrack(trackIndex);
+                track.type = static_cast<AnimationType>(trackInfo.type);
+                track.interpolation = static_cast<AnimationInterpolation>(trackInfo.interpolation);
+                track.keyTime.resize(trackInfo.keysCount);
+                stream.read(reinterpret_cast<std::istream::char_type *>(track.keyTime.data()), trackInfo.keysCount * sizeof(float));
+                track.duration = track.keyTime.back() + track.keyTime.front();
+                track.keyValue.resize(trackInfo.keysCount);
+                stream.read(reinterpret_cast<std::istream::char_type *>(track.keyValue.data()), trackInfo.keysCount * sizeof(float3));
+            }
+        }
 
         // Read, upload and create the Image and Texture objets (Vireo specific)
         std::vector<ImageTexture> textures;
