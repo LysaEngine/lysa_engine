@@ -603,7 +603,7 @@ export namespace lysa {
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                 const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
                 auto player = animationPlayers[nodeIndex];
-                if (!player->getParent().lock()) {
+                if (!player->haveParent()) {
                     const auto& node = nodes[nodeIndex];
                     node->addChild(player);
                 }
@@ -622,7 +622,7 @@ export namespace lysa {
         // find the top nodes, with no parents
         auto root = std::make_shared<T_OBJECT>();
         for (const auto& instance : nodes) {
-            if (!instance->getParent().lock()) {
+            if (!instance->haveParent()) {
                 root->addChild(instance);
             }
         }
