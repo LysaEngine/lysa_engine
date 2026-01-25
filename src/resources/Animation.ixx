@@ -122,6 +122,9 @@ export namespace lysa {
                 // initialScale = target->getScale(); TODO
             }
 
+            /**
+            * Returns the interpolated value at the given time (in seconds, from the start of the animation) for a track.
+            */
             TrackKeyValue getInterpolatedValue(
                 const AnimationLoopMode loopMode,
                 const double currentTimeFromStart,
@@ -229,14 +232,6 @@ export namespace lysa {
          * Returns a given track
          */
         auto& getTrack(const uint32 index) { return tracks[index]; }
-
-        /**
-         * Returns the interpolated value at the given time (in seconds, from the start of the animation) for a track.
-         */
-        TrackKeyValue getInterpolatedValue(uint32 trackIndex, double currentTimeFromStart, bool reverse=false) const {
-            assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
-            return tracks[trackIndex].getInterpolatedValue(loopMode, currentTimeFromStart, reverse);
-        }
 
         void reset() {
             for (auto& track : tracks) {
