@@ -14,6 +14,7 @@ import lysa.math;
 import lysa.resources.texture;
 import lysa.resources.animation;
 import lysa.resources.animation_library;
+import lysa.resources.animation_track;
 import lysa.resources.image;
 import lysa.resources.material;
 import lysa.resources.mesh;
