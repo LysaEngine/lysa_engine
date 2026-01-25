@@ -398,14 +398,6 @@ export namespace lysa {
                 animationHeaders[animationIndex].name);
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                 auto& trackInfo = tracksInfos[animationIndex][trackIndex];
-                // auto nodeIndex = trackInfo.nodeIndex;
-                // if (animationPlayers.contains(nodeIndex)) {
-                //     animationPlayer = animationPlayers[nodeIndex];
-                // } else {
-                //     animationPlayer = std::make_shared<T_ANIMATION_PLAYER>(); // node association is made later
-                //     animationPlayer->add("", std::make_shared<AnimationLibrary<T_OBJECT>>());
-                //     animationPlayers[nodeIndex] = animationPlayer;
-                // }
                 animationLibrary->addAnimation(anim->getName(), anim);
                 auto& track = anim->getTrack(trackIndex);
                 track.type = static_cast<AnimationType>(trackInfo.type);
@@ -623,11 +615,7 @@ export namespace lysa {
                 for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                     const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
                     animation->getTrack(trackIndex).target = nodes[nodeIndex].get();
-                    // auto player = animationPlayers[nodeIndex];
-                    // if (!player->haveParent()) {
-                    //     const auto& node = nodes[nodeIndex];
-                    //     node->addChild(player);
-                    // }
+                    animation->getTrack(trackIndex).path = nodes[nodeIndex]->getPath();
                 }
             }
             root->addChild(animationPlayer);

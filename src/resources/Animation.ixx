@@ -92,6 +92,7 @@ export namespace lysa {
             std::vector<float>     keyTime;
             std::vector<float4>    keyValue;
             T_3DOBJECT*            target{nullptr};
+            std::string            path;
             float3                 initialPosition{0.0f};
             quaternion             initialRotation{quaternion::identity()};
             float3                 initialScale{1.0f};
@@ -110,9 +111,10 @@ export namespace lysa {
                 initialRotation(track.initialRotation),
                 initialScale(track.initialScale) {}
 
-            void setTarget(T_3DOBJECT* target) {
+            void setTarget(T_3DOBJECT* target, const std::string& path) {
                 assert([&]{ return target != nullptr; }, "Incorrect target");
                 this->target = target;
+                this->path = path;
                 reset();
             }
 
@@ -239,9 +241,9 @@ export namespace lysa {
             }
         }
 
-        void setTarget(T_3DOBJECT* target) {
+        void setTarget(T_3DOBJECT* target, const std::string& path) {
             for (auto& track : tracks) {
-                track.setTarget(target);
+                track.setTarget(target, path);
             }
         }
 
