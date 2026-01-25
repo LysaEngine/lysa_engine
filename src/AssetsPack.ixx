@@ -8,9 +8,15 @@ export module lysa.assets_pack;
 
 import vireo;
 import lysa.context;
+import lysa.exception;
+import lysa.log;
 import lysa.math;
 import lysa.resources.texture;
-import lysa.resources.animation_player;
+import lysa.resources.animation;
+import lysa.resources.animation_library;
+import lysa.resources.image;
+import lysa.resources.material;
+import lysa.resources.mesh;
 
 export namespace lysa {
 
@@ -250,39 +256,390 @@ export namespace lysa {
             // + keyCount * variant<float3, quat> keyValue
         };
 
-        using Callback = std::function<void(
-            const std::vector<NodeHeader>& nodeHeaders,
-            const std::vector<unique_id>& meshes,
-            const std::vector<std::vector<uint32>>& childrenIndexes,
-            const std::vector<AnimationHeader>& animationHeaders,
-            const std::vector<std::vector<TrackInfo>>& tracksInfos,
-            const std::map<uint32, std::shared_ptr<AnimationPlayer>>& animationPlayers)>;
-
         /*
          * Load a scene from an assets pack file
          */
-        static void load(const std::string &fileURI, const Callback& callback);
+        template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
+        static std::shared_ptr<T_OBJECT> load(const std::string &fileURI) {
+            std::ifstream ifs = ctx().fs.openReadStream(fileURI);
+            return load<T_OBJECT, T_MESH_INSTANCE, T_ANIMATION_PLAYER>(ifs);
+        }
 
         /*
          * Load a scene from an assets pack data stream
          */
-        static void load(std::ifstream &stream, const Callback& callback);
+        template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
+        static std::shared_ptr<T_OBJECT> load(std::ifstream &stream);
 
         AssetsPack() = default;
 
     private:
-        Header header{};;
-
-        void loadScene(std::ifstream& stream, const Callback& callback);
-
-        std::vector<std::shared_ptr<vireo::Image>> loadImagesAndTextures(
+        static std::vector<std::shared_ptr<vireo::Image>> loadImagesAndTextures(
+            const Header& header,
             std::vector<ImageTexture>& textures,
             const vireo::Buffer& stagingBuffer,
             const vireo::CommandList& commandList,
             std::ifstream& stream,
             const std::vector<ImageHeader>&,
             const std::vector<std::vector<MipLevelInfo>>&,
-            const std::vector<TextureHeader>&) const;
+            const std::vector<TextureHeader>&);
     };
+
+    template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
+    std::shared_ptr<T_OBJECT> AssetsPack::load( std::ifstream& stream) {
+        Header header{};
+        auto& imageManager = ctx().res.get<ImageManager>();
+        auto& materialManager = ctx().res.get<MaterialManager>();
+        auto& meshManager = ctx().res.get<MeshManager>();
+        // Read the file global header
+        stream.read(reinterpret_cast<std::istream::char_type *>(&header), sizeof(header));
+        if (header.magic[0] != MAGIC[0] &&
+            header.magic[1] != MAGIC[1] &&
+            header.magic[2] != MAGIC[2] &&
+            header.magic[3] != MAGIC[3] &&
+            header.magic[4] != MAGIC[4] &&
+            header.magic[5] != MAGIC[5]) {
+            throw Exception("Assets pack bad magic");
+        }
+        if (header.version != VERSION) {
+            throw Exception("Assets pack version");
+        }
+        // print(header);
+
+        // Read the images & mips levels headers
+        auto imageHeaders = std::vector<ImageHeader>(header.imagesCount);
+        auto levelHeaders = std::vector<std::vector<MipLevelInfo>>(header.imagesCount);
+        uint64 totalImageSize{0};
+        for (auto imageIndex = 0; imageIndex < header.imagesCount; ++imageIndex) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(&imageHeaders[imageIndex]), sizeof(ImageHeader));
+            // print(imageHeaders[imageIndex]);
+            levelHeaders[imageIndex].resize(imageHeaders[imageIndex].mipLevels);
+            stream.read(reinterpret_cast<std::istream::char_type *>(levelHeaders[imageIndex].data()), sizeof(MipLevelInfo) * imageHeaders[imageIndex].mipLevels);
+            totalImageSize += imageHeaders[imageIndex].dataSize;
+        }
+
+        // Read the textures & materials headers
+        auto textureHeaders = std::vector<TextureHeader>(header.texturesCount);
+        if (header.texturesCount > 0) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(textureHeaders.data()), textureHeaders.size() * sizeof(TextureHeader));
+        }
+        auto materialHeaders = std::vector<MaterialHeader>(header.materialsCount);
+        if (header.materialsCount > 0) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(materialHeaders.data()), materialHeaders.size() * sizeof(MaterialHeader));
+        }
+
+        // Read the meshes & surfaces headers
+        auto meshesHeaders = std::vector<MeshHeader>(header.meshesCount);
+        auto surfaceInfo = std::vector<std::vector<SurfaceInfo>> (header.meshesCount);
+        auto uvsInfos = std::vector<std::vector<std::vector<DataInfo>>> (header.meshesCount);
+        for (auto meshIndex = 0; meshIndex < header.meshesCount; ++meshIndex) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(&meshesHeaders[meshIndex]), sizeof(MeshHeader));
+            // print(meshesHeaders[meshIndex]);
+            surfaceInfo[meshIndex].resize(meshesHeaders[meshIndex].surfacesCount);
+            uvsInfos[meshIndex].resize(meshesHeaders[meshIndex].surfacesCount);
+            for (auto surfaceIndex = 0; surfaceIndex < meshesHeaders[meshIndex].surfacesCount; ++surfaceIndex) {
+                stream.read(reinterpret_cast<std::istream::char_type *>(&surfaceInfo[meshIndex][surfaceIndex]), sizeof(SurfaceInfo));
+                // print(surfaceInfo[meshIndex][surfaceIndex]);
+                uvsInfos[meshIndex][surfaceIndex].resize(surfaceInfo[meshIndex][surfaceIndex].uvsCount);
+                stream.read(reinterpret_cast<std::istream::char_type *>(uvsInfos[meshIndex][surfaceIndex].data()), sizeof(DataInfo) * uvsInfos[meshIndex][surfaceIndex].size());
+            }
+        }
+
+        // Read the nodes headers
+        auto nodeHeaders = std::vector<NodeHeader>(header.nodesCount);
+        auto childrenIndexes = std::vector<std::vector<uint32>>(header.nodesCount);
+        for (auto nodeIndex = 0; nodeIndex < header.nodesCount; ++nodeIndex) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(&nodeHeaders[nodeIndex]), sizeof(NodeHeader));
+            childrenIndexes.at(nodeIndex).resize(nodeHeaders[nodeIndex].childrenCount);
+            stream.read(reinterpret_cast<std::istream::char_type *>(childrenIndexes.at(nodeIndex).data()), sizeof(uint32) * childrenIndexes[nodeIndex].size());
+        }
+
+        auto animationHeaders = std::vector<AnimationHeader>(header.animationsCount);
+        auto tracksInfos = std::vector<std::vector<TrackInfo>> (header.animationsCount);
+        for (auto animationIndex = 0; animationIndex < header.animationsCount; ++animationIndex) {
+            stream.read(reinterpret_cast<std::istream::char_type *>(&animationHeaders.at(animationIndex)), sizeof(AnimationHeader));
+            tracksInfos[animationIndex].resize(animationHeaders[animationIndex].tracksCount);
+            stream.read(reinterpret_cast<std::istream::char_type *>(tracksInfos[animationIndex].data()), sizeof(TrackInfo) * tracksInfos[animationIndex].size());
+        }
+
+        // Read the meshes data
+        uint32 count{0};
+        stream.read(reinterpret_cast<std::istream::char_type *>(&count), sizeof(uint32));
+        std::vector<uint32> indices(count);
+        stream.read(reinterpret_cast<std::istream::char_type *>(indices.data()), count * sizeof(uint32));
+
+        stream.read(reinterpret_cast<std::istream::char_type *>(&count), sizeof(uint32));
+        std::vector<float3> positions(count);
+        stream.read(reinterpret_cast<std::istream::char_type *>(positions.data()), count * sizeof(float3));
+
+        stream.read(reinterpret_cast<std::istream::char_type *>(&count), sizeof(uint32));
+        std::vector<float3> normals(count);
+        stream.read(reinterpret_cast<std::istream::char_type *>(normals.data()), count * sizeof(float3));
+
+        stream.read(reinterpret_cast<std::istream::char_type *>(&count), sizeof(uint32));
+        std::vector<float2> uvs(count);
+        stream.read(reinterpret_cast<std::istream::char_type *>(uvs.data()), count * sizeof(float2));
+
+        stream.read(reinterpret_cast<std::istream::char_type *>(&count), sizeof(uint32));
+        std::vector<float4> tangents(count);
+        stream.read(reinterpret_cast<std::istream::char_type *>(tangents.data()), count * sizeof(float4));
+
+        // INFO(std::format("{} indices, {} positions, {} normals, {} uvs, {} tangents",
+            // indices.size(), positions.size(), normals.size(), uvs.size(), tangents.size()));
+        // for(auto& pos : positions) {
+        //     log(to_string(pos));
+        // }
+
+        // Read the animations data
+        auto animationPlayers = std::map<uint32, std::shared_ptr<T_ANIMATION_PLAYER>>{};
+        for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
+            auto anim = std::make_shared<Animation>(animationHeaders[animationIndex].tracksCount,
+                animationHeaders[animationIndex].name);
+            for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
+                auto animationPlayer = std::shared_ptr<T_ANIMATION_PLAYER>();
+                auto& trackInfo = tracksInfos[animationIndex][trackIndex];
+                auto nodeIndex = trackInfo.nodeIndex;
+                if (animationPlayers.contains(nodeIndex)) {
+                    animationPlayer = animationPlayers[nodeIndex];
+                } else {
+                    animationPlayer = std::make_shared<T_ANIMATION_PLAYER>(); // node association is made later
+                    animationPlayer->add("", std::make_shared<AnimationLibrary>());
+                    animationPlayers[nodeIndex] = animationPlayer;
+                }
+                animationPlayer->getLibrary()->add(anim->getName(), anim);
+                animationPlayer->setCurrentAnimation(anim->getName());
+                auto& track = anim->getTrack(trackIndex);
+                track.type = static_cast<AnimationType>(trackInfo.type);
+                track.interpolation = static_cast<AnimationInterpolation>(trackInfo.interpolation);
+                track.keyTime.resize(trackInfo.keysCount);
+                stream.read(reinterpret_cast<std::istream::char_type *>(track.keyTime.data()), trackInfo.keysCount * sizeof(float));
+                track.duration = track.keyTime.back() + track.keyTime.front();
+                track.keyValue.resize(trackInfo.keysCount);
+                stream.read(reinterpret_cast<std::istream::char_type *>(track.keyValue.data()), trackInfo.keysCount * sizeof(float3));
+            }
+        }
+
+        // Read, upload and create the Image and Texture objets (Vireo specific)
+        std::vector<ImageTexture> textures;
+        textures.reserve(header.imagesCount);
+        if (header.imagesCount > 0) {
+            auto& asyncQueue = ctx().asyncQueue;
+            const auto command = asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
+            // Upload all images into VRAM using one big staging buffer
+            std::shared_ptr<vireo::Buffer> textureStagingBuffer;
+            textureStagingBuffer = asyncQueue.createBuffer(
+               command,
+               vireo::BufferType::IMAGE_UPLOAD,
+               totalImageSize,
+               1);
+            textureStagingBuffer->map();
+            const auto images = loadImagesAndTextures(
+                header,
+                textures,
+                *textureStagingBuffer,
+                *command.commandList,
+                stream,
+                imageHeaders,
+                levelHeaders,
+                textureHeaders);
+             asyncQueue.endCommand(command);
+            const auto barriersCommand = asyncQueue.beginCommand(vireo::CommandType::GRAPHIC);
+            for (auto textureIndex = 0; textureIndex < header.texturesCount; ++textureIndex) {
+                const auto& texture = textureHeaders[textureIndex];
+                if (texture.imageIndex != -1) {
+                    const auto& imageHeader = imageHeaders[texture.imageIndex];
+                    barriersCommand.commandList->barrier(
+                        images[textureIndex],
+                        vireo::ResourceState::COPY_DST,
+                        vireo::ResourceState::SHADER_READ,
+                        0,
+                        imageHeader.mipLevels);
+                }
+            }
+            asyncQueue.endCommand(barriersCommand);
+        }
+
+        // Create the Material objects
+        std::unordered_map<pipeline_id, std::vector<unique_id>> pipelineIds;
+        std::vector<unique_id> materials(header.materialsCount);
+        std::map<unique_id, int> materialsTexCoords;
+        for (auto materialIndex = 0; materialIndex < header.materialsCount; ++materialIndex) {
+            auto& header = materialHeaders.at(materialIndex);
+            auto& material = materialManager.create();
+            material.setBypassUpload(true);
+            auto textureInfo = [&](const TextureInfo& info) {
+                auto texInfo = StandardMaterial::TextureInfo {
+                    .transform = info.transform,
+                };
+                if (info.textureIndex != -1) {
+                    texInfo.texture = textures[info.textureIndex];
+                }
+                materialsTexCoords[material.id] = info.uvsIndex;
+                return texInfo;
+            };
+            material.setCullMode(static_cast<vireo::CullMode>(header.cullMode));
+            material.setTransparency(static_cast<Transparency>(header.transparency));
+            material.setAlphaScissor(header.alphaScissor);
+            material.setAlbedoColor(header.albedoColor);
+            material.setDiffuseTexture(textureInfo(header.albedoTexture));
+            material.setMetallicFactor(header.metallicFactor);
+            material.setMetallicTexture(textureInfo(header.metallicTexture));
+            material.setRoughnessFactor(header.roughnessFactor);
+            material.setRoughnessTexture(textureInfo(header.roughnessTexture));
+            material.setEmissiveFactor(header.emissiveFactor);
+            material.setEmissiveTexture(textureInfo(header.emissiveTexture));
+            material.setEmissiveStrength(header.emissiveStrength);
+            material.setNormalTexture(textureInfo(header.normalTexture));
+            material.setNormalScale(header.normalScale > 0.0f ? header.normalScale : 1.0f);
+            materials.at(materialIndex) = material.id;
+            material.setBypassUpload(false);
+            pipelineIds[material.getPipelineId()].push_back(material.id);
+        }
+
+        // Create the Mesh, Surface & Vertex objects
+        std::vector<unique_id> meshes(header.meshesCount);
+        for (auto meshIndex = 0; meshIndex < header.meshesCount; ++meshIndex) {
+            auto& header   = meshesHeaders[meshIndex];
+            auto& mesh     = meshManager.create(std::string(header.name));
+            auto& meshVertices = mesh.getVertices();
+            auto& meshIndices  = mesh.getIndices();
+            // print(header);
+            for (auto surfaceIndex = 0; surfaceIndex < header.surfacesCount; ++surfaceIndex) {
+                auto &info = surfaceInfo.at(meshIndex)[surfaceIndex];
+                // print(info);
+                uint32 firstIndex = meshIndices.size();
+                uint32 firstVertex  = meshVertices.size();
+                auto surface = MeshSurface{firstIndex, info.indices.count};
+                // Load indices
+                meshIndices.reserve(meshIndices.size() + info.indices.count);
+                for(auto i = 0; i < info.indices.count; ++i) {
+                    meshIndices.push_back(indices[info.indices.first + i]);
+                }
+                // Load positions
+                meshVertices.resize(meshVertices.size() + info.positions.count);
+                for(auto i = 0; i < info.positions.count; ++i) {
+                    meshVertices[firstVertex + i] = {
+                        .position = positions[info.positions.first + i],
+                    };
+                }
+                // Load normals
+                for(auto i = 0; i < info.normals.count; ++i) {
+                    meshVertices[firstVertex + i].normal = normals[info.normals.first + i];
+                }
+                // Load tangents
+                for(auto i = 0; i < info.tangents.count; ++i) {
+                    meshVertices[firstVertex + i].tangent = tangents[info.tangents.first + i];
+                }
+                if (info.materialIndex != -1) {
+                    // associate material to surface & mesh
+                    const auto& material = materials[info.materialIndex];
+                    surface.material = material;
+                    materialManager.use(material);
+                    mesh.getMaterials().insert(material);
+                    // load UVs
+                    auto texCoord = 0;
+                    if (materialsTexCoords.contains(material)) {
+                        texCoord = materialsTexCoords.at(material);
+                    }
+                    if (!uvsInfos.at(meshIndex)[surfaceIndex].empty()) {
+                        const auto& texCoordInfo = uvsInfos.at(meshIndex)[surfaceIndex][texCoord];
+                        for(auto i = 0; i < texCoordInfo.count; i++) {
+                            meshVertices[firstVertex + i].uv = uvs[texCoordInfo.first + i];
+                        }
+                    }
+                } else {
+                    // Mesh have no material, use a default one
+                    const auto &material =  materialManager.create();
+                    surface.material = material.id;
+                    materialManager.use(material.id);
+                    mesh.getMaterials().insert(material.id);
+                }
+                // calculate missing tangents
+                if (info.tangents.count == 0) {
+                    for (auto i = 0; i < meshIndices.size(); i += 3) {
+                        auto &vertex1  = meshVertices[meshIndices[i]];
+                        auto &vertex2  = meshVertices[meshIndices[i + 1]];
+                        auto &vertex3  = meshVertices[meshIndices[i + 2]];
+                        float3 edge1    = vertex2.position - vertex1.position;
+                        float3 edge2    = vertex3.position - vertex1.position;
+                        float2 deltaUV1 = vertex2.uv - vertex1.uv;
+                        float2 deltaUV2 = vertex3.uv - vertex1.uv;
+
+                        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+                        float3  tangent{
+                            f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x),
+                            f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y),
+                            f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z),
+                        };
+                        vertex1.tangent = float4{tangent, 1.0};
+                        vertex2.tangent = float4{tangent, 1.0};
+                        vertex3.tangent = float4{tangent, 1.0};
+                    }
+                }
+                mesh.getSurfaces().push_back(surface);
+            }
+            mesh.buildAABB();
+            meshes[meshIndex] = mesh.id;
+        }
+        materialManager.flush();
+        meshManager.flush();
+
+        std::vector<std::shared_ptr<T_OBJECT>> nodes(nodeHeaders.size());
+        for (auto nodeIndex = 0; nodeIndex < nodeHeaders.size(); ++nodeIndex) {
+            if (nodeHeaders[nodeIndex].meshIndex != -1) {
+                const auto mi = std::make_shared<T_MESH_INSTANCE>(
+                    meshManager[meshes[nodeHeaders[nodeIndex].meshIndex]],
+                    nodeHeaders[nodeIndex].name);
+                mi->setCastShadows(true);
+                nodes[nodeIndex] = mi;
+            }
+            else {
+                nodes[nodeIndex] =  std::make_shared<T_OBJECT>(nodeHeaders[nodeIndex].name);
+            }
+            nodes[nodeIndex]->setTransform(nodeHeaders[nodeIndex].transform);
+        }
+
+        for (auto animationIndex = 0; animationIndex < animationHeaders.size(); animationIndex++) {
+            for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
+                const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
+                auto player = animationPlayers[nodeIndex];
+                if (!player->getParent().lock()) {
+                    const auto& node = nodes[nodeIndex];
+                    node->addChild(player);
+                }
+            }
+        }
+
+        // Build the scene tree
+        for (auto nodeIndex = 0; nodeIndex < nodeHeaders.size(); ++nodeIndex) {
+           auto* parent = nodes[nodeIndex].get();
+           for (auto i = 0; i < nodeHeaders[nodeIndex].childrenCount; i++) {
+               const auto& child = nodes[childrenIndexes[nodeIndex][i]];
+               parent->addChild(child);
+           }
+        }
+
+        // find the top nodes, with no parents
+        auto root = std::make_shared<T_OBJECT>();
+        for (const auto& instance : nodes) {
+            if (!instance->getParent().lock()) {
+                root->addChild(instance);
+            }
+        }
+
+        for (auto& texture : textures) {
+            auto& image = imageManager[texture.image];
+            if (image.refCounter == 0) {
+                Log::warning("Image ", image.getName(), " not used in the assets pack");
+                imageManager.destroy(texture.image);
+            }
+        }
+
+        // Update renderers pipelines in current rendering targets
+        //ctx().res.get<RenderTargetManager>().updatePipelines(pipelineIds);  XXX
+
+        return root;
+    }
+
 
 }
