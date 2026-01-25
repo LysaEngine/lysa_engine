@@ -260,16 +260,16 @@ export namespace lysa {
          * Load a scene from an assets pack file
          */
         template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
-        static std::shared_ptr<T_OBJECT> load(const std::string &fileURI) {
+        static std::shared_ptr<T_OBJECT> load(const std::string &fileURI, const std::string& rootName = "Root") {
             std::ifstream ifs = ctx().fs.openReadStream(fileURI);
-            return load<T_OBJECT, T_MESH_INSTANCE, T_ANIMATION_PLAYER>(ifs);
+            return load<T_OBJECT, T_MESH_INSTANCE, T_ANIMATION_PLAYER>(ifs, rootName);
         }
 
         /*
          * Load a scene from an assets pack data stream
          */
         template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
-        static std::shared_ptr<T_OBJECT> load(std::ifstream &stream);
+        static std::shared_ptr<T_OBJECT> load(std::ifstream &stream, const std::string& rootName = "Root");
 
         AssetsPack() = default;
 
@@ -286,7 +286,7 @@ export namespace lysa {
     };
 
     template<typename T_OBJECT, typename T_MESH_INSTANCE, typename T_ANIMATION_PLAYER>
-    std::shared_ptr<T_OBJECT> AssetsPack::load( std::ifstream& stream) {
+    std::shared_ptr<T_OBJECT> AssetsPack::load(std::ifstream& stream, const std::string& rootName) {
         Header header{};
         auto& imageManager = ctx().res.get<ImageManager>();
         auto& materialManager = ctx().res.get<MaterialManager>();
@@ -600,7 +600,7 @@ export namespace lysa {
         }
 
         // find the top nodes, with no parents
-        auto root = std::make_shared<T_OBJECT>();
+        auto root = std::make_shared<T_OBJECT>(rootName);
         for (const auto& instance : nodes) {
             if (!instance->haveParent()) {
                 root->addChild(instance);
@@ -615,7 +615,8 @@ export namespace lysa {
                 for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                     const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
                     animation->getTrack(trackIndex).target = nodes[nodeIndex].get();
-                    animation->getTrack(trackIndex).path = nodes[nodeIndex]->getPath();
+                    Log::info(nodes[nodeIndex]->getRelativePath(root));
+                    animation->getTrack(trackIndex).path = nodes[nodeIndex]->getRelativePath(root);
                 }
             }
             root->addChild(animationPlayer);
