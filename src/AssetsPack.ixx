@@ -393,7 +393,7 @@ export namespace lysa {
         // Read the animations data
         auto animationPlayers = std::map<uint32, std::shared_ptr<T_ANIMATION_PLAYER>>{};
         for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
-            auto anim = std::make_shared<Animation>(animationHeaders[animationIndex].tracksCount,
+            auto anim = std::make_shared<Animation<T_OBJECT>>(animationHeaders[animationIndex].tracksCount,
                 animationHeaders[animationIndex].name);
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                 auto animationPlayer = std::shared_ptr<T_ANIMATION_PLAYER>();
@@ -403,7 +403,7 @@ export namespace lysa {
                     animationPlayer = animationPlayers[nodeIndex];
                 } else {
                     animationPlayer = std::make_shared<T_ANIMATION_PLAYER>(); // node association is made later
-                    animationPlayer->add("", std::make_shared<AnimationLibrary>());
+                    animationPlayer->add("", std::make_shared<AnimationLibrary<T_OBJECT>>());
                     animationPlayers[nodeIndex] = animationPlayer;
                 }
                 animationPlayer->getLibrary()->add(anim->getName(), anim);

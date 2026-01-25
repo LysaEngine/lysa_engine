@@ -15,12 +15,13 @@ export namespace lysa {
     /**
      * Container for \ref Animation resources.
      */
+    template<typename T_3DOBJECT>
     class AnimationLibrary : public UnmanagedResource {
     public:
         /**
          * Adds the \ref Animation to the library, accessible by the key name.
          */
-        void add(const std::string& keyName, const std::shared_ptr<Animation>& animation) {
+        void add(const std::string& keyName, const std::shared_ptr<Animation<T_3DOBJECT>>& animation) {
             if (animations.empty()) {
                 defaultAnimation = keyName;
             }
@@ -44,7 +45,7 @@ export namespace lysa {
 
     private:
         std::string defaultAnimation;
-        std::map<std::string, std::shared_ptr<Animation>> animations;
+        std::map<std::string, std::shared_ptr<Animation<T_3DOBJECT>>> animations;
     };
 
 }
