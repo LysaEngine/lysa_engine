@@ -21,7 +21,7 @@ export namespace lysa {
         /**
          * Adds the \ref Animation to the library, accessible by the key name.
          */
-        void add(const std::string& keyName, const std::shared_ptr<Animation<T_3DOBJECT>>& animation) {
+        void addAnimation(const std::string& keyName, const std::shared_ptr<Animation<T_3DOBJECT>>& animation) {
             if (animations.empty()) {
                 defaultAnimation = keyName;
             }
@@ -31,17 +31,23 @@ export namespace lysa {
         /**
          * Returns the \ref Animation with the key name.
          */
-        auto get(const std::string& keyName) const { return animations.at(keyName); }
+        auto getAnimation(const std::string& keyName) const { return animations.at(keyName); }
 
         /**
          * Returns `true` if the library stores an \ref Animation with name as the key.
          */
-        auto has(const std::string& keyName) const { return animations.contains(keyName); }
+        auto hasAnimation(const std::string& keyName) const { return animations.contains(keyName); }
 
         /**
          * Returns the name of the default animation
          */
-        const auto& getDefault() const { return defaultAnimation; }
+        const auto& getDefaultAnimationName() const { return defaultAnimation; }
+
+        void reset() {
+            for (auto& animation : animations | std::views::values) {
+                animation->reset();
+            }
+        }
 
     private:
         std::string defaultAnimation;

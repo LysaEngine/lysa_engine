@@ -391,23 +391,22 @@ export namespace lysa {
         // }
 
         // Read the animations data
-        auto animationPlayers = std::map<uint32, std::shared_ptr<T_ANIMATION_PLAYER>>{};
+        auto animationLibrary = std::make_shared<AnimationLibrary<T_OBJECT>>();
         for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
-            auto anim = std::make_shared<Animation<T_OBJECT>>(animationHeaders[animationIndex].tracksCount,
+            auto anim = std::make_shared<Animation<T_OBJECT>>(
+                animationHeaders[animationIndex].tracksCount,
                 animationHeaders[animationIndex].name);
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
-                auto animationPlayer = std::shared_ptr<T_ANIMATION_PLAYER>();
                 auto& trackInfo = tracksInfos[animationIndex][trackIndex];
-                auto nodeIndex = trackInfo.nodeIndex;
-                if (animationPlayers.contains(nodeIndex)) {
-                    animationPlayer = animationPlayers[nodeIndex];
-                } else {
-                    animationPlayer = std::make_shared<T_ANIMATION_PLAYER>(); // node association is made later
-                    animationPlayer->add("", std::make_shared<AnimationLibrary<T_OBJECT>>());
-                    animationPlayers[nodeIndex] = animationPlayer;
-                }
-                animationPlayer->getLibrary()->add(anim->getName(), anim);
-                animationPlayer->setCurrentAnimation(anim->getName());
+                // auto nodeIndex = trackInfo.nodeIndex;
+                // if (animationPlayers.contains(nodeIndex)) {
+                //     animationPlayer = animationPlayers[nodeIndex];
+                // } else {
+                //     animationPlayer = std::make_shared<T_ANIMATION_PLAYER>(); // node association is made later
+                //     animationPlayer->add("", std::make_shared<AnimationLibrary<T_OBJECT>>());
+                //     animationPlayers[nodeIndex] = animationPlayer;
+                // }
+                animationLibrary->addAnimation(anim->getName(), anim);
                 auto& track = anim->getTrack(trackIndex);
                 track.type = static_cast<AnimationType>(trackInfo.type);
                 track.interpolation = static_cast<AnimationInterpolation>(trackInfo.interpolation);
@@ -599,17 +598,6 @@ export namespace lysa {
             nodes[nodeIndex]->setTransform(nodeHeaders[nodeIndex].transform);
         }
 
-        for (auto animationIndex = 0; animationIndex < animationHeaders.size(); animationIndex++) {
-            for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
-                const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
-                auto player = animationPlayers[nodeIndex];
-                if (!player->haveParent()) {
-                    const auto& node = nodes[nodeIndex];
-                    node->addChild(player);
-                }
-            }
-        }
-
         // Build the scene tree
         for (auto nodeIndex = 0; nodeIndex < nodeHeaders.size(); ++nodeIndex) {
            auto* parent = nodes[nodeIndex].get();
@@ -625,6 +613,25 @@ export namespace lysa {
             if (!instance->haveParent()) {
                 root->addChild(instance);
             }
+        }
+
+        if (!animationHeaders.empty()) {
+            auto animationPlayer = std::make_shared<T_ANIMATION_PLAYER>();
+            animationPlayer->add("", animationLibrary);
+            animationPlayer->setCurrentAnimation(animationLibrary->getDefaultAnimationName());
+            for (auto animationIndex = 0; animationIndex < animationHeaders.size(); animationIndex++) {
+                auto animation = animationLibrary->getAnimation(animationHeaders[animationIndex].name);
+                for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
+                    const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
+                    animation->getTrack(trackIndex).target = nodes[nodeIndex].get();
+                    // auto player = animationPlayers[nodeIndex];
+                    // if (!player->haveParent()) {
+                    //     const auto& node = nodes[nodeIndex];
+                    //     node->addChild(player);
+                    // }
+                }
+            }
+            root->addChild(animationPlayer);
         }
 
         for (auto& texture : textures) {

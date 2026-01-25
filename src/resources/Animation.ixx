@@ -6,6 +6,7 @@
 */
 export module lysa.resources.animation;
 
+import lysa.exception;
 import lysa.math;
 import lysa.resources;
 
@@ -65,18 +66,6 @@ export namespace lysa {
     template<typename T_3DOBJECT>
     class Animation : public UnmanagedResource {
     public:
-        /**
-         * An animation track
-         */
-        struct Track {
-            AnimationType          type;
-            AnimationInterpolation interpolation{AnimationInterpolation::LINEAR};
-            bool                   enabled{true};
-            float                  duration{0.0f};
-            std::vector<float>     keyTime;
-            std::vector<float4>    keyValue;
-            T_3DOBJECT*            target{nullptr};
-        };
 
         /**
          * Values returned from getInterpolatedValue()
@@ -93,8 +82,115 @@ export namespace lysa {
         };
 
         /**
+         * An animation track
+         */
+        struct Track {
+            AnimationType          type;
+            AnimationInterpolation interpolation{AnimationInterpolation::LINEAR};
+            bool                   enabled{true};
+            float                  duration{0.0f};
+            std::vector<float>     keyTime;
+            std::vector<float4>    keyValue;
+            T_3DOBJECT*            target{nullptr};
+            float3                 initialPosition{0.0f};
+            quaternion             initialRotation{quaternion::identity()};
+            float3                 initialScale{1.0f};
+
+            void reset() {
+                initialPosition = target->getPosition();
+                // initialRotation = target->getRotation(); TODO
+                // initialScale = target->getScale(); TODO
+            }
+
+            void apply(const TrackKeyValue& value) const {
+                switch (value.type) {
+                case AnimationType::TRANSLATION:
+                    target->setPosition(value.value.xyz + initialPosition);
+                    break;
+                case AnimationType::ROTATION:
+                    target->setRotation(quaternion{value.value} + initialRotation);
+                    break;
+                case AnimationType::SCALE:
+                    // target->setScale(value.value + initialScale); TODO
+                    break;
+                default:
+                    throw Exception("Unknown animation type");
+                }
+            }
+
+            TrackKeyValue getInterpolatedValue(
+                const AnimationLoopMode loopMode,
+                const double currentTimeFromStart,
+                const bool reverse) const {
+                auto value = TrackKeyValue{
+                    .ended = (!enabled ||
+                            (loopMode == AnimationLoopMode::NONE && currentTimeFromStart >= duration) ||
+                            keyTime.size() < 2),
+                    .type = type,
+                };
+                if (value.ended) {
+                    if (reverse) {
+                        value.value = keyValue[0];
+                    } else {
+                        value.value = keyValue[keyValue.size() - 1];
+                    }
+                    return value;
+                }
+
+                const auto currentTime = std::fmod(currentTimeFromStart, static_cast<double>(duration));
+                value.frameTime = static_cast<float>(currentTime);
+
+                const auto it = std::ranges::lower_bound(keyTime, static_cast<float>(currentTime));
+                auto nextIndex = std::distance(keyTime.begin(), it);
+                if (nextIndex == 0) {
+                    if (reverse) {
+                        value.value = keyValue[keyValue.size() - 1];
+                    } else {
+                        value.value = keyValue[0];
+                    }
+                    return value;
+                }
+
+                auto previousIndex = nextIndex;
+                const bool overflow = nextIndex == keyTime.size();
+
+                if (reverse) {
+                    previousIndex = keyTime.size() - previousIndex;
+                    nextIndex = keyTime.size() - nextIndex;
+                }
+
+                const auto& previousTime = keyTime[previousIndex];
+                const auto nextTime = overflow ? duration : keyTime[nextIndex];
+                const auto diffTime = nextTime - previousTime;
+                const auto interpolationValue = static_cast<float>((currentTime - previousTime) / (diffTime > 0 ? diffTime : 1.0f));
+
+                const auto& previousValue = keyValue[previousIndex];
+                if (interpolation == AnimationInterpolation::LINEAR) {
+                    const auto nextValue = overflow ? keyValue[0] : keyValue[nextIndex];
+                    switch (type) {
+                        case AnimationType::TRANSLATION:
+                        case AnimationType::SCALE:
+                            value.value.xyz = lerp(previousValue.xyz, nextValue.xyz, interpolationValue);
+                            break;
+                        case AnimationType::ROTATION:{
+                            const auto prev = quaternion{previousValue};
+                            const auto next = quaternion{nextValue};
+                            value.value = lerp(prev, next, interpolationValue).xyzw;
+                            break;
+                        }
+                    }
+                } else {
+                    // STEP
+                    value.value = previousValue;
+                }
+                return value;
+            }
+        };
+
+        /**
          * Creates an Animation
          * @param tracksCount number of tracks to allocate
+         * @param name
          */
         Animation(uint32 tracksCount, const std::string &name);
 
@@ -116,12 +212,26 @@ export namespace lysa {
         /**
          * Returns a given track
          */
-        auto& getTrack(const uint32 index) { return tracks.at(index); }
+        auto& getTrack(const uint32 index) { return tracks[index]; }
 
         /**
          * Returns the interpolated value at the given time (in seconds, from the start of the animation) for a track.
          */
-        TrackKeyValue getInterpolatedValue(uint32 trackIndex, double currentTimeFromStart, bool reverse=false) const;
+        TrackKeyValue getInterpolatedValue(uint32 trackIndex, double currentTimeFromStart, bool reverse=false) const {
+            assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
+            return tracks[trackIndex].getInterpolatedValue(loopMode, currentTimeFromStart, reverse);
+        }
+
+        void apply(uint32 trackIndex, const TrackKeyValue& value) {
+            assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
+            tracks[trackIndex].apply(value);
+        }
+
+        void reset() {
+            for (auto& track : tracks) {
+                track.reset();
+            }
+        }
 
         const auto& getName() const { return name; }
 
@@ -135,77 +245,6 @@ export namespace lysa {
     template<typename T_3DOBJECT>
     Animation<T_3DOBJECT>::Animation(const uint32 tracksCount, const std::string &name): name {name} {
         tracks.resize(tracksCount);
-    }
-
-    template<typename T_3DOBJECT>
-    Animation<T_3DOBJECT>::TrackKeyValue Animation<T_3DOBJECT>::getInterpolatedValue(
-        const uint32 trackIndex,
-        const double currentTimeFromStart,
-        const bool reverse) const {
-        assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
-        const auto& track = tracks[trackIndex];
-        auto value = TrackKeyValue{
-            .ended = (!track.enabled ||
-                    (loopMode == AnimationLoopMode::NONE && currentTimeFromStart >= track.duration) ||
-                    track.keyTime.size() < 2),
-            .type = track.type,
-        };
-        if (value.ended) {
-            if (reverse) {
-                value.value = track.keyValue[0];
-            } else {
-                value.value = track.keyValue[track.keyValue.size() - 1];
-            }
-            return value;
-        }
-
-        const auto currentTime = std::fmod(currentTimeFromStart, static_cast<double>(track.duration));
-        value.frameTime = static_cast<float>(currentTime);
-
-        const auto it = std::ranges::lower_bound(track.keyTime, static_cast<float>(currentTime));
-        auto nextIndex = std::distance(track.keyTime.begin(), it);
-        if (nextIndex == 0) {
-            if (reverse) {
-                value.value = track.keyValue[track.keyValue.size() - 1];
-            } else {
-                value.value = track.keyValue[0];
-            }
-            return value;
-        }
-
-        auto previousIndex = nextIndex;
-        const bool overflow = nextIndex == track.keyTime.size();
-
-        if (reverse) {
-            previousIndex = track.keyTime.size() - previousIndex;
-            nextIndex = track.keyTime.size() - nextIndex;
-        }
-
-        const auto& previousTime = track.keyTime[previousIndex];
-        const auto nextTime = overflow ? track.duration : track.keyTime[nextIndex];
-        const auto diffTime = nextTime - previousTime;
-        const auto interpolationValue = static_cast<float>((currentTime - previousTime) / (diffTime > 0 ? diffTime : 1.0f));
-
-        const auto& previousValue = track.keyValue[previousIndex];
-        if (track.interpolation == AnimationInterpolation::LINEAR) {
-            const auto nextValue = overflow ? track.keyValue[0] : track.keyValue[nextIndex];
-            switch (track.type) {
-                case AnimationType::TRANSLATION:
-                case AnimationType::SCALE:
-                    value.value.xyz = lerp(previousValue.xyz, nextValue.xyz, interpolationValue);
-                    break;
-                case AnimationType::ROTATION:{
-                    const auto prev = quaternion{previousValue};
-                    const auto next = quaternion{nextValue};
-                    value.value = lerp(prev, next, interpolationValue).xyzw;
-                    break;
-                }
-            }
-        } else {
-            // STEP
-            value.value = previousValue;
-        }
-        return value;
     }
 
 
