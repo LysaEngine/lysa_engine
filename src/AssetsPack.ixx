@@ -391,9 +391,9 @@ export namespace lysa {
         // }
 
         // Read the animations data
-        auto animationLibrary = std::make_shared<AnimationLibrary<T_OBJECT>>();
+        auto animationLibrary = std::make_shared<AnimationLibrary>();
         for (auto animationIndex = 0; animationIndex < header.animationsCount; animationIndex++) {
-            auto anim = std::make_shared<Animation<T_OBJECT>>(
+            auto anim = std::make_shared<Animation>(
                 animationHeaders[animationIndex].tracksCount,
                 animationHeaders[animationIndex].name);
             for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {

@@ -16,7 +16,6 @@ export namespace lysa {
     /**
      * Container for \ref Animation resources.
      */
-    template<typename T_3DOBJECT>
     class AnimationLibrary : public UnmanagedResource {
     public:
 
@@ -25,14 +24,14 @@ export namespace lysa {
         AnimationLibrary(const AnimationLibrary& animationLibrary) :
             defaultAnimation(animationLibrary.defaultAnimation) {
             for (auto& anim : animationLibrary.animations) {
-                animations.insert(std::make_pair(anim.first, std::make_shared<Animation<T_3DOBJECT>>(*anim.second)));
+                animations.insert(std::make_pair(anim.first, std::make_shared<Animation>(*anim.second)));
             }
         }
 
         /**
          * Adds the \ref Animation to the library, accessible by the key name.
          */
-        void addAnimation(const std::string& keyName, const std::shared_ptr<Animation<T_3DOBJECT>>& animation) {
+        void addAnimation(const std::string& keyName, const std::shared_ptr<Animation>& animation) {
             if (animations.empty()) {
                 defaultAnimation = keyName;
             }
@@ -58,7 +57,7 @@ export namespace lysa {
 
     private:
         std::string defaultAnimation;
-        std::map<std::string, std::shared_ptr<Animation<T_3DOBJECT>>> animations;
+        std::map<std::string, std::shared_ptr<Animation>> animations;
     };
 
 }
