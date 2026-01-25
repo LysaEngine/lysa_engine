@@ -18,6 +18,15 @@ export namespace lysa {
     template<typename T_3DOBJECT>
     class AnimationLibrary : public UnmanagedResource {
     public:
+        AnimationLibrary() = default;
+
+        AnimationLibrary(const AnimationLibrary& animationLibrary) :
+            defaultAnimation(animationLibrary.defaultAnimation) {
+            for (auto& anim : animationLibrary.animations) {
+                animations.insert(std::make_pair(anim.first, std::make_shared<Animation<T_3DOBJECT>>(*anim.second)));
+            }
+        }
+
         /**
          * Adds the \ref Animation to the library, accessible by the key name.
          */

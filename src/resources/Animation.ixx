@@ -96,6 +96,26 @@ export namespace lysa {
             quaternion             initialRotation{quaternion::identity()};
             float3                 initialScale{1.0f};
 
+            Track() = default;
+
+            Track(const Track& track) :
+                type(track.type),
+                interpolation(track.interpolation),
+                enabled(track.enabled),
+                duration(track.duration),
+                keyTime(track.keyTime),
+                keyValue(track.keyValue),
+                target(track.target),
+                initialPosition(track.initialPosition),
+                initialRotation(track.initialRotation),
+                initialScale(track.initialScale) {}
+
+            void setTarget(T_3DOBJECT* target) {
+                assert([&]{ return target != nullptr; }, "Incorrect target");
+                this->target = target;
+                reset();
+            }
+
             void reset() {
                 initialPosition = target->getPosition();
                 // initialRotation = target->getRotation(); TODO
@@ -192,7 +212,19 @@ export namespace lysa {
          * @param tracksCount number of tracks to allocate
          * @param name
          */
-        Animation(uint32 tracksCount, const std::string &name);
+        Animation(uint32 tracksCount, const std::string &name) :
+            name {name} {
+            tracks.resize(tracksCount);
+        }
+
+        Animation(const Animation& anim) :
+            loopMode(anim.loopMode),
+            name(anim.name) {
+            tracks.reserve(tracks.size());
+            for (auto& track : anim.tracks) {
+                tracks.emplace_back(track);
+            }
+        }
 
         /**
          * Sets the looping mode
@@ -233,6 +265,12 @@ export namespace lysa {
             }
         }
 
+        void setTarget(T_3DOBJECT* target) {
+            for (auto& track : tracks) {
+                track.setTarget(target);
+            }
+        }
+
         const auto& getName() const { return name; }
 
     private:
@@ -240,12 +278,6 @@ export namespace lysa {
         std::vector<Track> tracks;
         const std::string name;
     };
-
-
-    template<typename T_3DOBJECT>
-    Animation<T_3DOBJECT>::Animation(const uint32 tracksCount, const std::string &name): name {name} {
-        tracks.resize(tracksCount);
-    }
 
 
 }
