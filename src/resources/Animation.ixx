@@ -84,18 +84,14 @@ export namespace lysa {
         /**
          * An animation track
          */
-        struct Track {
+        struct Track : UnmanagedResource {
             AnimationType          type;
             AnimationInterpolation interpolation{AnimationInterpolation::LINEAR};
             bool                   enabled{true};
             float                  duration{0.0f};
             std::vector<float>     keyTime;
             std::vector<float4>    keyValue;
-            T_3DOBJECT*            target{nullptr};
             std::string            path;
-            float3                 initialPosition{0.0f};
-            quaternion             initialRotation{quaternion::identity()};
-            float3                 initialScale{1.0f};
 
             Track() = default;
 
@@ -106,23 +102,13 @@ export namespace lysa {
                 duration(track.duration),
                 keyTime(track.keyTime),
                 keyValue(track.keyValue),
-                target(track.target),
-                initialPosition(track.initialPosition),
-                initialRotation(track.initialRotation),
-                initialScale(track.initialScale) {}
+                path(track.path) {}
 
-            void setTarget(T_3DOBJECT* target, const std::string& path) {
-                assert([&]{ return target != nullptr; }, "Incorrect target");
-                this->target = target;
-                this->path = path;
-                reset();
-            }
-
-            void reset() {
-                initialPosition = target->getPosition();
-                // initialRotation = target->getRotation(); TODO
-                // initialScale = target->getScale(); TODO
-            }
+            // void reset() {
+            //     initialPosition = target->getPosition();
+            //     // initialRotation = target->getRotation(); TODO
+            //     // initialScale = target->getScale(); TODO
+            // }
 
             /**
             * Returns the interpolated value at the given time (in seconds, from the start of the animation) for a track.
@@ -235,19 +221,9 @@ export namespace lysa {
          */
         auto& getTrack(const uint32 index) { return tracks[index]; }
 
-        void reset() {
-            for (auto& track : tracks) {
-                track.reset();
-            }
-        }
-
-        void setTarget(T_3DOBJECT* target, const std::string& path) {
-            for (auto& track : tracks) {
-                track.setTarget(target, path);
-            }
-        }
-
         const auto& getName() const { return name; }
+
+        const auto& getTracks() const { return tracks; }
 
     private:
         AnimationLoopMode loopMode{AnimationLoopMode::NONE};

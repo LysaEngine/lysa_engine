@@ -7,6 +7,7 @@
 export module lysa.resources.animation_library;
 
 import std;
+import lysa.math;
 import lysa.resources;
 import lysa.resources.animation;
 
@@ -18,6 +19,7 @@ export namespace lysa {
     template<typename T_3DOBJECT>
     class AnimationLibrary : public UnmanagedResource {
     public:
+
         AnimationLibrary() = default;
 
         AnimationLibrary(const AnimationLibrary& animationLibrary) :
@@ -52,11 +54,7 @@ export namespace lysa {
          */
         const auto& getDefaultAnimationName() const { return defaultAnimation; }
 
-        void reset() {
-            for (auto& animation : animations | std::views::values) {
-                animation->reset();
-            }
-        }
+        const auto& getAnimations() const { return animations; }
 
     private:
         std::string defaultAnimation;

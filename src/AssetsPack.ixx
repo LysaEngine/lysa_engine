@@ -614,8 +614,6 @@ export namespace lysa {
                 auto animation = animationLibrary->getAnimation(animationHeaders[animationIndex].name);
                 for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
                     const auto nodeIndex = tracksInfos[animationIndex][trackIndex].nodeIndex;
-                    animation->getTrack(trackIndex).target = nodes[nodeIndex].get();
-                    Log::info(nodes[nodeIndex]->getRelativePath(root));
                     animation->getTrack(trackIndex).path = nodes[nodeIndex]->getRelativePath(root);
                 }
             }
