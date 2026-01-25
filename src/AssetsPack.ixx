@@ -610,7 +610,7 @@ export namespace lysa {
 
         if (!animationHeaders.empty()) {
             auto animationPlayer = std::make_shared<T_ANIMATION_PLAYER>();
-            animationPlayer->add("", animationLibrary);
+            animationPlayer->add(animationLibrary);
             for (auto animationIndex = 0; animationIndex < animationHeaders.size(); animationIndex++) {
                 auto animation = animationLibrary->getAnimation(animationHeaders[animationIndex].name);
                 for (auto trackIndex = 0; trackIndex < animationHeaders[animationIndex].tracksCount; trackIndex++) {
