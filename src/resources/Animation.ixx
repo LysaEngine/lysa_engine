@@ -122,22 +122,6 @@ export namespace lysa {
                 // initialScale = target->getScale(); TODO
             }
 
-            void apply(const TrackKeyValue& value) const {
-                switch (value.type) {
-                case AnimationType::TRANSLATION:
-                    target->setPosition(value.value.xyz + initialPosition);
-                    break;
-                case AnimationType::ROTATION:
-                    target->setRotation(quaternion{value.value} + initialRotation);
-                    break;
-                case AnimationType::SCALE:
-                    // target->setScale(value.value + initialScale); TODO
-                    break;
-                default:
-                    throw Exception("Unknown animation type");
-                }
-            }
-
             TrackKeyValue getInterpolatedValue(
                 const AnimationLoopMode loopMode,
                 const double currentTimeFromStart,
@@ -252,11 +236,6 @@ export namespace lysa {
         TrackKeyValue getInterpolatedValue(uint32 trackIndex, double currentTimeFromStart, bool reverse=false) const {
             assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
             return tracks[trackIndex].getInterpolatedValue(loopMode, currentTimeFromStart, reverse);
-        }
-
-        void apply(uint32 trackIndex, const TrackKeyValue& value) {
-            assert([&]{ return trackIndex < tracks.size(); }, "Track index out of range");
-            tracks[trackIndex].apply(value);
         }
 
         void reset() {
