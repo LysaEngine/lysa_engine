@@ -31,12 +31,10 @@ export namespace lysa {
     public:
         /**
          * Constructs a deferred renderer instance.
-         * @param ctx
          * @param config Rendering configuration (attachments, frames in flight).
          * @param outputFormat
          */
         DeferredRenderer(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 

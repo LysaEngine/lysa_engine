@@ -37,7 +37,7 @@ export namespace lysa {
     class Renderer {
     public:
         static std::unique_ptr<Renderer> create(
-            Context& ctx,
+
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 
@@ -101,16 +101,12 @@ export namespace lysa {
         /** Applies gamme correction, must be called at the end of the rendering path */
          std::shared_ptr<vireo::RenderTarget> gammaCorrection(
             vireo::CommandList& commandList,
-            const vireo::Viewport&viewport,
-            const vireo::Rect&scissor,
             const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
             uint32 frameIndex) const;
 
         /** Applies post-processing chain (SMAA, bloom, custom passes). */
         void postprocess(
             vireo::CommandList& commandList,
-            const vireo::Viewport&viewport,
-            const vireo::Rect&scissor,
             uint32 frameIndex);
 
         /** Adds a full-screen post-processing pass. */
@@ -143,7 +139,6 @@ export namespace lysa {
             std::shared_ptr<vireo::RenderTarget> depthAttachment;
         };
 
-        const Context& ctx;
         const bool withStencil;
         const RendererConfiguration config;
         std::vector<FrameData> framesData;
@@ -151,7 +146,6 @@ export namespace lysa {
         DepthPrepass depthPrePass;
 
         Renderer(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 

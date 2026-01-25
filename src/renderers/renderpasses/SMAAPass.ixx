@@ -23,12 +23,10 @@ export namespace lysa {
     public:
         /**
          * Constructs an SMAAPass
-         * @param ctx The lysa context
          * @param config The renderer configuration
          * @param outputFormat
          */
         SMAAPass(
-            const Context& ctx,
             const RendererConfiguration& config,
             const vireo::ImageFormat outputFormat);
 

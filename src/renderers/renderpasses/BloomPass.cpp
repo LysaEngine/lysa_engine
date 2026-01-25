@@ -11,18 +11,16 @@ import lysa.resources.image;
 namespace lysa {
 
     BloomPass::BloomPass(
-        const Context& ctx,
         const RendererConfiguration& config,
         const vireo::ImageFormat outputFormat):
         PostProcessing(
-            ctx,
             config,
             outputFormat,
             "bloom",
             nullptr, 0,
         "Bloom"),
         blurData{ .kernelSize = config.bloomBlurKernelSize },
-        blurPass(ctx,
+        blurPass(
             config,
             outputFormat,
             "blur",
@@ -37,22 +35,16 @@ namespace lysa {
 
     void BloomPass::render(
         vireo::CommandList& commandList,
-        const vireo::Viewport& viewport,
-        const vireo::Rect& scissor,
         const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
         const std::shared_ptr<vireo::RenderTarget>& bloomAttachment,
         const uint32 frameIndex) {
         blurPass.render(
                         commandList,
-                        viewport,
-                        scissor,
                         bloomAttachment,
                         nullptr,
                         frameIndex);
         PostProcessing::render(
             commandList,
-            viewport,
-            scissor,
             colorAttachment,
             nullptr,
             blurPass.getColorAttachment(frameIndex),

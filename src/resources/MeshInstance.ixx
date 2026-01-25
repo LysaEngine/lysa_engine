@@ -35,7 +35,7 @@ export namespace lysa {
     public:
         MeshInstance(const MeshInstance& orig);
 
-        MeshInstance(const Context& ctx, const Mesh& mesh, const std::string& name = "");
+        MeshInstance(const Mesh& mesh, const std::string& name = "");
 
         MeshInstance(const MeshInstance& mi, const std::string& name);
 
@@ -47,7 +47,7 @@ export namespace lysa {
 
         bool isCastShadows() const { return castShadows; }
 
-        void setCastShadow(const bool castShadows) { this->castShadows = castShadows; }
+        void setCastShadows(const bool castShadows) { this->castShadows = castShadows; }
 
         const AABB& getAABB() const { return worldAABB; }
 
@@ -59,13 +59,15 @@ export namespace lysa {
 
         unique_id getSurfaceMaterial(uint32 surfaceIndex) const;
 
-        void setSurfaceMaterialOverride(const uint32 surfaceIndex, const unique_id materialId) {
+        void setSurfaceOverrideMaterial(const uint32 surfaceIndex, const unique_id materialId) {
             materialsOverride[surfaceIndex] = materialId;
         }
 
-        void removeSurfaceMaterialOverride(const uint32 surfaceIndex) {
+        void removeSurfaceOverrideMaterial(const uint32 surfaceIndex) {
             materialsOverride.erase(surfaceIndex);
         }
+
+        unique_id getSurfaceOverrideMaterial(const uint32 surfaceIndex) const;
 
         MeshInstanceData getData() const;
 

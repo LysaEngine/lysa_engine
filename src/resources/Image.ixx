@@ -52,7 +52,7 @@ export namespace lysa {
          */
         const std::string& getName() const { return name; }
 
-        Image(Context&, const std::shared_ptr<vireo::Image>& image, const std::string & name);
+        Image(const std::shared_ptr<vireo::Image>& image, const std::string & name);
         ~Image() override = default;
 
     private:
@@ -66,14 +66,13 @@ export namespace lysa {
         friend class ImageManager;
     };
 
-    class ImageManager : public ResourcesManager<Context, Image> {
+    class ImageManager : public ResourcesManager<Image> {
     public:
         /**
          * Construct a manager bound to the given runtime context.
-         * @param ctx Instance wide context
          * @param capacity Initial capacity
          */
-        ImageManager(Context& ctx, size_t capacity);
+        ImageManager(size_t capacity);
 
         ~ImageManager() override;
 

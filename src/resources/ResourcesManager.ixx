@@ -27,7 +27,7 @@ export namespace lysa {
      * @tparam T Resource type stored by the manager. T is expected to contain a public field
      *           named 'id' of type unique_id that will be assigned upon creation.
      */
-    template<typename CTX, typename T>
+    template<typename T>
     class ResourcesManager {
     public:
         /**
@@ -35,7 +35,7 @@ export namespace lysa {
        */
         template<typename... Args>
         T& create(Args&&... args) {
-            return allocate(std::make_unique<T>(ctx, std::forward<Args>(args)...));
+            return allocate(std::make_unique<T>(std::forward<Args>(args)...));
         }
 
         /**
@@ -97,15 +97,9 @@ export namespace lysa {
 
         unique_id getCapacity() const { return resources.size(); }
 
-        constexpr CTX& getContext() const { return ctx; }
-
     protected:
-        // Reference to the owning application context.
-        CTX& ctx;
-
         // Construct a manager with a fixed number of slots.
-        ResourcesManager(CTX& ctx, const size_t capacity, const std::string& name) :
-            ctx(ctx),
+        ResourcesManager(const size_t capacity, const std::string& name) :
             resources(capacity),
             name(name) {
             for (auto id = capacity; id > 0; --id) {

@@ -29,13 +29,11 @@ export namespace lysa {
     public:
         /**
          * Constructs a ShadowMapPass
-         * @param ctx The engine context
          * @param light Pointer to the light source for which shadows are generated
          * @param meshInstancesDataArray Array of mesh instance data in device memory
          * @param maxMeshSurfacePerPipeline Maximum number of mesh surfaces per pipeline
          */
         ShadowMapPass(
-            const Context& ctx,
             const Light* light,
             const DeviceMemoryArray& meshInstancesDataArray,
             size_t maxMeshSurfacePerPipeline);

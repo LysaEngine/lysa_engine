@@ -75,8 +75,6 @@ export namespace lysa {
         static inline const event_type READY{"RENDERING_WINDOW_READY"};
         //! The window is about to close
         static inline const event_type CLOSING{"RENDERING_WINDOW_CLOSING"};
-        //! The window has been resized
-        static inline const event_type RESIZED{"RENDERING_WINDOW_RESIZED"};
         //! User input
         static inline const event_type INPUT{"RENDERING_WINDOW_INPUT"};
     };
@@ -108,7 +106,7 @@ export namespace lysa {
     */
     class RenderingWindow : public UniqueResource {
     public:
-        RenderingWindow(Context& ctx, const RenderingWindowConfiguration& config = {});
+        RenderingWindow( const RenderingWindowConfiguration& config = {});
 
         ~RenderingWindow() override;
 
@@ -164,7 +162,9 @@ export namespace lysa {
 
         const RenderTarget& getRenderTarget() const { return renderTarget; }
 
-        void setPause(const bool pause) { renderTarget.setPause(pause); }
+        void setPause(const bool pause) {
+            renderTarget.setPause(pause);
+        }
 
         bool isPaused() const { return renderTarget.isPaused(); }
 

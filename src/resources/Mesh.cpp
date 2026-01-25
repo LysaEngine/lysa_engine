@@ -17,12 +17,11 @@ namespace lysa {
         indexCount{count} {
     }
 
-    Mesh::Mesh(Context& ctx,
-               const std::vector<Vertex>& vertices,
-               const std::vector<uint32>& indices,
-               const std::vector<MeshSurface> &surfaces,
-               const std::string& name):
-        ctx(ctx),
+    Mesh::Mesh(
+        const std::vector<Vertex>& vertices,
+        const std::vector<uint32>& indices,
+        const std::vector<MeshSurface> &surfaces,
+        const std::string& name):
         name(name),
         vertices{vertices},
         indices{indices},
@@ -31,7 +30,7 @@ namespace lysa {
     }
 
     Mesh::~Mesh() {
-        auto& materialManager = ctx.res.get<MaterialManager>();
+        auto& materialManager = ctx().res.get<MaterialManager>();
         for (const auto& surface : surfaces) {
             materialManager.destroy(surface.material);
         }
@@ -40,9 +39,9 @@ namespace lysa {
     void Mesh::setSurfaceMaterial(const uint32 surfaceIndex, const unique_id material) {
         assert([&]{return surfaceIndex < surfaces.size();}, "Invalid surface index");
         surfaces[surfaceIndex].material = material;
-        ctx.res.get<MaterialManager>().use(material);
+        ctx().res.get<MaterialManager>().use(material);
         materials.insert(surfaces[surfaceIndex].material);
-        ctx.res.get<MeshManager>().upload(id);
+        ctx().res.get<MeshManager>().upload(id);
     }
 
     bool Mesh::operator==(const Mesh &other) const {
@@ -70,35 +69,34 @@ namespace lysa {
     }
 
     MeshManager::MeshManager(
-        Context& ctx,
         const size_t capacity,
         const size_t vertexCapacity,
         const size_t indexCapacity,
         const size_t surfaceCapacity) :
-        ResourcesManager(ctx, capacity, "MeshManager"),
-        materialManager(ctx.res.get<MaterialManager>()),
+        ResourcesManager(capacity, "MeshManager"),
+        materialManager(ctx().res.get<MaterialManager>()),
         vertexArray {
-            ctx.vireo,
+            ctx().vireo,
             sizeof(VertexData),
             vertexCapacity,
             vertexCapacity,
             vireo::BufferType::VERTEX,
             "Vertex Array"},
         indexArray {
-            ctx.vireo,
+            ctx().vireo,
             sizeof(uint32),
             indexCapacity,
             indexCapacity,
             vireo::BufferType::INDEX,
             "Index Array"},
         meshSurfaceArray {
-            ctx.vireo,
+            ctx().vireo,
             sizeof(MeshSurfaceData),
             surfaceCapacity,
             surfaceCapacity,
             vireo::BufferType::DEVICE_STORAGE,
             "MeshSurface Array"} {
-        ctx.res.enroll(*this);
+        ctx().res.enroll(*this);
     }
 
       void MeshManager::upload(const unique_id id) {
@@ -110,7 +108,7 @@ namespace lysa {
         const std::vector<uint32>& indices,
         const std::vector<MeshSurface>&surfaces,
         const std::string& name) {
-        auto& mesh =  allocate(std::make_unique<Mesh>(ctx, vertices, indices, surfaces, name));
+        auto& mesh =  allocate(std::make_unique<Mesh>(vertices, indices, surfaces, name));
         upload(mesh.id);
         return mesh;
     }
@@ -174,11 +172,11 @@ namespace lysa {
         needUpload.clear();
 
         auto lock = std::unique_lock(mutex, std::try_to_lock);
-        const auto command = ctx.asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
+        const auto command = ctx().asyncQueue.beginCommand(vireo::CommandType::TRANSFER);
         vertexArray.flush(*command.commandList);
         indexArray.flush(*command.commandList);
         meshSurfaceArray.flush(*command.commandList);
-        ctx.asyncQueue.endCommand(command);
+        ctx().asyncQueue.endCommand(command);
     }
 
 #ifdef LUA_BINDING

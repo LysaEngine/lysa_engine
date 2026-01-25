@@ -53,7 +53,7 @@ export namespace lysa {
         /**
          * Creates all static descriptor layouts used by scenes and pipelines.
          */
-        static void createDescriptorLayouts(const Context& ctx);
+        static void createDescriptorLayouts();
         /** Destroys static descriptor layouts created by createDescriptorLayouts(). */
         static void destroyDescriptorLayouts();
 
@@ -80,7 +80,7 @@ export namespace lysa {
          * @param maxMeshSurfacePerPipeline Maximum number of mesh surfaces per pipeline.
          */
         SceneFrameData(
-            const Context& ctx,
+            const
             uint32 maxLights,
             uint32 maxMeshInstancesPerScene,
             uint32 maxMeshSurfacePerPipeline);
@@ -230,8 +230,6 @@ export namespace lysa {
         SceneFrameData& operator=(SceneFrameData&) = delete;
 
     private:
-        /*Reference to the engine context. */
-        const Context& ctx;
         /* Reference to the material manager. */
         MaterialManager& materialManager;
         /* Maximum number of supported lights. */

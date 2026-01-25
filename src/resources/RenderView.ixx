@@ -22,19 +22,19 @@ export namespace lysa {
     struct RenderView : UnmanagedResource {
         /** The viewport dimensions for rendering. */
         vireo::Viewport viewport{};
-        /** The scissor rectangle for rendering. */
-        vireo::Rect     scissors{};
+        /** The scissors rectangle for rendering. */
+        vireo::Rect scissors{};
         /** Reference to the camera used for this view. */
-        const Camera&   camera;
+        const Camera& camera;
         /** Reference to the scene to be rendered. */
-        Scene&          scene;
+        Scene& scene;
 
         /**
          * Constructs a new RenderView.
          * @param camera The camera defining the view transformation and projection.
          * @param scene The scene to be rendered from this view.
          * @param viewport The viewport dimensions (optional).
-         * @param scissors The scissor rectangle (optional).
+         * @param scissors The scissors rectangle (optional).
          */
         RenderView(
             const Camera& camera,

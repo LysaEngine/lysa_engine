@@ -21,7 +21,7 @@ endif()
 
 #######################################################
 set(LYSA_ENGINE_TARGET ${PROJECT_NAME})
-if (NOT LYSA_ENGINE_AS_DEPENDENCY)
+if (NOT DEFINED LYSA_ENGINE_PROJECT_DIR)
     message("Building Lysa Engine as standalone project")
     set(DIRECTX_BACKEND ON)
     set(LUA_BINDING OFF)
@@ -37,14 +37,14 @@ endif()
 #add_compile_definitions(SHADOW_TRANSPARENCY_COLOR_ENABLED ON)
 
 #######################################################
+if (LYSA_CONSOLE)
+    add_compile_definitions(LYSA_CONSOLE)
+endif ()
 if (LUA_BINDING)
     add_compile_definitions(LUA_BINDING)
 endif ()
 
 #######################################################
-if(NOT FORWARD_RENDERER AND NOT DEFERRED_RENDERER)
-    message(FATAL_ERROR "Please activate a renderer with FORWARD_RENDERER or DEFERRED_RENDERER")
-endif()
 if (FORWARD_RENDERER)
     add_compile_definitions(FORWARD_RENDERER)
 endif ()
@@ -62,8 +62,10 @@ if(WIN32)
     endif ()
     add_compile_definitions(UNICODE _UNICODE)
 elseif (LINUX AND NOT APPLE)
-    set(USE_SDL3 ON)
-    add_compile_definitions(USE_SDL3)
+    if (NOT DEFINED USE_SDL3)
+        set(USE_SDL3 ON)
+        add_compile_definitions(USE_SDL3)
+    endif ()
 endif ()
 
 #######################################################
@@ -145,22 +147,32 @@ compile_options(xxhash)
 
 #######################################################
 if(WIN32)
+    if (NOT LYSA_CONSOLE)
+        set(WIN32_UI_SRC
+                ${ENGINE_SRC_DIR}/platform/win32/Input.cpp
+                ${ENGINE_SRC_DIR}/platform/win32/Lysa.cpp
+                ${ENGINE_SRC_DIR}/platform/win32/RenderingWindow.cpp
+        )
+    endif ()
     set(WIN32_SRC
+            ${WIN32_UI_SRC}
             ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/Input.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/Lysa.cpp
             ${ENGINE_SRC_DIR}/platform/win32/Main.cpp
-            ${ENGINE_SRC_DIR}/platform/win32/RenderingWindow.cpp
     )
     set(WIN32_MODULES ""
     )
 elseif (UNIX AND NOT APPLE)
+    if (NOT LYSA_CONSOLE)
+        set(SDL_SRC
+                ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
+                ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
+                ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
+        )
+    endif ()
     set(POSIX_SRC
+            ${SDL_SRC}
             ${ENGINE_SRC_DIR}/platform/posix/Main.cpp
 #            ${ENGINE_SRC_DIR}/platform/win32/DirectoryWatcher.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/Input.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/Lysa.cpp
-            ${ENGINE_SRC_DIR}/platform/sdl/RenderingWindow.cpp
     )
     set(POSIX_MODULES ""
     )
@@ -252,6 +264,8 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/renderers/renderpasses/SMAAPass.cpp
         ${ENGINE_SRC_DIR}/renderers/renderpasses/TransparencyPass.cpp
 
+        ${ENGINE_SRC_DIR}/resources/Animation.cpp
+        ${ENGINE_SRC_DIR}/resources/AnimationTrack.cpp
         ${ENGINE_SRC_DIR}/resources/Font.cpp
         ${ENGINE_SRC_DIR}/resources/Image.cpp
         ${ENGINE_SRC_DIR}/resources/Material.cpp
@@ -317,6 +331,9 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/renderers/renderpasses/SMAAPass.ixx
         ${ENGINE_SRC_DIR}/renderers/renderpasses/TransparencyPass.ixx
 
+        ${ENGINE_SRC_DIR}/resources/Animation.ixx
+        ${ENGINE_SRC_DIR}/resources/AnimationLibrary.ixx
+        ${ENGINE_SRC_DIR}/resources/AnimationTrack.ixx
         ${ENGINE_SRC_DIR}/resources/Camera.ixx
         ${ENGINE_SRC_DIR}/resources/Environment.ixx
         ${ENGINE_SRC_DIR}/resources/Font.ixx
@@ -380,7 +397,6 @@ set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 
 #######################################################
 if(WIN32)
-    target_compile_definitions(${LYSA_ENGINE_TARGET} PRIVATE WIN32_LEAN_AND_MEAN)
     target_link_libraries(${LYSA_ENGINE_TARGET} Ws2_32)
     if (DIRECTX_BACKEND)
         target_link_libraries(${LYSA_ENGINE_TARGET} d3d12)

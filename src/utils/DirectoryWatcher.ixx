@@ -41,7 +41,7 @@ export namespace lysa {
          * @param debounceTimer The time to wait (in milliseconds) before emitting an event after a change is detected
          * for the same file as the previous detected change.
          */
-        DirectoryWatcher(Context& ctx, const std::string& uri, uint32 debounceTimer = 100);
+        DirectoryWatcher( const std::string& uri, uint32 debounceTimer = 100);
 
         ~DirectoryWatcher();
 
@@ -56,8 +56,6 @@ export namespace lysa {
         void stop() noexcept;
 
     private:
-        /* Reference to the application context. */
-        Context& ctx;
         /* Duration to wait before repeating events for the same file. */
         const std::chrono::steady_clock::duration debounceTimer;
         /* The background worker thread. */

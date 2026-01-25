@@ -14,31 +14,29 @@ import lysa.renderers.renderer;
 namespace lysa {
 
     RenderTarget::RenderTarget(
-        Context& ctx,
         const RenderTargetConfiguration& configuration,
         const vireo::PlatformWindowHandle renderingWindowHandle) :
-        ctx(ctx),
         rendererConfiguration(configuration.rendererConfiguration) {
         if (renderingWindowHandle == nullptr) {
             throw Exception("RenderTargetConfiguration : need a least one physical target, window or memory");
         }
-        if (ctx.config.framesInFlight <= 0) {
+        if (ctx().config.framesInFlight <= 0) {
             throw Exception("RenderTargetConfiguration : need a least one frame in flight");
         }
-        swapChain = ctx.vireo->createSwapChain(
+        swapChain = ctx().vireo->createSwapChain(
             configuration.rendererConfiguration.swapChainFormat,
-            ctx.graphicQueue,
+            ctx().graphicQueue,
             renderingWindowHandle,
             configuration.presentMode,
-            ctx.config.framesInFlight);
-        renderer = Renderer::create(ctx, rendererConfiguration, swapChain->getFormat());
-        framesData.resize(ctx.config.framesInFlight);
+            ctx().config.framesInFlight);
+        renderer = Renderer::create(rendererConfiguration, swapChain->getFormat());
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.inFlightFence = ctx.vireo->createFence(true, "inFlightFence");
-            frame.commandAllocator = ctx.vireo->createCommandAllocator(vireo::CommandType::GRAPHIC);
-            frame.updateSemaphore = ctx.vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Update");
-            frame.computeSemaphore = ctx.vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Compute");
-            frame.prepareSemaphore = ctx.vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Prepare");
+            frame.inFlightFence = ctx().vireo->createFence(true, "inFlightFence");
+            frame.commandAllocator = ctx().vireo->createCommandAllocator(vireo::CommandType::GRAPHIC);
+            frame.updateSemaphore = ctx().vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Update");
+            frame.computeSemaphore = ctx().vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Compute");
+            frame.prepareSemaphore = ctx().vireo->createSemaphore(vireo::SemaphoreType::BINARY, "Prepare");
             frame.updateCommandList = frame.commandAllocator->createCommandList();
             frame.computeCommandList = frame.commandAllocator->createCommandList();
             frame.prepareCommandList = frame.commandAllocator->createCommandList();
@@ -51,8 +49,8 @@ namespace lysa {
         frame.prepareCommandList->begin();
         renderer->resize(swapChain->getExtent(), frame.prepareCommandList);
         frame.prepareCommandList->end();
-        ctx.graphicQueue->submit({frame.prepareCommandList});
-        ctx.graphicQueue->waitIdle();
+        ctx().graphicQueue->submit({frame.prepareCommandList});
+        ctx().graphicQueue->waitIdle();
 
         const auto extent = swapChain->getExtent();
         mainViewport = vireo::Viewport{
@@ -102,11 +100,13 @@ namespace lysa {
     }
 
     void RenderTarget::setPause(const bool pause) {
-        paused = pause;
-        const auto event = Event{
-            .type = static_cast<event_type>(paused ? RenderTargetEvent::PAUSED : RenderTargetEvent::RESUMED),
-            .id = id};
-        ctx.events.push(event);
+        if (paused != pause) {
+            paused = pause;
+            const auto event = Event{
+                .type = static_cast<event_type>(paused ? RenderTargetEvent::PAUSED : RenderTargetEvent::RESUMED),
+                .id = id};
+            ctx().events.push(event);
+        }
     }
 
     void RenderTarget::resize() {
@@ -129,10 +129,10 @@ namespace lysa {
             frame.prepareCommandList->begin();
             renderer->resize(newExtent, frame.prepareCommandList);
             frame.prepareCommandList->end();
-            ctx.graphicQueue->submit({frame.prepareCommandList});
-            ctx.graphicQueue->waitIdle();
+            ctx().graphicQueue->submit({frame.prepareCommandList});
+            ctx().graphicQueue->waitIdle();
             const auto event = Event{static_cast<event_type>(RenderTargetEvent::RESIZED), newExtent, id};
-            ctx.events.push(event);
+            ctx().events.push(event);
         }
         setPause(false);
     }
@@ -165,7 +165,7 @@ namespace lysa {
             );
         }
         frame.updateCommandList->end();
-        ctx.graphicQueue->submit(
+        ctx().graphicQueue->submit(
             vireo::WaitStage::TRANSFER,
             frame.updateSemaphore,
             {frame.updateCommandList});
@@ -175,7 +175,7 @@ namespace lysa {
             view.scene.get(frameIndex).compute(*frame.computeCommandList, view.camera);
         }
         frame.computeCommandList->end();
-        ctx.graphicQueue->submit(
+        ctx().graphicQueue->submit(
         frame.updateSemaphore,
             vireo::WaitStage::COMPUTE_SHADER,
             vireo::WaitStage::COMPUTE_SHADER,
@@ -188,7 +188,7 @@ namespace lysa {
             renderer->prepare(*frame.prepareCommandList, data, view.viewport, view.scissors, frameIndex);
         }
         frame.prepareCommandList->end();
-        ctx.graphicQueue->submit(
+        ctx().graphicQueue->submit(
             frame.computeSemaphore,
             vireo::WaitStage::VERTEX_INPUT,
             vireo::WaitStage::ALL_COMMANDS,
@@ -211,8 +211,6 @@ namespace lysa {
         }
         renderer->postprocess(
            *commandList,
-           mainViewport,
-           mainScissors,
            frameIndex);
 
         auto colorAttachment = renderer->getCurrentColorAttachment(frameIndex);
@@ -230,8 +228,6 @@ namespace lysa {
         }
         colorAttachment = renderer->gammaCorrection(
             *commandList,
-            mainViewport,
-            mainScissors,
             colorAttachment,
             frameIndex);
 
@@ -242,7 +238,7 @@ namespace lysa {
         commandList->barrier(colorAttachment, vireo::ResourceState::COPY_SRC,vireo::ResourceState::UNDEFINED);
         commandList->end();
 
-        ctx.graphicQueue->submit(
+        ctx().graphicQueue->submit(
             frame.prepareSemaphore,
             vireo::WaitStage::VERTEX_INPUT,
             frame.inFlightFence,

@@ -33,7 +33,6 @@ export namespace lysa {
     public:
         /**
          * Constructs a vector renderer.
-         * @param ctx                Global context
          * @param config             Rendering config.
          * @param outputFormat
          * @param useCamera          True to apply Scene view/projection.
@@ -45,7 +44,6 @@ export namespace lysa {
          * @param glyphShadersName   Base shader name for glyph rendering.
          */
         Vector3DRenderer(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat,
             bool useCamera = true,
@@ -148,7 +146,6 @@ export namespace lysa {
         static constexpr vireo::DescriptorIndex FONT_PARAMS_BINDING{0};
         static constexpr vireo::DescriptorIndex FONT_PARAMS_SET{2};
 
-        const Context& ctx;
         const std::string name;
         const bool useCamera;
         std::shared_ptr<vireo::Image> blankImage;

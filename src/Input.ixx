@@ -224,13 +224,13 @@ export namespace lysa {
 
         /* Shuts down platform input backends and clears states. */
         static void closeInput();
-
+#ifndef LYSA_CONSOLE
         /* Converts an engine Key to the platform-specific OsKey. */
         static OsKey keyToOsKey(Key key);
 
         /* Converts a platform-specific OsKey to the engine Key. */
         static Key osKeyToKey(OsKey key);
-
+#endif
         /* Applies a symmetrical deadzone percentage to a raw axis value in [-1, 1]. */
         static float applyDeadzone(float value, float deadzonePercent);
 

@@ -45,7 +45,6 @@ export namespace lysa {
     class RenderTarget : public UniqueResource {
     public:
         RenderTarget(
-            Context& ctx,
             const RenderTargetConfiguration& configuration,
             vireo::PlatformWindowHandle renderingWindowHandle);
 
@@ -83,8 +82,6 @@ export namespace lysa {
 
         void resize();
 
-        Context& getContext() const { return ctx; }
-
         const RendererConfiguration& getRendererConfiguration() const { return rendererConfiguration; }
 
         void addRenderer(Vector3DRenderer& vector3DRenderer) {
@@ -92,8 +89,6 @@ export namespace lysa {
         }
 
         Renderer& getRenderer() const { return *renderer; }
-
-        Context& getContext() { return ctx; }
 
     private:
         struct FrameData {
@@ -117,7 +112,6 @@ export namespace lysa {
             std::shared_ptr<vireo::CommandList> renderCommandList;
         };
 
-        Context& ctx;
         const RendererConfiguration rendererConfiguration;
         // Set to true to pause the rendering in this target
         bool paused{false};

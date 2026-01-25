@@ -22,11 +22,9 @@ export namespace lysa {
     public:
         /**
          * Constructs a BloomPass
-         * @param ctx The engine context
          * @param config The renderer configuration
          */
         BloomPass(
-            const Context& ctx,
             const RendererConfiguration& config,
             vireo::ImageFormat outputFormat);
 
@@ -47,8 +45,6 @@ export namespace lysa {
          */
         void render(
             vireo::CommandList& commandList,
-            const vireo::Viewport& viewport,
-            const vireo::Rect& scissor,
             const std::shared_ptr<vireo::RenderTarget>& colorAttachment,
             const std::shared_ptr<vireo::RenderTarget>& bloomAttachment,
             uint32 frameIndex) override;

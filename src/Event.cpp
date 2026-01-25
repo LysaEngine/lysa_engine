@@ -28,12 +28,13 @@ namespace lysa {
     unique_id EventManager::subscribe(const event_type& type, EventHandlerCallback callback) {
         auto lock = std::lock_guard(globalHandlersMutex);
         const auto hid = nextId++;
-        globalHandlers[type].push_front({hid, std::move(callback)});
+        globalHandlers[type].push_back({hid, std::move(callback)});
         return hid;
     }
 
     void EventManager::unsubscribe(const unique_id id) {
         {
+            if (id == INVALID_ID) { return; }
             auto lock = std::lock_guard(globalHandlersMutex);
             for (auto& handlers : globalHandlers) {
                 std::erase_if(handlers.second,[&](const EventHandler& e) { return e.id == id; });

@@ -31,39 +31,38 @@ namespace lysa {
     }
 
     GraphicPipelineData::GraphicPipelineData(
-        const Context& ctx,
         const uint32 pipelineId,
         const DeviceMemoryArray& meshInstancesDataArray,
         const uint32 maxMeshSurfacePerPipeline) :
         pipelineId{pipelineId},
-        frustumCullingPipeline{ctx, true, meshInstancesDataArray, pipelineId},
-        materialManager(ctx.res.get<MaterialManager>()),
-        vireo(ctx.vireo),
+        frustumCullingPipeline{true, meshInstancesDataArray, pipelineId},
+        materialManager(ctx().res.get<MaterialManager>()),
+        vireo(ctx().vireo),
         instancesArray{
-            ctx.vireo,
+            ctx().vireo,
             sizeof(InstanceData),
             maxMeshSurfacePerPipeline,
             maxMeshSurfacePerPipeline,
             vireo::BufferType::DEVICE_STORAGE,
             "instance:" + std::to_string(pipelineId)},
         drawCommands(maxMeshSurfacePerPipeline),
-        drawCommandsBuffer{ctx.vireo->createBuffer(
+        drawCommandsBuffer{ctx().vireo->createBuffer(
             vireo::BufferType::DEVICE_STORAGE,
             sizeof(DrawCommand) * maxMeshSurfacePerPipeline,
             1,
             "drawCommand:" + std::to_string(pipelineId))},
-        culledDrawCommandsCountBuffer{ctx.vireo->createBuffer(
+        culledDrawCommandsCountBuffer{ctx().vireo->createBuffer(
             vireo::BufferType::READWRITE_STORAGE,
             sizeof(uint32),
             1,
             "culledDrawCommandsCount:" + std::to_string(pipelineId))},
-        culledDrawCommandsBuffer{ctx.vireo->createBuffer(
+        culledDrawCommandsBuffer{ctx().vireo->createBuffer(
             vireo::BufferType::READWRITE_STORAGE,
             sizeof(DrawCommand) * maxMeshSurfacePerPipeline,
             1,
             "culledDrawCommands:" + std::to_string(pipelineId))}
     {
-        descriptorSet = ctx.vireo->createDescriptorSet(pipelineDescriptorLayout, "Graphic : " + std::to_string(pipelineId));
+        descriptorSet = ctx().vireo->createDescriptorSet(pipelineDescriptorLayout, "Graphic : " + std::to_string(pipelineId));
         descriptorSet->update(BINDING_INSTANCES, instancesArray.getBuffer());
     }
 
@@ -151,9 +150,11 @@ namespace lysa {
                 drawCommandsStagingBuffer->map();
             }
 
-            drawCommandsStagingBuffer->write(drawCommands.data(),
-                sizeof(DrawCommand) * drawCommandsCount);
-            commandList.copy(drawCommandsStagingBuffer, drawCommandsBuffer, sizeof(DrawCommand) * drawCommandsCount);
+            if (drawCommandsCount > 0) {
+                drawCommandsStagingBuffer->write(drawCommands.data(),
+                    sizeof(DrawCommand) * drawCommandsCount);
+               commandList.copy(drawCommandsStagingBuffer, drawCommandsBuffer, sizeof(DrawCommand) * drawCommandsCount);
+            }
             instancesUpdated = false;
             commandList.barrier(
                 *drawCommandsBuffer,

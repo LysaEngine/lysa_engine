@@ -25,12 +25,10 @@ export namespace lysa {
          * @param toneMappingType
          */
         GammaCorrectionPass(
-            const Context& ctx,
             const RendererConfiguration& config,
             const vireo::ImageFormat outputFormat,
             const ToneMappingType toneMappingType) :
             PostProcessing(
-                ctx,
                 config,
                 outputFormat,
                 toneMappingType == ToneMappingType::REINHARD ? "reinhard" :

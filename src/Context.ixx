@@ -12,6 +12,7 @@ import lysa.async_queue;
 import lysa.async_pool;
 import lysa.command_buffer;
 import lysa.event;
+import lysa.log;
 import lysa.virtual_fs;
 import lysa.types;
 import lysa.resources.samplers;
@@ -59,20 +60,27 @@ export namespace  lysa {
         bool displayFPS{false};
         //! Virtual file system configuration
         VirtualFSConfiguration virtualFsConfiguration;
+        LoggingConfiguration loggingConfiguration;
     };
 
     /**
      * Lysa instance-wide runtime context.
      */
     struct Context {
+        //! Global runtime context (events, resources, etc.).
+        static std::unique_ptr<Context> ctx;
+
         /**
-         * Quit flag controlling the main loop termination.
+         * Flag controlling the main loop termination.
          *
          * When set to true, the main loop (see @ref Lysa::run) will exit
          * at the end of the current iteration.
          */
         bool exit{false};
 
+        /**
+         * Global context configuration
+         */
         const ContextConfiguration config;
 
         /**
@@ -125,10 +133,19 @@ export namespace  lysa {
          */
         AsyncQueue asyncQueue;
 
+        /**
+         *  Global descriptor set layout for GPU-ready shared resources.
+         */
         std::shared_ptr<vireo::DescriptorLayout> globalDescriptorLayout;
+
+        /**
+        *  Global descriptor set layout for GPU-ready shared resources.
+        */
         std::shared_ptr<vireo::DescriptorSet> globalDescriptorSet;
 
         Context(const ContextConfiguration& config);
     };
+
+    constexpr Context& ctx() { return *Context::ctx; }
 
 }

@@ -10,11 +10,10 @@ module lysa.resources.mesh_instance;
 namespace lysa {
 
     MeshInstance::MeshInstance(
-          const Context& ctx,
           const Mesh& mesh,
           const std::string& name) :
-          materialManager(ctx.res.get<MaterialManager>()),
-          meshManager(ctx.res.get<MeshManager>()),
+          materialManager(ctx().res.get<MaterialManager>()),
+          meshManager(ctx().res.get<MeshManager>()),
           mesh(mesh),
           name(name) {
         meshManager.use(mesh.id);
@@ -53,6 +52,13 @@ namespace lysa {
             return materialsOverride.at(surfaceIndex);
         }
         return mesh.getSurfaces()[surfaceIndex].material;
+    }
+
+    unique_id MeshInstance::getSurfaceOverrideMaterial(const uint32 surfaceIndex) const {
+        if (materialsOverride.contains(surfaceIndex)) {
+            return materialsOverride.at(surfaceIndex);
+        }
+        return INVALID_ID;
     }
 
     MeshInstanceData MeshInstance::getData() const {

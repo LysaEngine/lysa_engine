@@ -18,17 +18,27 @@ export import lysa.directory_watcher;
 export import lysa.event;
 export import lysa.exception;
 export import lysa.utils;
+#ifndef LYSA_CONSOLE
 export import lysa.input;
 export import lysa.input_event;
+#endif
 export import lysa.log;
 export import lysa.math;
 export import lysa.rect;
 export import lysa.types;
 export import lysa.virtual_fs;
 
-export import lysa.renderers.configuration;
+#ifdef DEFERRED_RENDERER
 export import lysa.renderers.deferred_renderer;
+export import lysa.renderers.renderpasses.gbuffer_pass;
+export import lysa.renderers.renderpasses.lighting_pass;
+export import lysa.renderers.renderpasses.ssao_pass;
+#endif
+#ifdef FORWARD_RENDERER
 export import lysa.renderers.forward_renderer;
+export import lysa.renderers.renderpasses.forward_color_pass;
+#endif
+export import lysa.renderers.configuration;
 export import lysa.renderers.global_descriptor_set;
 export import lysa.renderers.graphic_pipeline_data;
 export import lysa.renderers.renderer;
@@ -39,18 +49,18 @@ export import lysa.renderers.pipelines.frustum_culling;
 export import lysa.renderers.renderpasses.bloom_pass;
 export import lysa.renderers.renderpasses.depth_prepass;
 export import lysa.renderers.renderpasses.display_attachment;
-export import lysa.renderers.renderpasses.forward_color_pass;
 export import lysa.renderers.renderpasses.fxaa_pass;
 export import lysa.renderers.renderpasses.gamma_correction_pass;
-export import lysa.renderers.renderpasses.gbuffer_pass;
 export import lysa.renderers.renderpasses.post_processing;
 export import lysa.renderers.renderpasses.renderpass;
 export import lysa.renderers.renderpasses.shader_material_pass;
 export import lysa.renderers.renderpasses.shadow_map_pass;
 export import lysa.renderers.renderpasses.smaa_pass;
-export import lysa.renderers.renderpasses.ssao_pass;
 export import lysa.renderers.renderpasses.transparency_pass;
 
+export import lysa.resources.animation;
+export import lysa.resources.animation_library;
+export import lysa.resources.animation_track;
 export import lysa.resources.camera;
 export import lysa.resources.environment;
 export import lysa.resources.font;
@@ -63,7 +73,9 @@ export import lysa.resources.mesh_instance;
 export import lysa.resources.registry;
 export import lysa.resources.render_target;
 export import lysa.resources.render_view;
+#ifndef LYSA_CONSOLE
 export import lysa.resources.rendering_window;
+#endif
 export import lysa.resources.samplers;
 export import lysa.resources.scene;
 export import lysa.resources.texture;
@@ -87,7 +99,7 @@ export namespace  lysa {
     };
 
     struct _LysaInit {
-        _LysaInit(const LoggingConfiguration &loggingConfiguration);
+        _LysaInit(const ContextConfiguration& config);
         virtual ~_LysaInit();
     };
 
@@ -100,15 +112,11 @@ export namespace  lysa {
      */
     class Lysa final : _LysaInit {
     public:
-        //! Global runtime context (events, resources, etc.).
-        Context ctx;
-
         /**
          * Construct the runtime and initialize subsystems.
          * @param config Global Context configuration
-         * @param loggingConfiguration Logging system configuration
          */
-        Lysa(const ContextConfiguration& config, const LoggingConfiguration &loggingConfiguration);
+        Lysa(const ContextConfiguration& config);
 
         ~Lysa() override;
 
@@ -124,7 +132,7 @@ export namespace  lysa {
         double accumulator{0.0};
         // Frame count since last fps update
         uint32 frameCount = 0;
-        // Number of seconds since last fps update
+        // Number of seconds since the last fps update
         float elapsedSeconds{0.0f};
         // Average FPS,
         uint32 fps{0};

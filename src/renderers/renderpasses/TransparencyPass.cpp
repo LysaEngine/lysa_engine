@@ -10,16 +10,15 @@ import lysa.renderers.graphic_pipeline_data;
 namespace lysa {
 
     TransparencyPass::TransparencyPass(
-        const Context& ctx,
         const RendererConfiguration& config):
-        Renderpass{ctx, config, "Deferred Transparency"},
-        materialManager(ctx.res.get<MaterialManager>()) {
+        Renderpass{config, "OIT Transparency"},
+        materialManager(ctx().res.get<MaterialManager>()) {
 
         oitPipelineConfig.depthStencilImageFormat = config.depthStencilFormat;
         oitPipelineConfig.backStencilOpState = oitPipelineConfig.frontStencilOpState;
-        oitPipelineConfig.resources = ctx.vireo->createPipelineResources({
-            ctx.globalDescriptorLayout,
-            ctx.samplers.getDescriptorLayout(),
+        oitPipelineConfig.resources = ctx().vireo->createPipelineResources({
+            ctx().globalDescriptorLayout,
+            ctx().samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             GraphicPipelineData::pipelineDescriptorLayout,
 #ifdef SHADOW_TRANSPARENCY_COLOR_ENABLED
@@ -29,27 +28,27 @@ namespace lysa {
             SceneFrameData::instanceIndexConstantDesc, name);
         oitPipelineConfig.vertexShader = loadShader(VERTEX_SHADER_OIT);
         oitPipelineConfig.fragmentShader = loadShader(FRAGMENT_SHADER_OIT);
-        oitPipelineConfig.vertexInputLayout =ctx.vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
+        oitPipelineConfig.vertexInputLayout =ctx().vireo->createVertexLayout(sizeof(VertexData), VertexData::vertexAttributes);
 
-        compositeDescriptorLayout = ctx.vireo->createDescriptorLayout();
+        compositeDescriptorLayout = ctx().vireo->createDescriptorLayout();
         compositeDescriptorLayout->add(BINDING_ACCUM_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
         compositeDescriptorLayout->add(BINDING_REVEALAGE_BUFFER, vireo::DescriptorType::SAMPLED_IMAGE);
         compositeDescriptorLayout->build();
 
         compositePipelineConfig.colorRenderFormats.push_back(config.colorRenderingFormat);
-        compositePipelineConfig.resources = ctx.vireo->createPipelineResources({
-            ctx.globalDescriptorLayout,
-            ctx.samplers.getDescriptorLayout(),
+        compositePipelineConfig.resources = ctx().vireo->createPipelineResources({
+            ctx().globalDescriptorLayout,
+            ctx().samplers.getDescriptorLayout(),
             SceneFrameData::sceneDescriptorLayout,
             compositeDescriptorLayout},
             {}, name);
         compositePipelineConfig.vertexShader = loadShader(VERTEX_SHADER_COMPOSITE);
         compositePipelineConfig.fragmentShader = loadShader(FRAGMENT_SHADER_COMPOSITE);
-        compositePipeline = ctx.vireo->createGraphicPipeline(compositePipelineConfig, "Transparency OIT Composite");
+        compositePipeline = ctx().vireo->createGraphicPipeline(compositePipelineConfig, "Transparency OIT Composite");
 
-        framesData.resize(ctx.config.framesInFlight);
+        framesData.resize(ctx().config.framesInFlight);
         for (auto& frame : framesData) {
-            frame.compositeDescriptorSet = ctx.vireo->createDescriptorSet(compositeDescriptorLayout, name);
+            frame.compositeDescriptorSet = ctx().vireo->createDescriptorSet(compositeDescriptorLayout, name);
         }
     }
 
@@ -61,7 +60,7 @@ namespace lysa {
                 oitPipelineConfig.cullMode = material.getCullMode();
                 oitPipelineConfig.vertexShader = loadShader(VERTEX_SHADER_OIT);
                 oitPipelineConfig.fragmentShader = loadShader(fragShaderName);
-                oitPipelines[pipelineId] = ctx.vireo->createGraphicPipeline(oitPipelineConfig, "Transparency OIT");
+                oitPipelines[pipelineId] = ctx().vireo->createGraphicPipeline(oitPipelineConfig, "Transparency OIT");
             }
         }
     }
@@ -102,11 +101,14 @@ namespace lysa {
         commandList.beginRendering(compositeRenderingConfig);
         commandList.bindPipeline(compositePipeline);
         commandList.bindDescriptors({
-            ctx.globalDescriptorSet,
-            ctx.samplers.getDescriptorSet(),
+            ctx().globalDescriptorSet,
+            ctx().samplers.getDescriptorSet(),
             scene.getDescriptorSet(),
             frame.compositeDescriptorSet
        });
+        commandList.setViewport({
+                static_cast<float>(colorAttachment->getImage()->getWidth()),
+                static_cast<float>(colorAttachment->getImage()->getHeight())});
         commandList.draw(3);
         commandList.endRendering();
         commandList.barrier(
@@ -117,12 +119,12 @@ namespace lysa {
 
     void TransparencyPass::resize(const vireo::Extent& extent, const std::shared_ptr<vireo::CommandList>& commandList) {
         for (auto& frame : framesData) {
-            frame.accumBuffer = ctx.vireo->createRenderTarget(
+            frame.accumBuffer = ctx().vireo->createRenderTarget(
                 oitPipelineConfig.colorRenderFormats[BINDING_ACCUM_BUFFER],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
                 oitRenderingConfig.colorRenderTargets[BINDING_ACCUM_BUFFER].clearValue);
-            frame.revealageBuffer = ctx.vireo->createRenderTarget(
+            frame.revealageBuffer = ctx().vireo->createRenderTarget(
                 oitPipelineConfig.colorRenderFormats[BINDING_REVEALAGE_BUFFER],
                 extent.width,extent.height,
                 vireo::RenderTargetType::COLOR,
