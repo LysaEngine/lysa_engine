@@ -27,6 +27,8 @@ if (NOT DEFINED LYSA_ENGINE_PROJECT_DIR)
     set(LUA_BINDING OFF)
     set(FORWARD_RENDERER ON)
     set(DEFERRED_RENDERER ON)
+    set(PHYSIC_ENGINE_JOLT ON)
+    set(PHYSIC_ENGINE_PHYSX OFF)
 endif()
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -69,6 +71,36 @@ elseif (LINUX AND NOT APPLE)
 endif ()
 
 #######################################################
+if(NOT PHYSIC_ENGINE_JOLT AND NOT PHYSIC_ENGINE_PHYSX)
+    message(FATAL_ERROR "Please activate a physics library with PHYSIC_ENGINE_JOLT ou PHYSIC_ENGINE_PHYSX")
+endif()
+if(PHYSIC_ENGINE_JOLT AND PHYSIC_ENGINE_PHYSX)
+    message(FATAL_ERROR "Please deactivate a physics library")
+endif()
+if(PHYSIC_ENGINE_JOLT)
+    add_compile_definitions(PHYSIC_ENGINE_JOLT)
+    add_compile_definitions(JPH_DISABLE_CUSTOM_ALLOCATOR)
+    #add_compile_definitions(JPH_USE_STD_VECTOR)
+endif()
+if (PHYSIC_ENGINE_PHYSX)
+    if (NOT DEFINED PHYSX_ROOT)
+        message(FATAL_ERROR "Please set PHYSX_ROOT in the .env.cmake file")
+    endif()
+    if (NOT DEFINED PHYSX_LIBRARIES)
+        message(FATAL_ERROR "Please set PHYSX_LIBRARIES in the .env.cmake file")
+    endif()
+    add_compile_definitions(PHYSIC_ENGINE_PHYSX PX_PHYSX_STATIC_LIB PX_FOUNDATION_STATIC_LIB PX_PHYSX_COMMON_STATIC_LIB)
+endif()
+
+#######################################################
+include(FetchContent)
+if(PHYSIC_ENGINE_JOLT)
+    include(cmake/jolt.cmake)
+endif()
+include(cmake/libraries.cmake)
+include(cmake/shaders.cmake)
+
+#######################################################
 function(lysa_compile_options TARGET_NAME)
     compile_options(${TARGET_NAME})
     if(MSVC)
@@ -77,13 +109,8 @@ function(lysa_compile_options TARGET_NAME)
 endfunction()
 
 #######################################################
-include(FetchContent)
-include(cmake/libraries.cmake)
-include(cmake/shaders.cmake)
-
-#######################################################
 set(VIREO_RHI_TARGET "vireo_rhi")
-add_subdirectory(${VIREO_RHI_PROJECT_DIR} external_lib_build/${VIREO_RHI_TARGET})
+add_subdirectory(${VIREO_RHI_PROJECT_DIR} ${VIREO_RHI_TARGET})
 
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(ENGINE_SRC_DIR ${SRC_DIR})
@@ -144,6 +171,23 @@ target_include_directories(xxhash PUBLIC
         ${xxhash_SOURCE_DIR}
 )
 compile_options(xxhash)
+
+#######################################################
+if(PHYSIC_ENGINE_JOLT)
+    set(PHYSICS_SRC
+            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
+    )
+    set(PHYSICS_MODULES
+            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.ixx
+    )
+endif ()
+if(PHYSIC_ENGINE_PHYSX)
+    set(PHYSICS_SRC
+    )
+    set(PHYSICS_MODULES
+    )
+endif ()
+
 
 #######################################################
 if(WIN32)
@@ -240,11 +284,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/Memory.cpp
         ${ENGINE_SRC_DIR}/VirtualFS.cpp
 
-        ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.cpp
-        ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.cpp
-        ${ENGINE_SRC_DIR}/utils/Frustum.cpp
-        ${ENGINE_SRC_DIR}/utils/Log.cpp
-        ${ENGINE_SRC_DIR}/utils/Utils.cpp
+        ${ENGINE_SRC_DIR}/physics/PhysicsEngine.cpp
 
         ${DEFERRED_RENDERER_SRC}
         ${FORWARD_RENDERER_SRC}
@@ -276,6 +316,12 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
 
+        ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.cpp
+        ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.cpp
+        ${ENGINE_SRC_DIR}/utils/Frustum.cpp
+        ${ENGINE_SRC_DIR}/utils/Log.cpp
+        ${ENGINE_SRC_DIR}/utils/Utils.cpp
+
         ${POSIX_SRC}
         ${WIN32_SRC}
         ${PHYSICS_SRC}
@@ -300,14 +346,9 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/Types.ixx
         ${ENGINE_SRC_DIR}/VirtualFS.ixx
 
-        ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.ixx
-        ${ENGINE_SRC_DIR}/utils/BlurData.ixx
-        ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.ixx
-        ${ENGINE_SRC_DIR}/utils/DirectoryWatcher.ixx
-        ${ENGINE_SRC_DIR}/utils/Frustum.ixx
-        ${ENGINE_SRC_DIR}/utils/Log.ixx
-        ${ENGINE_SRC_DIR}/utils/Rect.ixx
-        ${ENGINE_SRC_DIR}/utils/Utils.ixx
+        ${ENGINE_SRC_DIR}/physics/Configuration.ixx
+        ${ENGINE_SRC_DIR}/physics/PhysicsEngine.ixx
+        ${ENGINE_SRC_DIR}/physics/PhysicsMaterial.ixx
 
         ${FORWARD_RENDERER_MODULES}
         ${DEFERRED_RENDERER_MODULES}
@@ -335,6 +376,8 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/AnimationLibrary.ixx
         ${ENGINE_SRC_DIR}/resources/AnimationTrack.ixx
         ${ENGINE_SRC_DIR}/resources/Camera.ixx
+        ${ENGINE_SRC_DIR}/resources/CollisionObject.ixx
+        ${ENGINE_SRC_DIR}/resources/CollisionShape.ixx
         ${ENGINE_SRC_DIR}/resources/Environment.ixx
         ${ENGINE_SRC_DIR}/resources/Font.ixx
         ${ENGINE_SRC_DIR}/resources/Image.ixx
@@ -351,6 +394,15 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Samplers.ixx
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
+
+        ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.ixx
+        ${ENGINE_SRC_DIR}/utils/BlurData.ixx
+        ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.ixx
+        ${ENGINE_SRC_DIR}/utils/DirectoryWatcher.ixx
+        ${ENGINE_SRC_DIR}/utils/Frustum.ixx
+        ${ENGINE_SRC_DIR}/utils/Log.ixx
+        ${ENGINE_SRC_DIR}/utils/Rect.ixx
+        ${ENGINE_SRC_DIR}/utils/Utils.ixx
 
         ${POSIX_MODULES}
         ${WIN32_MODULES}
@@ -376,6 +428,25 @@ target_link_libraries(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET}
         Freetype::Freetype
         harfbuzz
 )
+add_dependencies(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET})
+
+if(PHYSIC_ENGINE_JOLT)
+    target_include_directories(${LYSA_ENGINE_TARGET} PRIVATE ${JoltPhysics_SOURCE_DIR}/..)
+    target_link_libraries(${LYSA_ENGINE_TARGET} Jolt)
+endif()
+if (PHYSIC_ENGINE_PHYSX)
+    target_include_directories(${LYSA_ENGINE_TARGET} PRIVATE ${PHYSX_ROOT}/include)
+    target_link_directories(${LYSA_ENGINE_TARGET} PRIVATE ${PHYSX_LIBRARIES})
+    target_link_libraries(${LYSA_ENGINE_TARGET}
+            PhysX_static_64
+            PhysXCharacterKinematic_static_64
+            PhysXCommon_static_64
+            PhysXCooking_static_64
+            PhysXExtensions_static_64
+            PhysXFoundation_static_64
+            PhysXPvdSDK_static_64
+    )
+endif()
 if (USE_SDL3)
     target_link_libraries(${LYSA_ENGINE_TARGET} SDL3::SDL3)
 endif ()
@@ -387,16 +458,10 @@ if(LUA_BINDING)
         ${LUA_INCLUDE_DIR} # defined in Vireo
     )
 endif ()
-add_dependencies(${LYSA_ENGINE_TARGET} ${VIREO_RHI_TARGET})
 if(WIN32)
     target_precompile_headers(${LYSA_ENGINE_TARGET} PRIVATE
         "<intrin.h>"
     )
-endif ()
-set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
-
-#######################################################
-if(WIN32)
     target_link_libraries(${LYSA_ENGINE_TARGET} Ws2_32)
     if (DIRECTX_BACKEND)
         target_link_libraries(${LYSA_ENGINE_TARGET} d3d12)
@@ -406,10 +471,12 @@ if(WIN32)
     endif()
     set_target_properties(${LYSA_ENGINE_TARGET} PROPERTIES
             WIN32_EXECUTABLE TRUE)
-endif()
+endif ()
 if (UNIX AND NOT APPLE)
     target_compile_options(${LYSA_ENGINE_TARGET} PRIVATE -stdlib=libc++)
 endif ()
+set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
+
 
 #######################################################
 find_program(DOXYPRESS_EXECUTABLE doxypress)

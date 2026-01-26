@@ -164,7 +164,7 @@ namespace lysa {
         }
 
         const auto sceneUniform = SceneData {
-            .cameraPosition = camera.transform[3].xyz,
+            .cameraPosition = camera.transform[3],
             .projection = camera.projection,
             .view = inverse(camera.transform),
             .viewInverse = camera.transform,

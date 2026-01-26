@@ -24,6 +24,7 @@ export namespace lysa {
 
     using unique_id = int64;
     using pipeline_id = uint32;
+    using collision_layer = uint32;
 
     constexpr unique_id INVALID_ID{-1};
 
