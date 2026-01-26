@@ -121,7 +121,7 @@ export namespace lysa {
         MeshManager& meshManager;
 
     private:
-        /*Per-frame state and deferred operations processed at frame boundaries.*/
+        /* Per-frame state and deferred operations processed at frame boundaries.*/
         struct FrameData {
             /* Nodes to add on the next frame (synchronous path). */
             std::unordered_set<const MeshInstance*> addedNodes;

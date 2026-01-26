@@ -22,7 +22,7 @@ export namespace lysa {
         /**
          * Creates an Animation
          * @param tracksCount number of tracks to allocate
-         * @param name
+         * @param name The name of the animation
          */
         Animation(uint32 tracksCount, const std::string &name);
 
@@ -48,13 +48,22 @@ export namespace lysa {
          */
         auto& getTrack(const uint32 index) { return tracks[index]; }
 
+        /**
+         * Returns the name of the animation
+         */
         const auto& getName() const { return name; }
 
+        /**
+         * Returns all tracks
+         */
         const auto& getTracks() const { return tracks; }
 
     private:
+        /* The looping mode */
         AnimationLoopMode loopMode{AnimationLoopMode::NONE};
+        /* The list of animation tracks */
         std::vector<AnimationTrack> tracks;
+        /* The name of the animation */
         const std::string name;
     };
 

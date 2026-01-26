@@ -30,6 +30,8 @@ export namespace lysa {
 
         /**
          * Adds the \ref Animation to the library, accessible by the key name.
+         * @param keyName The name of the animation
+         * @param animation The animation to add
          */
         void addAnimation(const std::string& keyName, const std::shared_ptr<Animation>& animation) {
             if (animations.empty()) {
@@ -40,23 +42,34 @@ export namespace lysa {
 
         /**
          * Returns the \ref Animation with the key name.
+         * @param keyName The name of the animation to retrieve
+         * @return A shared pointer to the animation
          */
         auto getAnimation(const std::string& keyName) const { return animations.at(keyName); }
 
         /**
          * Returns `true` if the library stores an \ref Animation with name as the key.
+         * @param keyName The name to check
+         * @return `true` if the animation exists in the library
          */
         auto hasAnimation(const std::string& keyName) const { return animations.contains(keyName); }
 
         /**
          * Returns the name of the default animation
+         * @return The name of the default animation
          */
         const auto& getDefaultAnimationName() const { return defaultAnimation; }
 
+        /**
+         * Returns all animations in the library
+         * @return A reference to the map of animations
+         */
         const auto& getAnimations() const { return animations; }
 
     private:
+        /* The name of the default animation */
         std::string defaultAnimation;
+        /* The map of animations, indexed by name */
         std::map<std::string, std::shared_ptr<Animation>> animations;
     };
 

@@ -13,8 +13,8 @@ import lysa.resources;
 export namespace lysa {
 
     /**
-    * Animation type for an animation track
-    */
+     * Animation type for an animation track
+     */
     enum class AnimationType : uint8 {
         /**
          * The values are the translation along the X, Y, and Z axes.
@@ -36,12 +36,11 @@ export namespace lysa {
      */
     enum class AnimationInterpolation : uint8 {
         /**
-         * The animated values are linearly interpolated between keyframes..
+         * The animated values are linearly interpolated between keyframes.
          */
         LINEAR = 0,
         /**
-         * The animated values remain constant to the output of the first keyframe, until the next
-         * keyframe.
+         * The animated values remain constant to the output of the first keyframe, until the next keyframe.
          */
         STEP = 1,
         /**
@@ -54,33 +53,43 @@ export namespace lysa {
      * Animation loop mode
      */
     enum class AnimationLoopMode : uint8 {
-        //! No loop (default)
+        /** No loop (default) */
         NONE    = 0,
-        //! Restart from the start of the track
+        /** Restart from the start of the track */
         LINEAR  = 1,
     };
 
+    /**
+     * Interpolated value returned by AnimationTrack::getInterpolatedValue
+     */
     struct AnimationTrackKeyValue {
-        //! `true` if we reach the end of the track
-        bool           ended;
-        //! corresponding time from the start of the track
-        float          frameTime;
-        //! animation type
-        AnimationType  type;
-        //! interpolated value
-        float4          value;
+        /** `true` if we reach the end of the track */
+        bool          ended;
+        /** corresponding time from the start of the track */
+        float         frameTime;
+        /** animation type */
+        AnimationType type;
+        /** interpolated value */
+        float4        value;
     };
 
     /**
      * An animation track
      */
     struct AnimationTrack : UnmanagedResource {
+        /** Animation type */
         AnimationType          type;
+        /** Interpolation type */
         AnimationInterpolation interpolation{AnimationInterpolation::LINEAR};
+        /** `true` if the track is enabled */
         bool                   enabled{true};
+        /** Total duration of the track in seconds */
         float                  duration{0.0f};
+        /** Keyframe times in seconds */
         std::vector<float>     keyTime;
+        /** Keyframe values */
         std::vector<float4>    keyValue;
+        /** Path to the resource */
         std::string            path;
 
         AnimationTrack() = default;
@@ -96,6 +105,9 @@ export namespace lysa {
 
         /**
         * Returns the interpolated value at the given time (in seconds, from the start of the animation) for a track.
+        * @param loopMode The loop mode to apply
+        * @param currentTimeFromStart The current time from the start of the animation in seconds
+        * @param reverse `true` if the animation is played in reverse
         */
         AnimationTrackKeyValue getInterpolatedValue(
             AnimationLoopMode loopMode,

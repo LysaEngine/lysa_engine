@@ -15,56 +15,101 @@ export namespace lysa {
      * Light type
      */
     enum class LightType : int8 {
+        /** Unknown light type */
         LIGHT_UNKNOWN     = -1,
+        /** Directional light */
         LIGHT_DIRECTIONAL = 0,
+        /** Omni (point) light */
         LIGHT_OMNI        = 1,
+        /** Spot light */
         LIGHT_SPOT        = 2
     };
 
     /**
-      * Light data in GPU memory
-      */
+    * Light data in GPU memory
+    */
     struct LightData {
-        // light params
-        int32 type{-1}; // Light::LightType
+        /** Light type (Light::LightType) */
+        int32 type{-1};
+        /** Light range */
         float range{0.0f};
+        /** Inner cut-off angle in radians */
         float cutOff{0.0f};
+        /** Outer cut-off angle in radians */
         float outerCutOff{0.0f};
+        /** Light position in world space */
         float4 position{0.0f};
+        /** Light direction */
         float4 direction{0.0f};
-        float4 color{1.0f, 1.0f, 1.0f, 1.0f}; // RGB + Intensity;
-        // shadow map params
+        /** Light color (RGB) + Intensity (A) */
+        float4 color{1.0f, 1.0f, 1.0f, 1.0f};
+        /** Shadow map index */
         int32 mapIndex{-1};
+        /** Number of cascades for directional shadows */
         uint32 cascadesCount{0};
+        /** Cascade split depths */
         float4 cascadeSplitDepth{0.0f};
+        /** Light space matrices for shadows */
         float4x4 lightSpace[6];
     };
 
     /**
-    * %A Light
+    * A Light resource
     */
     struct Light : UnmanagedResource {
+        /** Light type */
         LightType type;
+        /** Light color (RGB) */
         float3 color;
+        /** Light intensity */
         float intensity;
         /** World space transform */
         float4x4 transform;
+        /** Light range */
         float range;
-        float cutOff;  // radians
-        float outerCutOff;  // radians
+        /** Inner cut-off angle in radians */
+        float cutOff;
+        /** Outer cut-off angle in radians */
+        float outerCutOff;
+        /** Whether the light casts shadows */
         bool castShadows;
+        /** Resolution of the shadow map */
         uint32 shadowMapSize;
+        /** Whether the light is visible/active */
         bool visible{true};
+        /** Shadow map near clip distance */
         float shadowMapNearClipDistance{0.01f};
+        /** Number of cascades for directional shadow maps */
         uint32 shadowMapCascadesCount{3};
+        /** Lambda factor for cascade splitting */
         float shadowMapCascadesSplitLambda{.85f};
+        /** Scissors factor for shadow transparency */
         float shadowTransparencyScissors{0.25f};
+        /** Color scissors factor for shadow transparency */
         float shadowTransparencyColorScissors{0.75f};
 
+        /**
+         * Returns the light position in world space
+         */
         float3 getPosition() const { return transform[3].xyz; }
 
+        /**
+         * Returns the light front (direction) vector
+         */
         float3 getFrontVector() const {  return -normalize(transform[2].xyz); }
 
+        /**
+         * Constructor
+         * @param type The light type
+         * @param color The light color
+         * @param intensity The light intensity
+         * @param transform The world space transform
+         * @param range The light range
+         * @param cutOff The inner cut-off angle in radians
+         * @param outerCutOff The outer cut-off angle in radians
+         * @param castShadows Whether the light casts shadows
+         * @param shadowMapSize The resolution of the shadow map
+         */
         Light(
             const LightType type,
             const float3& color = {1.0f},
@@ -85,6 +130,9 @@ export namespace lysa {
             castShadows(castShadows),
             shadowMapSize(shadowMapSize) {}
 
+        /**
+         * Returns the light data for GPU consumption
+         */
         LightData getData() const {
             return {
                 .type = static_cast<int32>(type),
