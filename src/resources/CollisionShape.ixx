@@ -19,6 +19,7 @@ import lysa.aabb;
 import lysa.math;
 import lysa.physics.physics_material;
 import lysa.resources;
+import lysa.resources.mesh;
 #ifdef PHYSIC_ENGINE_PHYSX
 import lysa.application;
 import lysa.physics.physx.engine;
@@ -31,7 +32,11 @@ export namespace lysa {
      */
     class CollisionShape : public UnmanagedResource {
     public:
-        CollisionShape(const PhysicsMaterial* material, const std::string &resName);
+        CollisionShape(const PhysicsMaterial* material):
+        material(material ?
+                Application::getPhysicsEngine().duplicateMaterial((material)):
+                Application::getPhysicsEngine().createMaterial()) {
+        }
 
         auto& getMaterial() const { return *material; }
 
@@ -113,10 +118,98 @@ export namespace lysa {
 #endif
     private:
         float3 extends;
+
         AABBCollisionShape(
-            PhysicsMaterial* material,
-            const std::string &resName) :
-            CollisionShape{material, resName} {}
+            const PhysicsMaterial* material) :
+            CollisionShape{material} {}
+    };
+
+    /**
+     * %A mesh shape, consisting of triangles. *Must* only be used with a StaticBody (like a terrain for example)
+     */
+    class MeshShape : public CollisionShape {
+    public:
+        /**
+         * Creates a MeshShape using the triangles of the Mesh of first MeshInstance found in the `node` tree
+         */
+        MeshShape(
+            const Mesh& mesh,
+            const PhysicsMaterial* material = nullptr) :
+            CollisionShape(material),
+            mesh(mesh) {}
+
+#ifdef PHYSIC_ENGINE_JOLT
+        JPH::ShapeSettings* getShapeSettings() override;
+#endif
+#ifdef PHYSIC_ENGINE_PHYSX
+        std::unique_ptr<physx::PxGeometry> getGeometry(const float3& scale) const override;
+#endif
+    private:
+        const Mesh& mesh;
+    };
+
+
+    /**
+     * Sub shape composing a StaticCompoundShape
+     */
+    struct SubShape {
+        /**
+         * The geometry shape
+         */
+        CollisionShape shape;
+
+        /**
+         * Local space position
+         */
+        float3 position{0.0f};
+
+        /**
+         * Local space rotation
+         */
+        quaternion rotation{quaternion::identity()};
+    };
+
+    /**
+     * Collision shape composed by a collection of SubShape
+     */
+    class StaticCompoundShape : public CollisionShape {
+    public:
+        /**
+         * Creates a StaticCompoundShape using the `subshapes` collection of Shape
+         */
+        StaticCompoundShape(
+            const std::vector<SubShape> &subshapes);
+
+#ifdef PHYSIC_ENGINE_PHYSX
+        auto getSubShapes() const { return subShapes; }
+    private:
+        std::list<SubShape> subShapes;
+#endif
+    };
+
+    /**
+     * %A convex hull collision shape
+     */
+    class ConvexHullShape : public CollisionShape {
+    public:
+        /**
+         * Creates a ConvexHullShape using the vertices of the Mesh of the first MeshInstance found in the `node` tree.
+         * Uses the local transform of the node when creating the shape.
+         */
+        ConvexHullShape(
+            const Mesh& mesh,
+            const PhysicsMaterial* material = nullptr) :
+            CollisionShape(material),
+            mesh(mesh) {}
+
+#ifdef PHYSIC_ENGINE_JOLT
+        JPH::ShapeSettings* getShapeSettings() override;
+#endif
+#ifdef PHYSIC_ENGINE_PHYSX
+        std::unique_ptr<physx::PxGeometry> getGeometry(const float3& scale) const override;
+#endif
+    private:
+        const Mesh& mesh;
     };
 
 }
