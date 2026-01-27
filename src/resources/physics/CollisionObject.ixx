@@ -40,15 +40,17 @@ export namespace lysa {
     };
 
     /**
-     * Base class for 3D physics objects.
+     * Base class for 3D physics resources.
      */
     class CollisionObject : public UnmanagedResource {
     public:
+        CollisionObject(const std::shared_ptr<CollisionShape>&shape, collision_layer layer);
+
+        CollisionObject(collision_layer layer);
+
         CollisionObject(const CollisionObject&);
 
-        ~CollisionObject() override {
-            releaseResources();
-        }
+        ~CollisionObject() override;
 
         /**
          * Collision data for the CollisionObject::on_collision_starts and CollisionObject::on_collision_persists signal
@@ -77,7 +79,7 @@ export namespace lysa {
          */
         bool wereInContact(const CollisionObject *obj) const;
 
-        virtual void scaleBody(float scale);
+        virtual void scale(float scale);
 
         virtual void activate(const float3& position, const quaternion& rotation);
 
@@ -91,22 +93,21 @@ export namespace lysa {
 
         void hide() const;
 
+        void update(float3& position, quaternion& rotation);
+
+        auto getShape() const { return shape; }
+
         virtual void setPositionAndRotation(const float3& position, const quaternion& rotation);
 
-        virtual bool isProcessed() const { return true; }
+        virtual bool isProcessed() const = 0;
 
-        virtual bool isCharacter() const { return false; }
+        virtual bool isCharacter() const  = 0;
 
-        virtual bool isVisible() const { return true; }
+        virtual bool isVisible() const = 0;
 
     protected:
-        bool updating{false};
         collision_layer collisionLayer;
         std::shared_ptr<CollisionShape> shape{nullptr};
-
-        CollisionObject(const std::shared_ptr<CollisionShape>&shape, collision_layer layer);
-
-        CollisionObject(collision_layer layer);
 
         void releaseResources();
 
@@ -134,6 +135,10 @@ export namespace lysa {
     public:
         auto getActor() const { return actor; }
 #endif
+
+    private:
+        bool updating{false};
+
     };
 
 }

@@ -47,8 +47,8 @@ namespace lysa {
         }
     }
 
-    void RigidBody::scaleBody(const float scale) {
-        PhysicsBody::scaleBody(scale);
+    void RigidBody::scale(const float scale) {
+        PhysicsBody::scale(scale);
         setMass(mass);
     }
 

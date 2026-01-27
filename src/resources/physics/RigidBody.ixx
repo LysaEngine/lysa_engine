@@ -88,7 +88,7 @@ export namespace lysa {
         ~RigidBody() override = default;
 
 #ifdef PHYSIC_ENGINE_JOLT
-        void scaleBody(float scale) override;
+        void scale(float scale) override;
 #endif
 
     protected:

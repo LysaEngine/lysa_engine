@@ -17,6 +17,10 @@ import lysa.physics.jolt.engine;
 
 namespace lysa {
 
+    CollisionObject::~CollisionObject() {
+        releaseResources();
+    }
+
     CollisionObject::CollisionObject(
         const std::shared_ptr<CollisionShape>& shape,
         const uint32 layer):
@@ -77,7 +81,7 @@ namespace lysa {
                 activationMode);
     }
 
-    void CollisionObject::scaleBody(const float scale) {
+    void CollisionObject::scale(const float scale) {
         if (bodyId.IsInvalid()|| !bodyInterface.IsAdded(bodyId)) {
             return;
         }
@@ -90,6 +94,17 @@ namespace lysa {
                 false,
                 activationMode);
         }
+    }
+
+    void CollisionObject::update(float3& position, quaternion& rotation) {
+        if (bodyId.IsInvalid() || !bodyInterface.IsAdded(bodyId)) { return; }
+        updating = true;
+        JPH::Vec3 pos;
+        JPH::Quat rot;
+        bodyInterface.GetPositionAndRotation(bodyId, pos, rot);
+        position = float3{pos.GetX(), pos.GetY(), pos.GetZ()};
+        rotation = quaternion{rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()};
+        updating = false;
     }
 
     void CollisionObject::activate(const float3& position, const quaternion& rotation) {
