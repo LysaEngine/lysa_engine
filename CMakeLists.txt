@@ -184,27 +184,17 @@ if(ENABLE_PHYSICS_ENGINE)
             ${ENGINE_SRC_DIR}/physics/PhysicsEngine.ixx
             ${ENGINE_SRC_DIR}/physics/PhysicsMaterial.ixx
             ${ENGINE_SRC_DIR}/renderers/DebugRenderer.ixx
-            ${ENGINE_SRC_DIR}/resources/physics/CollisionArea.ixx
             ${ENGINE_SRC_DIR}/resources/physics/CollisionObject.ixx
             ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.ixx
-            ${ENGINE_SRC_DIR}/resources/physics/KinematicBody.ixx
-            ${ENGINE_SRC_DIR}/resources/physics/PhysicsBody.ixx
             ${ENGINE_SRC_DIR}/resources/physics/RayCast.ixx
-            ${ENGINE_SRC_DIR}/resources/physics/RigidBody.ixx
-            ${ENGINE_SRC_DIR}/resources/physics/StaticBody.ixx
     )
     if(PHYSIC_ENGINE_JOLT)
         set(PHYSICS_SRC
                 ${PHYSICS_COMMON_SRC}
-                ${ENGINE_SRC_DIR}/physics/jolt/CollisionArea.cpp
                 ${ENGINE_SRC_DIR}/physics/jolt/CollisionObject.cpp
                 ${ENGINE_SRC_DIR}/physics/jolt/CollisionShapes.cpp
-                ${ENGINE_SRC_DIR}/physics/jolt/KinematicBody.cpp
-                ${ENGINE_SRC_DIR}/physics/jolt/PhysicsBody.cpp
                 ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
                 ${ENGINE_SRC_DIR}/physics/jolt/RayCast.cpp
-                ${ENGINE_SRC_DIR}/physics/jolt/RigidBody.cpp
-                ${ENGINE_SRC_DIR}/physics/jolt/StaticBody.cpp
         )
         set(PHYSICS_MODULES
                 ${PHYSICS_COMMON_MODULES}

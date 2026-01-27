@@ -85,14 +85,9 @@ export import lysa.physics.configuration;
 export import lysa.physics.physics_engine;
 export import lysa.physics.physics_material;
 export import lysa.renderers.debug_renderer;
-export import lysa.resources.collision_area;
 export import lysa.resources.collision_object;
 export import lysa.resources.collision_shape;
-export import lysa.resources.kinematic_body;
-export import lysa.resources.physics_body;
 export import lysa.resources.ray_cast;
-export import lysa.resources.rigid_body;
-export import lysa.resources.static_body;
 #endif
 
 
