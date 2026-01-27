@@ -7,20 +7,8 @@
 module;
 #ifdef PHYSIC_ENGINE_JOLT
 #include <Jolt/Jolt.h>
-#ifdef JPH_DEBUG_RENDERER
-#include <Jolt/Renderer/DebugRenderer.h>
-#else
-// Hack to still compile DebugRenderer when Jolt is compiled without
-#define JPH_DEBUG_RENDERER
-// Make sure the debug renderer symbols don't get imported or exported
-#define JPH_DEBUG_RENDERER_EXPORT
-#include <Jolt/Renderer/DebugRenderer.h>
-#undef JPH_DEBUG_RENDERER
-#undef JPH_DEBUG_RENDERER_EXPORT
-#endif
 #include <Jolt/Renderer/DebugRendererSimple.h>
 #endif
-#include <cstdlib>
 export module lysa.renderers.debug_renderer;
 
 import std;

@@ -9,12 +9,6 @@ module;
 #include <Jolt/Jolt.h>
 #include <Jolt/Core/Color.h>
 #include <Jolt/Renderer/DebugRenderer.h>
-#ifndef JPH_DEBUG_RENDERER
-// Hack to still compile DebugRenderer when Jolt is compiled without
-#define JPH_DEBUG_RENDERER
-#include <Jolt/Renderer/DebugRenderer.cpp>
-#undef JPH_DEBUG_RENDERER
-#endif // !JPH_DEBUG_RENDERER
 #endif // PHYSIC_ENGINE_JOLT
 module lysa.renderers.debug_renderer;
 
