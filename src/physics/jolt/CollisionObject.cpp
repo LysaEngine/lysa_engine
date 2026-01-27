@@ -81,7 +81,7 @@ namespace lysa {
                 activationMode);
     }
 
-    void CollisionObject::scale(const float scale) {
+    void CollisionObject::scaleBody(const float scale) {
         if (bodyId.IsInvalid()|| !bodyInterface.IsAdded(bodyId)) {
             return;
         }

@@ -79,7 +79,7 @@ export namespace lysa {
          */
         bool wereInContact(const CollisionObject *obj) const;
 
-        virtual void scale(float scale);
+        virtual void scaleBody(float scale);
 
         virtual void activate(const float3& position, const quaternion& rotation);
 
@@ -101,7 +101,7 @@ export namespace lysa {
 
         virtual bool isProcessed() const = 0;
 
-        virtual bool isCharacter() const  = 0;
+        virtual bool isCharacter() const { return false; }
 
         virtual bool isVisible() const = 0;
 
