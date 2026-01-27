@@ -71,8 +71,7 @@ export namespace lysa {
          */
         BoxCollisionShape(
             const float3& extends,
-            PhysicsMaterial* material = nullptr,
-            const std::string &resName = "BoxShape");
+            const PhysicsMaterial* material = nullptr);
 
 #ifdef PHYSIC_ENGINE_PHYSX
         std::unique_ptr<physx::PxGeometry> getGeometry(const float3& scale) const override;
@@ -91,8 +90,7 @@ export namespace lysa {
          */
         SphereCollisionShape(
             float radius,
-            const PhysicsMaterial* material = nullptr,
-            const std::string &resName = "SphereShape");
+            const PhysicsMaterial* material = nullptr);
 
 #ifdef PHYSIC_ENGINE_PHYSX
         std::unique_ptr<physx::PxGeometry> getGeometry(const float3& scale) const override;
@@ -128,16 +126,17 @@ export namespace lysa {
     /**
      * %A mesh shape, consisting of triangles. *Must* only be used with a StaticBody (like a terrain for example)
      */
-    class MeshShape : public CollisionShape {
+    class MeshCollisionShape : public CollisionShape {
     public:
         /**
          * Creates a MeshShape using the triangles of the Mesh of first MeshInstance found in the `node` tree
          */
-        MeshShape(
+        MeshCollisionShape(
             const Mesh& mesh,
+            const float4x4& transform,
             const PhysicsMaterial* material = nullptr) :
             CollisionShape(material),
-            mesh(mesh) {}
+            mesh(mesh), transform(transform) {}
 
 #ifdef PHYSIC_ENGINE_JOLT
         JPH::ShapeSettings* getShapeSettings() override;
@@ -147,13 +146,14 @@ export namespace lysa {
 #endif
     private:
         const Mesh& mesh;
+        const float4x4& transform;
     };
 
 
     /**
      * Sub shape composing a StaticCompoundShape
      */
-    struct SubShape {
+    struct CollisionSubShape {
         /**
          * The geometry shape
          */
@@ -173,13 +173,12 @@ export namespace lysa {
     /**
      * Collision shape composed by a collection of SubShape
      */
-    class StaticCompoundShape : public CollisionShape {
+    class StaticCompoundCollisionShape : public CollisionShape {
     public:
         /**
          * Creates a StaticCompoundShape using the `subshapes` collection of Shape
          */
-        StaticCompoundShape(
-            const std::vector<SubShape> &subshapes);
+        StaticCompoundCollisionShape(std::vector<CollisionSubShape> &subshapes);
 
 #ifdef PHYSIC_ENGINE_PHYSX
         auto getSubShapes() const { return subShapes; }
@@ -191,17 +190,18 @@ export namespace lysa {
     /**
      * %A convex hull collision shape
      */
-    class ConvexHullShape : public CollisionShape {
+    class ConvexHullCollisionShape : public CollisionShape {
     public:
         /**
          * Creates a ConvexHullShape using the vertices of the Mesh of the first MeshInstance found in the `node` tree.
          * Uses the local transform of the node when creating the shape.
          */
-        ConvexHullShape(
+        ConvexHullCollisionShape(
             const Mesh& mesh,
+            const float4x4& transform,
             const PhysicsMaterial* material = nullptr) :
             CollisionShape(material),
-            mesh(mesh) {}
+            mesh(mesh), transform(transform) {}
 
 #ifdef PHYSIC_ENGINE_JOLT
         JPH::ShapeSettings* getShapeSettings() override;
@@ -211,6 +211,7 @@ export namespace lysa {
 #endif
     private:
         const Mesh& mesh;
+        const float4x4& transform;
     };
 
 }

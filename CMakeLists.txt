@@ -173,6 +173,7 @@ compile_options(xxhash)
 #######################################################
 if(PHYSIC_ENGINE_JOLT)
     set(PHYSICS_SRC
+            ${ENGINE_SRC_DIR}/physics/jolt/CollisionShape.cpp
             ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
     )
     set(PHYSICS_MODULES
