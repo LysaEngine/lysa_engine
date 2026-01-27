@@ -107,9 +107,10 @@ namespace lysa {
         const auto settings = new JPH::StaticCompoundShapeSettings();
         for (auto &subshape : subshapes) {
             const auto quat = quaternion{subshape.rotation};
-            settings->AddShape(JPH::Vec3{subshape.position.x, subshape.position.y, subshape.position.z},
-                               JPH::Quat{quat.x, quat.y, quat.z, quat.w},
-                               subshape.shape.getShapeSettings());
+            settings->AddShape(
+                JPH::Vec3{subshape.position.x, subshape.position.y, subshape.position.z},
+                JPH::Quat{quat.x, quat.y, quat.z, quat.w},
+                subshape.shape->getShapeSettings());
         }
         shapeSettings = settings;
     }

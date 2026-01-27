@@ -152,7 +152,7 @@ export namespace lysa {
         /**
          * The geometry shape
          */
-        CollisionShape shape;
+        std::shared_ptr<CollisionShape> shape;
 
         /**
          * Local space position
