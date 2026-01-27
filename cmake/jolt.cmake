@@ -43,9 +43,6 @@ endif ()
 # When turning this on, the library will be compiled with C++ RTTI enabled.
 # This adds some overhead and Jolt doesn't use RTTI so by default it is off.
 set(CPP_RTTI_ENABLED ON)
-# When turning this on, the library will be compiled with C++ exceptions enabled.
-# This adds some overhead and Jolt doesn't use exceptions so by default it is off.
-set(CPP_EXCEPTIONS_ENABLED ON)
 FetchContent_Declare(
         JoltPhysics
         GIT_REPOSITORY "https://github.com/jrouwe/JoltPhysics"
