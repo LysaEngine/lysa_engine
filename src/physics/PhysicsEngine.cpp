@@ -26,7 +26,7 @@ namespace lysa {
         throw Exception("Not implemented");
     }
 
-    std::unique_ptr<PhysicsEngine> PhysicsEngine::create(const PhysicsConfiguration& config) {
+    std::unique_ptr<PhysicsEngine> PhysicsEngine::create(const PhysicsEngineConfiguration& config) {
 #ifdef PHYSIC_ENGINE_JOLT
         return std::make_unique<JoltPhysicsEngine>(config.layerCollisionTable);
 #endif

@@ -17,6 +17,7 @@ import lysa.math;
 import lysa.physics.configuration;
 import lysa.physics.engine;
 import lysa.physics.physics_material;
+import lysa.renderers.configuration;
 import lysa.renderers.debug_renderer;
 
 export namespace lysa {
@@ -80,12 +81,12 @@ export namespace lysa {
     };
 
     /**
-     * Jolt implementation of PhysicsScene.
+     * Jolt implementation of PhysicsWorld.
      * Owns the Jolt PhysicsSystem and provides update/debug helpers.
      */
-    class JoltPhysicsScene : public PhysicsScene {
+    class JoltPhysicsWorld : public PhysicsWorld {
     public:
-        JoltPhysicsScene(
+        JoltPhysicsWorld(
             const DebugConfiguration& debugConfig,
             JPH::TempAllocatorImpl& tempAllocator,
             JPH::JobSystemThreadPool& jobSystem,
@@ -115,19 +116,18 @@ export namespace lysa {
         JPH::PhysicsSystem physicsSystem;
         JPH::TempAllocatorImpl& tempAllocator;
         JPH::JobSystemThreadPool& jobSystem;
-        // Debug view config
         JPH::BodyManager::DrawSettings bodyDrawSettings{};
     };
 
     /**
      * Jolt implementation of PhysicsEngine.
-     * Creates scenes/materials and wires Jolt‑specific collision filtering.
+     * Creates world/materials and wires Jolt‑specific collision filtering.
      */
     class JoltPhysicsEngine : public PhysicsEngine {
     public:
         JoltPhysicsEngine(const LayerCollisionTable& layerCollisionTable);
 
-        std::unique_ptr<PhysicsScene> createScene(const DebugConfiguration& debugConfig) override;
+        std::unique_ptr<PhysicsWorld> createScene(const DebugConfiguration& debugConfig) override;
 
         PhysicsMaterial* createMaterial(
             float friction = 0.5f,

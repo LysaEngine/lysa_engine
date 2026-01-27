@@ -173,6 +173,7 @@ compile_options(xxhash)
 #######################################################
 if(PHYSIC_ENGINE_JOLT)
     set(PHYSICS_SRC
+            ${ENGINE_SRC_DIR}/physics/jolt/CollisionObject.cpp
             ${ENGINE_SRC_DIR}/physics/jolt/CollisionShape.cpp
             ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
     )
@@ -272,7 +273,6 @@ endif ()
 
 #######################################################
 add_library(${LYSA_ENGINE_TARGET} STATIC
-        ${ENGINE_SRC_DIR}/AABB.cpp
         ${ENGINE_SRC_DIR}/AsyncQueue.cpp
         ${ENGINE_SRC_DIR}/AssetsPack.cpp
         ${ENGINE_SRC_DIR}/Context.cpp
@@ -306,6 +306,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
 
         ${ENGINE_SRC_DIR}/resources/Animation.cpp
         ${ENGINE_SRC_DIR}/resources/AnimationTrack.cpp
+        ${ENGINE_SRC_DIR}/resources/CollisionShape.cpp
         ${ENGINE_SRC_DIR}/resources/Font.cpp
         ${ENGINE_SRC_DIR}/resources/Image.cpp
         ${ENGINE_SRC_DIR}/resources/Material.cpp
@@ -316,6 +317,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
 
+        ${ENGINE_SRC_DIR}/utils/AABB.cpp
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.cpp
         ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.cpp
         ${ENGINE_SRC_DIR}/utils/Frustum.cpp
@@ -332,7 +334,6 @@ target_sources(${LYSA_ENGINE_TARGET}
     PUBLIC
     FILE_SET CXX_MODULES
     FILES
-        ${ENGINE_SRC_DIR}/AABB.ixx
         ${ENGINE_SRC_DIR}/AsyncQueue.ixx
         ${ENGINE_SRC_DIR}/AssetsPack.ixx
         ${ENGINE_SRC_DIR}/Context.ixx
@@ -396,6 +397,7 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
 
+        ${ENGINE_SRC_DIR}/utils/AABB.ixx
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.ixx
         ${ENGINE_SRC_DIR}/utils/BlurData.ixx
         ${ENGINE_SRC_DIR}/utils/DeferredTasksBuffer.ixx

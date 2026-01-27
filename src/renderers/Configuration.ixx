@@ -80,5 +80,51 @@ export namespace lysa {
 #endif
     };
 
+    /**
+     * Coloring scheme of collision shapes (only supported by Jolt)
+     */
+    enum class DebugShapeColor {
+        /** Random color per instance */
+        InstanceColor,
+        /** Convex = green, scaled = yellow, compound = orange, mesh = red */
+        ShapeTypeColor,
+        /** Static = grey, keyframed = green, dynamic = random color per instance */
+        MotionTypeColor,
+        /** Static = grey, keyframed = green, dynamic = yellow, sleeping = red */
+        SleepColor,
+    };
+
+    /**
+     * Configuration of the in-game debug
+     */
+    struct DebugConfiguration {
+        /** Enable the debug visualization */
+        bool enabled{false};
+        /** If the debug renderer is enabled, display the debug at startup */
+        bool displayAtStartup{true};
+        /** Draw with depth-testing */
+        bool depthTestEnable{true};
+        /** Draw coordinate system (x = red, y = green, z = blue) */
+        bool drawCoordinateSystem{false};
+        /** Coordinate system draw scale */
+        float coordinateSystemScale{1.0f};
+        /** Draw all the rays of the RayCast objects */
+        bool drawRayCast{false};
+        /** Color for the non-colliding rays */
+        float4 rayCastColor{0.0f, 0.5f, 1.0f, 1.0f};
+        /** Color for the colliding rays */
+        float4 rayCastCollidingColor{0.95f, 0.275f, 0.76f, 1.0f};
+        /** Draw the collision shapes of all collision objects */
+        bool drawShape{true};
+        /** Coloring scheme to use for collision shapes */
+        DebugShapeColor shapeColor{DebugShapeColor::ShapeTypeColor};
+        /** Draw a bounding box per collision object */
+        bool drawBoundingBox{false};
+        /** Draw the velocity vectors */
+        bool drawVelocity{false};
+        /** Draw the center of mass for each collision object */
+        bool drawCenterOfMass{false};
+    };
+
 
 }

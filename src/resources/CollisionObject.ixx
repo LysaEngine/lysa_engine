@@ -46,7 +46,9 @@ export namespace lysa {
     public:
         CollisionObject(const CollisionObject&);
 
-        ~CollisionObject() override;
+        ~CollisionObject() override {
+            releaseResources();
+        }
 
         /**
          * Collision data for the CollisionObject::on_collision_starts and CollisionObject::on_collision_persists signal
@@ -75,34 +77,45 @@ export namespace lysa {
          */
         bool wereInContact(const CollisionObject *obj) const;
 
-        virtual bool isProcessed() const = 0;
+        void scale(float scale) const;
 
-        virtual bool isCharacter() const = 0;
+        void activate() const;
+
+        void deactivate() const;
+
+        void pause() const;
+
+        void resume() const;
+
+        void setVisible(bool visible = true) const;
+
+        virtual void setPositionAndRotation(const float3& position, const quaternion& rotation);
+
+        virtual bool isProcessed() const { return true; }
+
+        virtual bool isCharacter() const { return false; }
+
+        virtual bool isVisible() const { return true; }
 
     protected:
         bool updating{false};
         collision_layer collisionLayer;
         std::shared_ptr<CollisionShape> shape{nullptr};
 
-        CollisionObject(const std::shared_ptr<CollisionShape>&shape,
-                        collision_layer layer);
+        CollisionObject(const std::shared_ptr<CollisionShape>&shape, collision_layer layer);
 
         CollisionObject(collision_layer layer);
-
-        virtual void setPositionAndRotation(const float3& position, const quaternion& rotation);
 
         void releaseResources();
 
 #ifdef PHYSIC_ENGINE_JOLT
-        JPH::BodyInterface* bodyInterface{nullptr};
+        JPH::BodyInterface& bodyInterface;
+        JPH::PhysicsSystem& physicsSystem;
+        JPH::BodyID bodyId{JPH::BodyID::cInvalidBodyID};
         JPH::EActivation activationMode{JPH::EActivation::Activate};
 
-        auto getBodyId() const { return bodyId; }
         void setBodyId(JPH::BodyID id);
-
-        friend class Character;
-        JPH::BodyID bodyId{JPH::BodyID::cInvalidBodyID};
-        JPH::BodyInterface* getBodyInterface() const;
+        auto getBodyId() const { return bodyId; }
 #endif
 #ifdef PHYSIC_ENGINE_PHYSX
         PhysXPhysicsEngine& physX;

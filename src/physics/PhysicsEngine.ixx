@@ -10,6 +10,7 @@ import std;
 import lysa.math;
 import lysa.physics.configuration;
 import lysa.physics.physics_material;
+import lysa.renderers.configuration;
 import lysa.renderers.debug_renderer;
 
 export namespace lysa {
@@ -25,13 +26,13 @@ export namespace lysa {
     };
 
     /**
-     * Physics scene interface.
+     * Physics world interface.
      *
-     * A PhysicsScene encapsulates the simulation world (bodies, constraints,
+     * A PhysicsWorld encapsulates the simulation world (bodies, constraints,
      * queries) and advances it with a fixed time step. Concrete implementations
      * are provided by each backend (Jolt / PhysX).
      */
-    class PhysicsScene {
+    class PhysicsWorld {
     public:
         /**
          * Steps the physics simulation by the given delta time (seconds).
@@ -50,7 +51,7 @@ export namespace lysa {
          */
         virtual float3 getGravity() const = 0;
 
-        virtual ~PhysicsScene() = default;
+        virtual ~PhysicsWorld() = default;
     };
 
     /**
@@ -60,15 +61,13 @@ export namespace lysa {
     public:
         /**
          * Creates a physics engine using the active backend.
-         * @param config Physics configuration (layers/collision table, etc.).
-         * @return A heap‑allocated engine instance.
          */
-        static std::unique_ptr<PhysicsEngine> create(const PhysicsConfiguration& config);
+        static std::unique_ptr<PhysicsEngine> create(const PhysicsEngineConfiguration& config);
 
         /**
-         * Creates a new physics scene/world with optional debug settings.
+         * Creates a new physics world with optional debug settings.
          */
-        virtual std::unique_ptr<PhysicsScene> createScene(const DebugConfiguration& debugConfig)  = 0;
+        virtual std::unique_ptr<PhysicsWorld> createScene(const DebugConfiguration& debugConfig)  = 0;
 
         /**
          * Creates a new physics material with the specified properties.

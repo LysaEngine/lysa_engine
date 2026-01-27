@@ -70,7 +70,9 @@ namespace  lysa {
         samplers(vireo, config.resourcesCapacity.samplers),
         graphicQueue(vireo->createSubmitQueue(vireo::CommandType::GRAPHIC, "Main graphic queue")),
         transferQueue(vireo->createSubmitQueue(vireo::CommandType::TRANSFER, "Main transfer queue")),
-        asyncQueue(vireo, transferQueue, graphicQueue) {
+        asyncQueue(vireo, transferQueue, graphicQueue),
+        physicsEngine(PhysicsEngine::create(config.physicsEngineConfiguration)),
+        physicsWorld(physicsEngine->createScene(config.debugConfiguration)) {
     }
 
 }

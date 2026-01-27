@@ -15,8 +15,9 @@ import lysa.event;
 import lysa.log;
 import lysa.virtual_fs;
 import lysa.types;
-// import lysa.physics.engine;
-import lysa.resources.samplers;
+import lysa.physics.configuration;
+import lysa.physics.engine;
+import lysa.renderers.configuration;
 import lysa.resources.registry;
 import lysa.resources.samplers;
 
@@ -61,7 +62,12 @@ export namespace  lysa {
         bool displayFPS{false};
         //! Virtual file system configuration
         VirtualFSConfiguration virtualFsConfiguration;
+        //! Logging system configuration
         LoggingConfiguration loggingConfiguration;
+        //! Physics engine & library configuration
+        PhysicsEngineConfiguration physicsEngineConfiguration;
+        //! Configuration of the debug renderer
+        DebugConfiguration debugConfiguration;
     };
 
     /**
@@ -130,7 +136,7 @@ export namespace  lysa {
         const std::shared_ptr<vireo::SubmitQueue> transferQueue;
 
         /**
-         * Asynchronous submissions of submit queues
+         * Asynchronous submissions of transfer commands
          */
         AsyncQueue asyncQueue;
 
@@ -145,9 +151,14 @@ export namespace  lysa {
         std::shared_ptr<vireo::DescriptorSet> globalDescriptorSet;
 
         /**
-         *  Unique physics engine instance based on Jolt or PhysX
+         *  Physics engine instance based on Jolt or PhysX
          */
-        // std::unique_ptr<PhysicsEngine> physicsEngine;
+        std::unique_ptr<PhysicsEngine> physicsEngine;
+
+        /**
+         * Physics simulation world
+         */
+        std::unique_ptr<PhysicsWorld> physicsWorld;
 
         Context(const ContextConfiguration& config);
     };

@@ -35,7 +35,7 @@ export namespace lysa {
     /**
      * High‑level physics engine configuration.
      */
-    struct PhysicsConfiguration {
+    struct PhysicsEngineConfiguration {
         /** Layers vs Layers collision table. */
         LayerCollisionTable layerCollisionTable;
     };

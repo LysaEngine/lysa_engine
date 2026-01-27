@@ -32,12 +32,7 @@ export namespace lysa {
      */
     class CollisionShape : public UnmanagedResource {
     public:
-        CollisionShape(const PhysicsMaterial* material):
-        material(material) {
-        // material(material ?
-                // Application::getPhysicsEngine().duplicateMaterial((material)):
-                // Application::getPhysicsEngine().createMaterial()) {
-        }
+        CollisionShape(const PhysicsMaterial* material);
 
         auto& getMaterial() const { return *material; }
 
@@ -129,7 +124,7 @@ export namespace lysa {
     class MeshCollisionShape : public CollisionShape {
     public:
         /**
-         * Creates a MeshShape using the triangles of the Mesh of first MeshInstance found in the `node` tree
+         * Creates a MeshShape using the triangles of the Mesh
          */
         MeshCollisionShape(
             const Mesh& mesh,
@@ -193,7 +188,7 @@ export namespace lysa {
     class ConvexHullCollisionShape : public CollisionShape {
     public:
         /**
-         * Creates a ConvexHullShape using the vertices of the Mesh of the first MeshInstance found in the `node` tree.
+         * Creates a ConvexHullShape using the vertices of the Mesh.
          * Uses the local transform of the node when creating the shape.
          */
         ConvexHullCollisionShape(

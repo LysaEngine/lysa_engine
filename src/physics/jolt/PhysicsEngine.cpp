@@ -139,8 +139,8 @@ namespace lysa {
         JPH::PhysicsMaterial::sDefault = reinterpret_cast<JPH::PhysicsMaterial*>(defaultMaterial);
     }
 
-    std::unique_ptr<PhysicsScene> JoltPhysicsEngine::createScene(const DebugConfiguration& debugConfig) {
-        return std::make_unique<JoltPhysicsScene>(
+    std::unique_ptr<PhysicsWorld> JoltPhysicsEngine::createScene(const DebugConfiguration& debugConfig) {
+        return std::make_unique<JoltPhysicsWorld>(
             debugConfig,
             *tempAllocator,
             *jobSystem,
@@ -166,7 +166,7 @@ namespace lysa {
         physicsMaterial->restitutionCombineMode = combineMode;
     }
 
-    JoltPhysicsScene::JoltPhysicsScene(
+    JoltPhysicsWorld::JoltPhysicsWorld(
         const DebugConfiguration& debugConfig,
         JPH::TempAllocatorImpl& tempAllocator,
         JPH::JobSystemThreadPool& jobSystem,
@@ -195,11 +195,11 @@ namespace lysa {
         };
     }
 
-    void JoltPhysicsScene::update(const float deltaTime) {
+    void JoltPhysicsWorld::update(const float deltaTime) {
         physicsSystem.Update(deltaTime, 1, &tempAllocator, &jobSystem);
     }
 
-    void JoltPhysicsScene::debug(DebugRenderer& debugRenderer) {
+    void JoltPhysicsWorld::debug(DebugRenderer& debugRenderer) {
         if (debugConfig.enabled) {
             if (debugConfig.drawCoordinateSystem) {
                 // debugRenderer.DrawCoordinateSystem(JPH::RMat44::sTranslation(
@@ -210,7 +210,7 @@ namespace lysa {
         }
     }
 
-    float3 JoltPhysicsScene::getGravity() const {
+    float3 JoltPhysicsWorld::getGravity() const {
         const auto gravity = physicsSystem.GetGravity();
         return float3{gravity.GetX(), gravity.GetY(), gravity.GetZ()};
     }
