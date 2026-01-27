@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderer;
 
+import lysa.context;
 import lysa.exception;
 import lysa.renderers.renderpasses.renderpass;
 import lysa.renderers.renderpasses.shadow_map_pass;

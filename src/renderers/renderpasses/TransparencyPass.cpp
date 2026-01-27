@@ -6,7 +6,9 @@
 */
 module lysa.renderers.renderpasses.transparency_pass;
 
+import lysa.context;
 import lysa.renderers.graphic_pipeline_data;
+
 namespace lysa {
 
     TransparencyPass::TransparencyPass(

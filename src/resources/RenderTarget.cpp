@@ -7,6 +7,7 @@
 module lysa.resources.render_target;
 
 import vireo;
+import lysa.context;
 import lysa.exception;
 import lysa.log;
 import lysa.renderers.renderer;

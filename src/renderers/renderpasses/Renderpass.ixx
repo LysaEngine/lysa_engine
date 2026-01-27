@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.renderpass;
 
 import vireo;
-import lysa.context;
 import lysa.types;
 import lysa.renderers.configuration;
 

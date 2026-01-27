@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.ssao_pass;
 
 import vireo;
-import lysa.context;
 import lysa.math;
 import lysa.renderers.configuration;
 import lysa.renderers.scene_frame_data;

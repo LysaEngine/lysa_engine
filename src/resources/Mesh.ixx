@@ -8,7 +8,6 @@ export module lysa.resources.mesh;
 
 import vireo;
 import lysa.aabb;
-import lysa.context;
 import lysa.exception;
 import lysa.math;
 import lysa.memory;

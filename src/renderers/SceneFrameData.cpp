@@ -6,6 +6,7 @@
 */
 module lysa.renderers.scene_frame_data;
 
+import lysa.context;
 import lysa.exception;
 import lysa.log;
 import lysa.math;

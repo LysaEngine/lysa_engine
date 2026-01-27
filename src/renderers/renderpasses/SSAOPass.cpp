@@ -6,6 +6,8 @@
 */
 module lysa.renderers.renderpasses.ssao_pass;
 
+import lysa.context;
+
 namespace lysa {
 
     SSAOPass::SSAOPass(

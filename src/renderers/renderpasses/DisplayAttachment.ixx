@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.display_attachment;
 
 import vireo;
-import lysa.context;
 import lysa.types;
 import lysa.renderers.configuration;
 import lysa.renderers.renderpasses.post_processing;

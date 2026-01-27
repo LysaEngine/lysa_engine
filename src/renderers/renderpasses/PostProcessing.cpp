@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderpasses.post_processing;
 
+import lysa.context;
 import lysa.resources.image;
 
 namespace lysa {

@@ -7,6 +7,8 @@
 module;
 module lysa.resources.mesh_instance;
 
+import lysa.context;
+
 namespace lysa {
 
     MeshInstance::MeshInstance(

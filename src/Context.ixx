@@ -15,6 +15,7 @@ import lysa.event;
 import lysa.log;
 import lysa.virtual_fs;
 import lysa.types;
+// import lysa.physics.engine;
 import lysa.resources.samplers;
 import lysa.resources.registry;
 import lysa.resources.samplers;
@@ -142,6 +143,11 @@ export namespace  lysa {
         *  Global descriptor set layout for GPU-ready shared resources.
         */
         std::shared_ptr<vireo::DescriptorSet> globalDescriptorSet;
+
+        /**
+         *  Unique physics engine instance based on Jolt or PhysX
+         */
+        // std::unique_ptr<PhysicsEngine> physicsEngine;
 
         Context(const ContextConfiguration& config);
     };

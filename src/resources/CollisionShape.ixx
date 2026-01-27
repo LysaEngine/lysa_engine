@@ -33,15 +33,16 @@ export namespace lysa {
     class CollisionShape : public UnmanagedResource {
     public:
         CollisionShape(const PhysicsMaterial* material):
-        material(material ?
-                Application::getPhysicsEngine().duplicateMaterial((material)):
-                Application::getPhysicsEngine().createMaterial()) {
+        material(material) {
+        // material(material ?
+                // Application::getPhysicsEngine().duplicateMaterial((material)):
+                // Application::getPhysicsEngine().createMaterial()) {
         }
 
         auto& getMaterial() const { return *material; }
 
     protected:
-        PhysicsMaterial* material;
+        const PhysicsMaterial* material;
 
 #ifdef PHYSIC_ENGINE_JOLT
     public:

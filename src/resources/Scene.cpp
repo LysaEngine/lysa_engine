@@ -6,6 +6,7 @@
 */
 module lysa.resources.scene;
 
+import lysa.context;
 import lysa.exception;
 import lysa.log;
 import lysa.resources.environment;

@@ -6,7 +6,6 @@
 */
 export module lysa.resources.scene;
 
-import lysa.context;
 import lysa.math;
 import lysa.renderers.graphic_pipeline_data;
 import lysa.renderers.scene_frame_data;

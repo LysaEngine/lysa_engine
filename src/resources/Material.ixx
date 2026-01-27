@@ -7,7 +7,6 @@
 export module lysa.resources.material;
 
 import vireo;
-import lysa.context;
 import lysa.math;
 import lysa.memory;
 import lysa.resources;

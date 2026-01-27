@@ -8,6 +8,7 @@ module;
 #include <hb.h>
 module lysa.renderers.vector_3d;
 
+import lysa.context;
 import lysa.exception;
 
 namespace lysa {
@@ -24,8 +25,8 @@ namespace lysa {
         const std::string& glyphShadersName) :
         imageManager(ctx().res.get<ImageManager>()),
         config{config},
-        useCamera{useCamera},
-        name{name} {
+        name{name},
+        useCamera{useCamera} {
 
         descriptorLayout = ctx().vireo->createDescriptorLayout(name);
         if (useCamera) {

@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.post_processing;
 
 import vireo;
-import lysa.context;
 import lysa.exception;
 import lysa.math;
 import lysa.renderers.configuration;

@@ -7,7 +7,6 @@
 export module lysa.renderers.pipelines.frustum_culling;
 
 import vireo;
-import lysa.context;
 import lysa.frustum;
 import lysa.utils;
 import lysa.math;

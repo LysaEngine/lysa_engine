@@ -11,7 +11,6 @@ module;
 export module lysa.directory_watcher;
 
 import std;
-import lysa.context;
 import lysa.event;
 import lysa.types;
 

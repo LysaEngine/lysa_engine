@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.lighting_pass;
 
 import vireo;
-import lysa.context;
 import lysa.types;
 import lysa.renderers.configuration;
 import lysa.renderers.scene_frame_data;

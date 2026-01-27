@@ -15,7 +15,6 @@ export module lysa.resources.rendering_window;
 
 import vireo;
 
-import lysa.context;
 import lysa.event;
 import lysa.input_event;
 import lysa.math;

@@ -13,6 +13,7 @@ module;
 module lysa.resources.font;
 
 import vireo;
+import lysa.context;
 import lysa.exception;
 import lysa.log;
 

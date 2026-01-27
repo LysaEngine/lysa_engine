@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.transparency_pass;
 
 import vireo;
-import lysa.context;
 import lysa.types;
 import lysa.resources.material;
 import lysa.renderers.configuration;

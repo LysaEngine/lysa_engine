@@ -6,6 +6,8 @@
 */
 module lysa.renderers.renderpasses.renderpass;
 
+import lysa.context;
+
 namespace lysa {
 
     std::mutex Renderpass::shaderModulesMutex;

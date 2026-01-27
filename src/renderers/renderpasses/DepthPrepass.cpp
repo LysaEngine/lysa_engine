@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderpasses.depth_prepass;
 
+import lysa.context;
 import lysa.renderers.graphic_pipeline_data;
 
 namespace lysa {

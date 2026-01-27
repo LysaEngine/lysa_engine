@@ -8,7 +8,6 @@ export module lysa.renderers.global_descriptor_set;
 
 import vireo;
 
-import lysa.context;
 import lysa.types;
 import lysa.resources.image;
 

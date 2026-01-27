@@ -9,7 +9,6 @@ export module lysa.renderers.graphic_pipeline_data;
 import vireo;
 
 import lysa.aabb;
-import lysa.context;
 import lysa.math;
 import lysa.memory;
 import lysa.resources.material;

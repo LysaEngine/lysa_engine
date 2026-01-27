@@ -7,7 +7,6 @@
 export module lysa.renderers.renderpasses.fxaa_pass;
 
 import vireo;
-import lysa.context;
 import lysa.renderers.configuration;
 import lysa.renderers.renderpasses.post_processing;
 

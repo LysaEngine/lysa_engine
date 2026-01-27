@@ -8,6 +8,7 @@ module;
 #include <xxhash.h>
 module lysa.resources.material;
 
+import lysa.context;
 import lysa.log;
 
 namespace lysa {

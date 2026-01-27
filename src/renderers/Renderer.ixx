@@ -8,7 +8,6 @@ export module lysa.renderers.renderer;
 
 import vireo;
 
-import lysa.context;
 import lysa.math;
 import lysa.renderers.configuration;
 import lysa.renderers.graphic_pipeline_data;

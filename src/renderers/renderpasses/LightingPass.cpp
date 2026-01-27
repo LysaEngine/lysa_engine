@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderpasses.lighting_pass;
 
+import lysa.context;
 import lysa.resources.image;
 import lysa.renderers.graphic_pipeline_data;
 

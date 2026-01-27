@@ -8,7 +8,6 @@
 export module lysa.renderers.vector_2d;
 
 import vireo;
-import lysa.context;
 import lysa.math;
 import lysa.rect;
 import lysa.renderers.configuration;

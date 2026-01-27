@@ -9,7 +9,6 @@ module;
 export module lysa.renderers.renderpasses.shadow_map_pass;
 
 import vireo;
-import lysa.context;
 import lysa.math;
 import lysa.memory;
 import lysa.resources.camera;

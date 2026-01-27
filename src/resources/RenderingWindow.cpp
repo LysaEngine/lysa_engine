@@ -6,6 +6,8 @@
 */
 module lysa.resources.rendering_window;
 
+import lysa.context;
+
 namespace lysa {
 
     bool RenderingWindow::_resettingMousePosition{false};

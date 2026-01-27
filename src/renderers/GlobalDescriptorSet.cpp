@@ -7,6 +7,7 @@
 module lysa.renderers.global_descriptor_set;
 
 import vireo;
+import lysa.context;
 import lysa.resources.material;
 import lysa.resources.mesh;
 

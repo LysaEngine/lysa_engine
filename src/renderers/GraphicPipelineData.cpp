@@ -10,6 +10,7 @@ module lysa.renderers.graphic_pipeline_data;
 
 import std;
 import vireo;
+import lysa.context;
 import lysa.log;
 
 namespace lysa {

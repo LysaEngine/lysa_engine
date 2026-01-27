@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderpasses.smaa_pass;
 
+import lysa.context;
 
 namespace lysa {
 

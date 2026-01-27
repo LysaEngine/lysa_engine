@@ -6,6 +6,7 @@
 */
 module lysa.renderers.renderpasses.gbuffer_pass;
 
+import lysa.context;
 import lysa.renderers.graphic_pipeline_data;
 
 namespace lysa {

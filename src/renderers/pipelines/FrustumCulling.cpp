@@ -6,6 +6,7 @@
 */
 module lysa.renderers.pipelines.frustum_culling;
 
+import lysa.context;
 import lysa.log;
 import lysa.virtual_fs;
 

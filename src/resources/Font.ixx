@@ -10,7 +10,6 @@ module;
 #include FT_FREETYPE_H
 export module lysa.resources.font;
 
-import lysa.context;
 import lysa.math;
 import lysa.resources;
 import lysa.resources.image;

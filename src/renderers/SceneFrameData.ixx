@@ -7,7 +7,6 @@
 export module lysa.renderers.scene_frame_data;
 
 import vireo;
-import lysa.context;
 import lysa.math;
 import lysa.memory;
 import lysa.resources.camera;
