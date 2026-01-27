@@ -79,15 +79,17 @@ export namespace lysa {
 
         void scale(float scale) const;
 
-        void activate() const;
+        virtual void activate(const float3& position, const quaternion& rotation);
 
         void deactivate() const;
 
         void pause() const;
 
-        void resume() const;
+        void resume(const float3& position, const quaternion& rotation);
 
-        void setVisible(bool visible = true) const;
+        void show(const float3& position, const quaternion& rotation);
+
+        void hide() const;
 
         virtual void setPositionAndRotation(const float3& position, const quaternion& rotation);
 
@@ -133,6 +135,5 @@ export namespace lysa {
         auto getActor() const { return actor; }
 #endif
     };
-
 
 }

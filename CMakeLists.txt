@@ -173,8 +173,10 @@ compile_options(xxhash)
 #######################################################
 if(PHYSIC_ENGINE_JOLT)
     set(PHYSICS_SRC
+            ${ENGINE_SRC_DIR}/physics/jolt/CollisionArea.cpp
             ${ENGINE_SRC_DIR}/physics/jolt/CollisionObject.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/CollisionShape.cpp
+            ${ENGINE_SRC_DIR}/physics/jolt/CollisionShapes.cpp
+            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsBody.cpp
             ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
     )
     set(PHYSICS_MODULES
@@ -306,7 +308,6 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
 
         ${ENGINE_SRC_DIR}/resources/Animation.cpp
         ${ENGINE_SRC_DIR}/resources/AnimationTrack.cpp
-        ${ENGINE_SRC_DIR}/resources/CollisionShape.cpp
         ${ENGINE_SRC_DIR}/resources/Font.cpp
         ${ENGINE_SRC_DIR}/resources/Image.cpp
         ${ENGINE_SRC_DIR}/resources/Material.cpp
@@ -316,6 +317,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/RenderingWindow.cpp
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
+        ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.cpp
 
         ${ENGINE_SRC_DIR}/utils/AABB.cpp
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.cpp
@@ -378,8 +380,6 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/AnimationLibrary.ixx
         ${ENGINE_SRC_DIR}/resources/AnimationTrack.ixx
         ${ENGINE_SRC_DIR}/resources/Camera.ixx
-        ${ENGINE_SRC_DIR}/resources/CollisionObject.ixx
-        ${ENGINE_SRC_DIR}/resources/CollisionShape.ixx
         ${ENGINE_SRC_DIR}/resources/Environment.ixx
         ${ENGINE_SRC_DIR}/resources/Font.ixx
         ${ENGINE_SRC_DIR}/resources/Image.ixx
@@ -396,6 +396,10 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Samplers.ixx
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
+        ${ENGINE_SRC_DIR}/resources/physics/CollisionArea.ixx
+        ${ENGINE_SRC_DIR}/resources/physics/CollisionObject.ixx
+        ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.ixx
+        ${ENGINE_SRC_DIR}/resources/physics/PhysicsBody.ixx
 
         ${ENGINE_SRC_DIR}/utils/AABB.ixx
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.ixx

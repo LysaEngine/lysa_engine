@@ -92,11 +92,11 @@ namespace lysa {
         }
     }
 
-    void CollisionObject::activate() const {
+    void CollisionObject::activate(const float3& position, const quaternion& rotation) {
         bodyInterface.SetObjectLayer(bodyId, collisionLayer);
         if (isProcessed() && isVisible()) {
             bodyInterface.AddBody(bodyId, activationMode);
-            // setPositionAndRotation(position, rotation);
+            setPositionAndRotation(position, rotation);
         }
     }
 
@@ -114,32 +114,36 @@ namespace lysa {
         }
     }
 
-    void CollisionObject::resume() const {
+    void CollisionObject::resume(const float3& position, const quaternion& rotation) {
         if (isProcessed() && !bodyId.IsInvalid()) {
             if (isVisible()) {
                 if (!bodyInterface.IsAdded(bodyId)) {
                     bodyInterface.AddBody(bodyId, activationMode);
                 }
                 bodyInterface.SetObjectLayer(bodyId, collisionLayer);
-                // setPositionAndRotation(position, rotation);
+                setPositionAndRotation(position, rotation);
             }
         }
     }
 
-    void CollisionObject::setVisible(const bool visible) const {
-        if (!bodyId.IsInvalid() && visible != this->isVisible()) {
-            if (isVisible()) {
-                if (!bodyInterface.IsAdded(bodyId)) {
-                    bodyInterface.AddBody(bodyId, activationMode);
-                }
-                bodyInterface.SetObjectLayer(bodyId, collisionLayer);
-                // setPositionAndRotation();
-            } else {
-                if (bodyInterface.IsAdded(bodyId)) {
-                    bodyInterface.RemoveBody(bodyId);
-                }
+    void CollisionObject::show(const float3& position, const quaternion& rotation) {
+        if (!bodyId.IsInvalid() && !this->isVisible()) {
+            if (!bodyInterface.IsAdded(bodyId)) {
+                bodyInterface.AddBody(bodyId, activationMode);
+            }
+            bodyInterface.SetObjectLayer(bodyId, collisionLayer);
+            setPositionAndRotation(position, rotation);
+        }
+    }
+
+    void CollisionObject::hide() const {
+        if (!bodyId.IsInvalid() && this->isVisible()) {
+            if (bodyInterface.IsAdded(bodyId)) {
+                bodyInterface.RemoveBody(bodyId);
             }
         }
     }
+
+
 
 }
