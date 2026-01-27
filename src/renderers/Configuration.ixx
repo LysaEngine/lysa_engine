@@ -7,7 +7,6 @@
 export module lysa.renderers.configuration;
 
 import vireo;
-
 import lysa.math;
 
 export namespace lysa {

@@ -9,6 +9,7 @@ module;
 #include <stb_image_write.h>
 module lysa.resources.image;
 
+import lysa.context;
 import lysa.exception;
 import lysa.log;
 

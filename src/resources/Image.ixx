@@ -8,7 +8,6 @@ export module lysa.resources.image;
 
 import vireo;
 
-import lysa.context;
 import lysa.math;
 import lysa.resources;
 import lysa.resources.manager;

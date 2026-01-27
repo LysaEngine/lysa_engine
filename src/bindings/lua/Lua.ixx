@@ -14,7 +14,6 @@ export module lysa.lua;
 
 export import lua_bridge; // from Vireo
 
-import lysa.context;
 import lysa.exception;
 import lysa.types;
 
@@ -123,7 +122,6 @@ export namespace lysa {
         lua_State* get() const { return L; }
 
     private:
-        Context& ctx;
         lua_State* L;
 
         void bind();

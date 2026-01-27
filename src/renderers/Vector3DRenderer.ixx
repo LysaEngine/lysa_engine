@@ -11,7 +11,7 @@ export module lysa.renderers.vector_3d;
 import vireo;
 import lysa.math;
 import lysa.renderers.configuration;
-import lysa.renderers.scene_frame_data;
+// import lysa.renderers.scene_frame_data;
 import lysa.resources.camera;
 import lysa.resources.font;
 import lysa.resources.image;

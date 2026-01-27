@@ -288,6 +288,7 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
 
         ${DEFERRED_RENDERER_SRC}
         ${FORWARD_RENDERER_SRC}
+        ${ENGINE_SRC_DIR}/renderers/DebugRenderer.cpp
         ${ENGINE_SRC_DIR}/renderers/GlobalDescriptorSet.cpp
         ${ENGINE_SRC_DIR}/renderers/GraphicPipelineData.cpp
         ${ENGINE_SRC_DIR}/renderers/Renderer.cpp
@@ -352,6 +353,7 @@ target_sources(${LYSA_ENGINE_TARGET}
 
         ${FORWARD_RENDERER_MODULES}
         ${DEFERRED_RENDERER_MODULES}
+        ${ENGINE_SRC_DIR}/renderers/DebugRenderer.ixx
         ${ENGINE_SRC_DIR}/renderers/Configuration.ixx
         ${ENGINE_SRC_DIR}/renderers/GlobalDescriptorSet.ixx
         ${ENGINE_SRC_DIR}/renderers/GraphicPipelineData.ixx
