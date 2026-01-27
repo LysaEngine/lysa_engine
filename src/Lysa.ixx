@@ -39,7 +39,6 @@ export import lysa.renderers.forward_renderer;
 export import lysa.renderers.renderpasses.forward_color_pass;
 #endif
 export import lysa.renderers.configuration;
-export import lysa.renderers.debug_renderer;
 export import lysa.renderers.global_descriptor_set;
 export import lysa.renderers.graphic_pipeline_data;
 export import lysa.renderers.renderer;
@@ -80,6 +79,22 @@ export import lysa.resources.rendering_window;
 export import lysa.resources.samplers;
 export import lysa.resources.scene;
 export import lysa.resources.texture;
+
+#ifdef ENABLE_PHYSICS_ENGINE
+export import lysa.physics.configuration;
+export import lysa.physics.physics_engine;
+export import lysa.physics.physics_material;
+export import lysa.renderers.debug_renderer;
+export import lysa.resources.collision_area;
+export import lysa.resources.collision_object;
+export import lysa.resources.collision_shape;
+export import lysa.resources.kinematic_body;
+export import lysa.resources.physics_body;
+export import lysa.resources.ray_cast;
+export import lysa.resources.rigid_body;
+export import lysa.resources.static_body;
+#endif
+
 
 #ifdef LUA_BINDING
 export import lysa.lua;

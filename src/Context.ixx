@@ -15,11 +15,13 @@ import lysa.event;
 import lysa.log;
 import lysa.virtual_fs;
 import lysa.types;
-import lysa.physics.configuration;
-import lysa.physics.engine;
 import lysa.renderers.configuration;
 import lysa.resources.registry;
 import lysa.resources.samplers;
+#ifdef ENABLE_PHYSICS_ENGINE
+import lysa.physics.configuration;
+import lysa.physics.physics_engine;
+#endif
 
 export namespace  lysa {
 
@@ -64,10 +66,12 @@ export namespace  lysa {
         VirtualFSConfiguration virtualFsConfiguration;
         //! Logging system configuration
         LoggingConfiguration loggingConfiguration;
+#ifdef ENABLE_PHYSICS_ENGINE
         //! Physics engine & library configuration
         PhysicsEngineConfiguration physicsEngineConfiguration;
         //! Configuration of the debug renderer
         DebugConfiguration debugConfiguration;
+#endif
     };
 
     /**
@@ -150,6 +154,7 @@ export namespace  lysa {
         */
         std::shared_ptr<vireo::DescriptorSet> globalDescriptorSet;
 
+#ifdef ENABLE_PHYSICS_ENGINE
         /**
          *  Physics engine instance based on Jolt or PhysX
          */
@@ -159,6 +164,7 @@ export namespace  lysa {
          * Physics simulation world
          */
         std::unique_ptr<PhysicsWorld> physicsWorld;
+#endif
 
         Context(const ContextConfiguration& config);
     };

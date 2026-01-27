@@ -135,4 +135,9 @@ namespace lysa {
         }
         return mass;
     }
+
+    void RigidBody::activate(const float3& position, const quaternion& rotation) {
+        setGravityFactor(gravityFactor);
+        if (mass > 0) { setMass(mass); }
+    }
 }

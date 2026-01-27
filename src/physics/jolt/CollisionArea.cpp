@@ -37,4 +37,7 @@ namespace lysa {
         setBodyId(body->GetID());
     }
 
+    void CollisionArea::activate(const float3& position, const quaternion& rotation) {
+        createBody(position, rotation);
+    }
 }

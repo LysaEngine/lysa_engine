@@ -4,7 +4,7 @@
  * This software is released under the MIT License.
  * https://opensource.org/licenses/MIT
 */
-export module lysa.physics.engine;
+export module lysa.physics.physics_engine;
 
 import std;
 import lysa.math;

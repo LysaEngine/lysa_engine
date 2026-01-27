@@ -16,7 +16,7 @@ module;
 module lysa.resources.collision_shape;
 
 import lysa.exception;
-import lysa.physics.engine;
+import lysa.physics.physics_engine;
 
 namespace lysa {
 

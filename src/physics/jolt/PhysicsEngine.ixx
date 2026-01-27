@@ -15,7 +15,7 @@ import std;
 import lysa.event;
 import lysa.math;
 import lysa.physics.configuration;
-import lysa.physics.engine;
+import lysa.physics.physics_engine;
 import lysa.physics.physics_material;
 import lysa.renderers.configuration;
 import lysa.renderers.debug_renderer;

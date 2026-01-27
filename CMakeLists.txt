@@ -71,16 +71,15 @@ elseif (LINUX AND NOT APPLE)
 endif ()
 
 #######################################################
-if(NOT PHYSIC_ENGINE_JOLT AND NOT PHYSIC_ENGINE_PHYSX)
-    message(FATAL_ERROR "Please activate a physics library with PHYSIC_ENGINE_JOLT ou PHYSIC_ENGINE_PHYSX")
-endif()
-if(PHYSIC_ENGINE_JOLT AND PHYSIC_ENGINE_PHYSX)
+if (PHYSIC_ENGINE_JOLT AND PHYSIC_ENGINE_PHYSX)
     message(FATAL_ERROR "Please deactivate a physics library")
 endif()
-if(PHYSIC_ENGINE_JOLT)
+if (PHYSIC_ENGINE_JOLT)
+    set(ENABLE_PHYSICS_ENGINE ON)
     add_compile_definitions(PHYSIC_ENGINE_JOLT)
 endif()
 if (PHYSIC_ENGINE_PHYSX)
+    set(ENABLE_PHYSICS_ENGINE ON)
     if (NOT DEFINED PHYSX_ROOT)
         message(FATAL_ERROR "Please set PHYSX_ROOT in the .env.cmake file")
     endif()
@@ -88,6 +87,9 @@ if (PHYSIC_ENGINE_PHYSX)
         message(FATAL_ERROR "Please set PHYSX_LIBRARIES in the .env.cmake file")
     endif()
     add_compile_definitions(PHYSIC_ENGINE_PHYSX PX_PHYSX_STATIC_LIB PX_FOUNDATION_STATIC_LIB PX_PHYSX_COMMON_STATIC_LIB)
+endif()
+if (ENABLE_PHYSICS_ENGINE)
+    add_compile_definitions(ENABLE_PHYSICS_ENGINE)
 endif()
 
 #######################################################
@@ -171,27 +173,52 @@ target_include_directories(xxhash PUBLIC
 compile_options(xxhash)
 
 #######################################################
-if(PHYSIC_ENGINE_JOLT)
-    set(PHYSICS_SRC
-            ${ENGINE_SRC_DIR}/physics/jolt/CollisionArea.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/CollisionObject.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/CollisionShapes.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/KinematicBody.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsBody.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/RayCast.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/RigidBody.cpp
-            ${ENGINE_SRC_DIR}/physics/jolt/StaticBody.cpp
+if(ENABLE_PHYSICS_ENGINE)
+    set(PHYSICS_COMMON_SRC
+            ${ENGINE_SRC_DIR}/physics/PhysicsEngine.cpp
+            ${ENGINE_SRC_DIR}/renderers/DebugRenderer.cpp
+            ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.cpp
     )
-    set(PHYSICS_MODULES
-            ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.ixx
+    set(PHYSICS_COMMON_MODULES
+            ${ENGINE_SRC_DIR}/physics/Configuration.ixx
+            ${ENGINE_SRC_DIR}/physics/PhysicsEngine.ixx
+            ${ENGINE_SRC_DIR}/physics/PhysicsMaterial.ixx
+            ${ENGINE_SRC_DIR}/renderers/DebugRenderer.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/CollisionArea.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/CollisionObject.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/KinematicBody.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/PhysicsBody.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/RayCast.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/RigidBody.ixx
+            ${ENGINE_SRC_DIR}/resources/physics/StaticBody.ixx
     )
-endif ()
-if(PHYSIC_ENGINE_PHYSX)
-    set(PHYSICS_SRC
-    )
-    set(PHYSICS_MODULES
-    )
+    if(PHYSIC_ENGINE_JOLT)
+        set(PHYSICS_SRC
+                ${PHYSICS_COMMON_SRC}
+                ${ENGINE_SRC_DIR}/physics/jolt/CollisionArea.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/CollisionObject.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/CollisionShapes.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/KinematicBody.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/PhysicsBody.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/RayCast.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/RigidBody.cpp
+                ${ENGINE_SRC_DIR}/physics/jolt/StaticBody.cpp
+        )
+        set(PHYSICS_MODULES
+                ${PHYSICS_COMMON_MODULES}
+                ${ENGINE_SRC_DIR}/physics/jolt/PhysicsEngine.ixx
+        )
+    endif ()
+    if(PHYSIC_ENGINE_PHYSX)
+        set(PHYSICS_SRC
+                ${PHYSICS_COMMON_SRC}
+        )
+        set(PHYSICS_MODULES
+                ${PHYSICS_COMMON_MODULES}
+        )
+    endif ()
 endif ()
 
 
@@ -289,11 +316,8 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/Memory.cpp
         ${ENGINE_SRC_DIR}/VirtualFS.cpp
 
-        ${ENGINE_SRC_DIR}/physics/PhysicsEngine.cpp
-
         ${DEFERRED_RENDERER_SRC}
         ${FORWARD_RENDERER_SRC}
-        ${ENGINE_SRC_DIR}/renderers/DebugRenderer.cpp
         ${ENGINE_SRC_DIR}/renderers/GlobalDescriptorSet.cpp
         ${ENGINE_SRC_DIR}/renderers/GraphicPipelineData.cpp
         ${ENGINE_SRC_DIR}/renderers/Renderer.cpp
@@ -321,7 +345,6 @@ add_library(${LYSA_ENGINE_TARGET} STATIC
         ${ENGINE_SRC_DIR}/resources/RenderingWindow.cpp
         ${ENGINE_SRC_DIR}/resources/Samplers.cpp
         ${ENGINE_SRC_DIR}/resources/Scene.cpp
-        ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.cpp
 
         ${ENGINE_SRC_DIR}/utils/AABB.cpp
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.cpp
@@ -353,13 +376,8 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/Types.ixx
         ${ENGINE_SRC_DIR}/VirtualFS.ixx
 
-        ${ENGINE_SRC_DIR}/physics/Configuration.ixx
-        ${ENGINE_SRC_DIR}/physics/PhysicsEngine.ixx
-        ${ENGINE_SRC_DIR}/physics/PhysicsMaterial.ixx
-
         ${FORWARD_RENDERER_MODULES}
         ${DEFERRED_RENDERER_MODULES}
-        ${ENGINE_SRC_DIR}/renderers/DebugRenderer.ixx
         ${ENGINE_SRC_DIR}/renderers/Configuration.ixx
         ${ENGINE_SRC_DIR}/renderers/GlobalDescriptorSet.ixx
         ${ENGINE_SRC_DIR}/renderers/GraphicPipelineData.ixx
@@ -400,14 +418,6 @@ target_sources(${LYSA_ENGINE_TARGET}
         ${ENGINE_SRC_DIR}/resources/Samplers.ixx
         ${ENGINE_SRC_DIR}/resources/Scene.ixx
         ${ENGINE_SRC_DIR}/resources/Texture.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/CollisionArea.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/CollisionObject.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/CollisionShapes.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/KinematicBody.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/PhysicsBody.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/RayCast.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/RigidBody.ixx
-        ${ENGINE_SRC_DIR}/resources/physics/StaticBody.ixx
 
         ${ENGINE_SRC_DIR}/utils/AABB.ixx
         ${ENGINE_SRC_DIR}/utils/AsyncTasksPool.ixx
@@ -489,7 +499,6 @@ if(WIN32)
 endif ()
 if (UNIX AND NOT APPLE)
     target_compile_options(${LYSA_ENGINE_TARGET} PRIVATE -stdlib=libc++)
-    target_compile_options(Jolt PRIVATE -stdlib=libc++)
 endif ()
 set_property(TARGET ${LYSA_ENGINE_TARGET} PROPERTY COMPILE_WARNING_AS_ERROR ON)
 

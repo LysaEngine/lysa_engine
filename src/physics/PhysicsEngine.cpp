@@ -4,7 +4,7 @@
  * This software is released under the MIT License.
  * https://opensource.org/licenses/MIT
 */
-module lysa.physics.engine;
+module lysa.physics.physics_engine;
 
 import lysa.exception;
 #ifdef PHYSIC_ENGINE_JOLT

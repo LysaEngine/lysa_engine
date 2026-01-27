@@ -80,6 +80,7 @@ export namespace lysa {
 #endif
     };
 
+#ifdef ENABLE_PHYSICS_ENGINE
     /**
      * Coloring scheme of collision shapes (only supported by Jolt)
      */
@@ -125,6 +126,6 @@ export namespace lysa {
         /** Draw the center of mass for each collision object */
         bool drawCenterOfMass{false};
     };
-
+#endif
 
 }
