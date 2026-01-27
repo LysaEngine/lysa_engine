@@ -39,6 +39,7 @@ export import lysa.renderers.forward_renderer;
 export import lysa.renderers.renderpasses.forward_color_pass;
 #endif
 export import lysa.renderers.configuration;
+export import lysa.renderers.debug_renderer;
 export import lysa.renderers.global_descriptor_set;
 export import lysa.renderers.graphic_pipeline_data;
 export import lysa.renderers.renderer;

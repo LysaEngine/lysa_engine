@@ -21,7 +21,7 @@ module;
 #include <Jolt/Renderer/DebugRendererSimple.h>
 #endif
 #include <cstdlib>
-export module lysa.renderers.debug;
+export module lysa.renderers.debug_renderer;
 
 import std;
 import vireo;

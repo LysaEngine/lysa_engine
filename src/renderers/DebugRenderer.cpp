@@ -16,8 +16,7 @@ module;
 #undef JPH_DEBUG_RENDERER
 #endif // !JPH_DEBUG_RENDERER
 #endif // PHYSIC_ENGINE_JOLT
-module lysa.renderers.debug;
-
+module lysa.renderers.debug_renderer;
 
 namespace lysa {
 
