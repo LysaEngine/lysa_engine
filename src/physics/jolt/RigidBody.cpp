@@ -118,7 +118,7 @@ namespace lysa {
                 }
             }
         } else {
-            const auto joltShape = bodyInterface->GetShape(bodyId);
+            const auto joltShape = bodyInterface.GetShape(bodyId);
             if (joltShape) {
                 setMass(joltShape->GetVolume() * density);
                 mass = -1.0f;
