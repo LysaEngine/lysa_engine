@@ -107,7 +107,7 @@ namespace lysa {
         updating = false;
     }
 
-    void CollisionObject::activate(const float3& position, const quaternion& rotation) {
+    void CollisionObject::activate(const float3& position, const quaternion& rotation, const float3&) {
         bodyInterface.SetObjectLayer(bodyId, collisionLayer);
         if (isProcessed() && isVisible()) {
             bodyInterface.AddBody(bodyId, activationMode);

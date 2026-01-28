@@ -28,12 +28,12 @@ export namespace lysa {
 
     struct CollisionObjectEvent {
         /**
-        * Signal called whenever a new contact point is detected and reports the first contact point in a CollisionObject::Collision<br>
+        * Event fired whenever a new contact point is detected and reports the first contact point in a CollisionObject::Collision<br>
         * For characters, called whenever the character collides with a body.
         */
         static constexpr auto START{"COLLISION_STARTS"};
         /**
-        * Signal called whenever a contact is detected that was also detected last update and reports the first contact point in a CollisionObject::Collision<br>
+        * Event fire whenever a contact is detected that was also detected last update and reports the first contact point in a CollisionObject::Collision<br>
         * Never called for characters since on_collision_added is called during the whole contact.
         */
         static constexpr auto PERSISTS{"COLLISION_PERSISTS"};
@@ -81,7 +81,7 @@ export namespace lysa {
 
         virtual void scaleBody(float scale);
 
-        virtual void activate(const float3& position, const quaternion& rotation);
+        virtual void activate(const float3& position, const quaternion& rotation, const float3& scale);
 
         void deactivate() const;
 
