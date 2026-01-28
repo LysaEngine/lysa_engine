@@ -20,6 +20,21 @@ if (NOT DEFINED VIREO_RHI_PROJECT_DIR)
 endif()
 
 #######################################################
+set(VIREO_RHI_TARGET "vireo_rhi")
+add_subdirectory(${VIREO_RHI_PROJECT_DIR} ${VIREO_RHI_TARGET})
+
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(ENGINE_SRC_DIR ${SRC_DIR})
+set(SHADERS_SRC_DIR ${ENGINE_SRC_DIR}/shaders)
+set(SHADERS_INCLUDE_DIR ${ENGINE_SRC_DIR}/shaders/include)
+set(SHADERS_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+set(DEPENDS_SRC_DIR ${ENGINE_SRC_DIR}/depends)
+
+set(HLSLPP_TARGET hlslpp)
+set(HLSLPP_SRC_DIR ${DEPENDS_SRC_DIR}/${HLSLPP_TARGET})
+
+#######################################################
+include(cmake/compile_options.cmake)
 set(LYSA_ENGINE_TARGET ${PROJECT_NAME})
 if (NOT DEFINED LYSA_ENGINE_PROJECT_DIR)
     message("Building Lysa Engine as standalone project")
@@ -29,14 +44,10 @@ if (NOT DEFINED LYSA_ENGINE_PROJECT_DIR)
     set(DEFERRED_RENDERER ON)
     set(PHYSIC_ENGINE_JOLT ON)
     set(PHYSIC_ENGINE_PHYSX OFF)
+    if (LINUX AND NOT APPLE)
+        set(USE_SDL3 ON)
+    endif ()
 endif()
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-#add_compile_definitions(SHADOW_TRANSPARENCY_COLOR_ENABLED ON)
 
 #######################################################
 if (LYSA_CONSOLE)
@@ -55,41 +66,20 @@ if (DEFERRED_RENDERER)
 endif ()
 
 #######################################################
-if(WIN32)
-    set(USE_STATIC_MSVC_RUNTIME_LIBRARY ON)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug")
-    else ()
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
-    endif ()
-    add_compile_definitions(UNICODE _UNICODE)
-elseif (LINUX AND NOT APPLE)
-    if (NOT DEFINED USE_SDL3)
-        set(USE_SDL3 ON)
-        add_compile_definitions(USE_SDL3)
-    endif ()
-endif ()
-
-#######################################################
 if (PHYSIC_ENGINE_JOLT AND PHYSIC_ENGINE_PHYSX)
     message(FATAL_ERROR "Please deactivate a physics library")
 endif()
 if (PHYSIC_ENGINE_JOLT)
-    set(ENABLE_PHYSICS_ENGINE ON)
-    add_compile_definitions(PHYSIC_ENGINE_JOLT)
-endif()
-if (PHYSIC_ENGINE_PHYSX)
-    set(ENABLE_PHYSICS_ENGINE ON)
+    set(ENABLE_PHYSICS_ENGINE ON CACHE INTERNAL "")
+elseif (PHYSIC_ENGINE_PHYSX)
+    set(ENABLE_PHYSICS_ENGINE ON CACHE INTERNAL "")
     if (NOT DEFINED PHYSX_ROOT)
         message(FATAL_ERROR "Please set PHYSX_ROOT in the .env.cmake file")
     endif()
     if (NOT DEFINED PHYSX_LIBRARIES)
         message(FATAL_ERROR "Please set PHYSX_LIBRARIES in the .env.cmake file")
     endif()
-    add_compile_definitions(PHYSIC_ENGINE_PHYSX PX_PHYSX_STATIC_LIB PX_FOUNDATION_STATIC_LIB PX_PHYSX_COMMON_STATIC_LIB)
-endif()
-if (ENABLE_PHYSICS_ENGINE)
-    add_compile_definitions(ENABLE_PHYSICS_ENGINE)
+    add_compile_definitions(PX_PHYSX_STATIC_LIB PX_FOUNDATION_STATIC_LIB PX_PHYSX_COMMON_STATIC_LIB)
 endif()
 
 #######################################################
@@ -99,28 +89,6 @@ if(PHYSIC_ENGINE_JOLT)
 endif()
 include(cmake/libraries.cmake)
 include(cmake/shaders.cmake)
-
-#######################################################
-function(lysa_compile_options TARGET_NAME)
-    compile_options(${TARGET_NAME})
-    if(MSVC)
-        target_compile_options(${TARGET_NAME} PRIVATE /wd4291) # for Flecs 'new' placement operator
-    endif ()
-endfunction()
-
-#######################################################
-set(VIREO_RHI_TARGET "vireo_rhi")
-add_subdirectory(${VIREO_RHI_PROJECT_DIR} ${VIREO_RHI_TARGET})
-
-set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-set(ENGINE_SRC_DIR ${SRC_DIR})
-set(SHADERS_SRC_DIR ${ENGINE_SRC_DIR}/shaders)
-set(SHADERS_INCLUDE_DIR ${ENGINE_SRC_DIR}/shaders/include)
-set(SHADERS_BUILD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
-set(DEPENDS_SRC_DIR ${ENGINE_SRC_DIR}/depends)
-
-set(HLSLPP_TARGET hlslpp)
-set(HLSLPP_SRC_DIR ${DEPENDS_SRC_DIR}/${HLSLPP_TARGET})
 
 #######################################################
 # Slang shaders
@@ -170,7 +138,7 @@ add_library(xxhash STATIC
 target_include_directories(xxhash PUBLIC
         ${xxhash_SOURCE_DIR}
 )
-compile_options(xxhash)
+vireo_compile_options(xxhash)
 
 #######################################################
 if(ENABLE_PHYSICS_ENGINE)
@@ -210,7 +178,6 @@ if(ENABLE_PHYSICS_ENGINE)
         )
     endif ()
 endif ()
-
 
 #######################################################
 if(WIN32)
