@@ -50,5 +50,7 @@ FetchContent_Declare(
         SOURCE_SUBDIR "Build"
 )
 FetchContent_MakeAvailable(JoltPhysics)
-target_compile_options(Jolt PRIVATE -stdlib=libc++)
+if (LINUX AND NOT APPLE)
+    target_compile_options(Jolt PRIVATE -stdlib=libc++)
+endif ()
 
